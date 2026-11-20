@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.1.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.2.0
 
-> **Güncel sürüm: v1.1.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.2.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.1.0** | 2026-11-20 | Pervane renkleri: 17 renk, kırılma noktasının renk ve halkayla işaretlenmesi, sürüm takibi |
+| **v1.2.0** | 2026-11-20 | Excel, Word ve rapor çıktıları: kırılınca indirme penceresi, Excel veri dosyası, grafikli Word raporu |
+| v1.1.0 | 2026-11-20 | Pervane renkleri: 17 renk, kırılma noktasının renk ve halkayla işaretlenmesi, sürüm takibi |
 | v1.0.0 | 2026-11-20 | İlk sürüm: 3D test laboratuvarı, 6 filament, 4 motor, grafikler, Arduino test düzeneği |
 <!-- SURUMLER:BITIS -->
 
@@ -43,6 +44,11 @@ Proje iki parçadan oluşur:
   - Sınıra yaklaşınca (%75'in üstü) kanat kökünde kırmızı bir uyarı halkası yanıp söner.
   - Kırılınca kökte "Kırılma noktası" etiketi çıkar.
   - "Bükülme abartma" ayarı küçük esnemeleri görünür kılar.
+- **Test raporu (Excel / Word):**
+  - Pervane kırılınca bir pencere açılır ve verilerin indirilip indirilmeyeceğini sorar.
+  - Aynı pencere her zaman **📄 Raporu indir** düğmesiyle de açılabilir.
+  - **Excel (.xlsx):** Özet, saniyede 10 satırlık ölçüm verisi (devir, itki, gerilme, bükülme, güç, akım, verim, durum), malzeme karşılaştırması ve olay günlüğü sayfaları.
+  - **Word (.docx):** Sonuç yorumu, kırılma anının 3D görüntüsü, 3 grafik, koşullar ve karşılaştırma tabloları, yöntem. Bilim fuarı dosyasına doğrudan eklenebilir.
 - **Hepsini sırayla canlı test et:** 6 malzemeyi arka arkaya test eder ve karşılaştırma tablosunu doldurur. Sonuçları CSV olarak indirip raporunda kullanabilirsin.
 - **Gerçek veri ve kalibrasyon:**
   - Arduino'dan gelen ölçümler itki grafiğinde **beyaz noktalar** olarak görünür.
@@ -104,3 +110,5 @@ Hepsi `vendor/` klasöründedir; sayfa internetsiz çalışır.
 | Kütüphane | Sürüm | Görevi | Lisans |
 |---|---|---|---|
 | [three.js](https://threejs.org) | r149 | 3D sahne | MIT |
+| [SheetJS](https://sheetjs.com) | 0.20.3 | Excel (.xlsx) üretimi | Apache 2.0 |
+| [docx](https://docx.js.org) | 9.5.1 | Word (.docx) üretimi | MIT |

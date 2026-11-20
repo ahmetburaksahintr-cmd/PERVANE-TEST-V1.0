@@ -82,6 +82,7 @@
         <button class="btn primary" id="rampBtn">▶ Otomatik rampa testi</button>
         <button class="btn" id="stopBtn">⏹ Durdur</button>
         <button class="btn" id="resetBtn">🔄 Yeni pervane tak</button>
+        <button class="btn" id="reportBtn">📄 Raporu indir</button>
       </div>
     </section>
   </main>
@@ -132,12 +133,37 @@
     </div>
   </section>
 
+  <!-- Rapor penceresi: pervane kırıldığında açılır -->
+  <div class="modal-bg" id="reportModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rmTitle">
+      <header><h2 id="rmTitle">💥 Pervane kırıldı!</h2><button class="icon" id="rmClose" aria-label="Kapat">✕</button></header>
+      <div class="rm-body">
+        <div class="rm-top">
+          <img id="rmShot" alt="Test anının 3D görüntüsü">
+          <div id="rmStats" class="rm-stats"></div>
+        </div>
+        <p class="rm-q">Bu testin verisini dosya olarak <b>indirmek ister misiniz?</b></p>
+        <div class="rm-choices">
+          <button class="choice rec" data-fmt="xlsx"><span>📊</span><b>Excel (.xlsx)</b><small>Saniyede 10 satır ölçüm verisi, özet ve karşılaştırma sayfaları. Grafik çizmek için ideal.</small><em>Önerilen</em></button>
+          <button class="choice" data-fmt="docx"><span>📝</span><b>Word raporu (.docx)</b><small>Grafikli ve 3D görüntülü hazır rapor. Bilim fuarı dosyası için.</small></button>
+          <button class="choice" data-fmt="both"><span>📦</span><b>İkisi de</b><small>Excel verisi + Word raporu</small></button>
+        </div>
+        <label class="check small"><input type="checkbox" id="rmMute"> Bu oturumda pervane kırılınca bir daha sorma</label>
+      </div>
+      <footer><button class="btn ghost" id="rmNo">Hayır, teşekkürler</button></footer>
+    </div>
+  </div>
+  <div id="toasts"></div>
+
   <script src="vendor/three.min.js"></script>
+  <script src="vendor/xlsx.full.min.js"></script>
+  <script src="vendor/docx.umd.js"></script>
   <script src="js/version.js"></script>
   <script src="js/materials.js"></script>
   <script src="js/physics.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/scene.js"></script>
+  <script src="js/report.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

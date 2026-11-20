@@ -303,6 +303,12 @@ const Scene3D = {
     return out.copy(this._solid).lerp(new THREE.Color(0xffffff), 0.06 * (1 - t));
   },
 
+  /** Rapor için 3D görüntünün anlık PNG'si */
+  snapshot() {
+    this.renderer.render(this.scene, this.camera);
+    return this.renderer.domElement.toDataURL("image/png");
+  },
+
   /**
    * Kanatları büker ve renklendirir.
    * tipDeflMm : uç sehimi (mm, abartma uygulanmış)

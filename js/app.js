@@ -12,7 +12,7 @@ const S = {
   throttle: 0, rpm: 0, plastic: 0, broken: false, bentLogged: false, warnLogged: false, yieldLogged: false,
   ramp: null, seq: null, history: [], measured: [], lastEval: null, t0: performance.now(),
   sound: false, results: {},
-  colorKey: "mat", customHex: "#ff6b00", simT: 0, lastRecT: -1
+  colorKey: "mat", customHex: "#ff6b00", simT: 0, lastRecT: -1, muteReport: false, seqRecords: [], breakShot: null, logLines: []
 };
 
 const mat = () => MATERIALS[S.matKey];
@@ -52,6 +52,17 @@ function init() {
   }).join("");
   $("#colorList").onclick = (e) => { const b = e.target.closest(".swatch"); if (b) selectColor(b.dataset.k); };
   $("#customColor").oninput = (e) => { S.customHex = e.target.value; selectColor("custom"); };
+
+  // Rapor
+  $("#reportBtn").onclick = () => {
+    if (!S.history.length) { toast("Önce bir test yap (gazı aç veya rampa testini başlat).", "warn"); return; }
+    openReportModal(buildRecord(), "📄 Test raporu");
+  };
+  $("#rmClose").onclick = $("#rmNo").onclick = closeReportModal;
+  $("#reportModal").addEventListener("mousedown", (e) => { if (e.target.id === "reportModal") closeReportModal(); });
+  document.querySelectorAll("#reportModal .choice").forEach((b) => (b.onclick = () => exportReport(b.dataset.fmt)));
+  $("#rmMute").onchange = (e) => { S.muteReport = e.target.checked; };
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeReportModal(); });
 
   $("#rampBtn").onclick = () => startRamp();
   $("#stopBtn").onclick = () => { stopRamp(); S.seq = null; S.throttle = 0; syncInputs(); };
@@ -99,7 +110,7 @@ function newProp(logMsg) {
   S.broken = false; S.plastic = 0; S.rpm = Math.min(S.rpm, 0); S.history = [];
   S.warnLogged = S.yieldLogged = S.bentLogged = false;
   Scene3D.buildProp(S.prop, mat(), colorSpec());
-  S.simT = 0; S.lastRecT = -1;
+  S.simT = 0; S.lastRecT = -1; S.breakShot = null; S.breakInfo = null;
   updateLegend();
   if (logMsg) log(logMsg, "info");
   refreshCompare();
@@ -137,6 +148,7 @@ function finishRamp() {
   log(`Test bitti: en yüksek ${fmt(peak.thrust)} g itki @ ${fmt(peak.rpm)} devir${S.broken ? " — pervane KIRILDI" : ""}`, S.broken ? "bad" : "ok");
   S.ramp = null;
   S.throttle = 0;
+  if (S.seq) S.seqRecords.push(buildRecord({ withImages: false }));
   if (done) done();
 }
 
@@ -144,9 +156,17 @@ function finishRamp() {
 function startSequence() {
   const keys = Object.keys(MATERIALS);
   S.seq = { i: 0, keys };
+  S.seqRecords = [];
   const next = () => {
     if (!S.seq) return;
-    if (S.seq.i >= keys.length) { log("Tüm malzemeler test edildi ✔", "ok"); S.seq = null; return; }
+    if (S.seq.i >= keys.length) {
+      log("Tüm malzemeler test edildi ✔", "ok");
+      S.seq = null;
+      const rec = buildRecord();
+      rec.sequence = S.seqRecords.slice();
+      openReportModal(rec, "🏁 Tüm malzemeler test edildi");
+      return;
+    }
     selectMaterial(keys[S.seq.i]);
     S.seq.i++;
     setTimeout(() => startRamp(next), 700);
@@ -181,7 +201,7 @@ function loop(now) {
   Scene3D.deform(S.broken ? 0 : visDefl, stressRatio, S.plastic * S.exag, S.heat);
   Scene3D.frame(dt, S.rpm, ev.thrustG / 1500);
 
-  // Ölçüm kaydı: simülasyon zamanıyla saniyede 10 satır (grafikler)
+  // Ölçüm kaydı: simülasyon zamanıyla saniyede 10 satır (grafikler + Excel)
   S.simT += dt;
   if (S.rpm > 200 && S.simT - S.lastRecT >= 0.1) { S.lastRecT = S.simT; recordPoint(ev, realDefl); }
   updateHud(ev, realDefl);
@@ -208,8 +228,12 @@ function checkEvents(ev) {
   if (ev.sigma >= ev.strength) {
     S.broken = true;
     S.throttle = 0;
+    S.breakInfo = { rpm: ev.rpm, thrust: ev.thrustG, stress: ev.sigma / 1e6, strength: ev.strength / 1e6 };
     recordPoint(ev, ev.delta * 1000, "KIRILDI");
     Scene3D.breakBlade(ev.rpm);
+    // Kırılma anının görüntüsü (parçalar havadayken) ve indirme sorusu
+    setTimeout(() => { S.breakShot = { url: Scene3D.snapshot(), w: Scene3D.renderer.domElement.width, h: Scene3D.renderer.domElement.height }; }, 350);
+    if (!S.seq && !S.muteReport) setTimeout(() => { if (S.broken) openReportModal(buildRecord(), "💥 Pervane kırıldı!"); }, 1600);
     log(`💥 ${fmt(ev.rpm)} devir: KIRILMA — kök gerilmesi ${fmt(ev.sigma / 1e6, 1)} MPa ≥ dayanım ${fmt(ev.strength / 1e6, 1)} MPa`, "bad");
     syncInputs();
   }
@@ -396,6 +420,8 @@ function log(msg, type = "info") {
   const li = document.createElement("li");
   li.className = type;
   li.innerHTML = `<span>${t} s</span>${msg}`;
+  S.logLines.push(`${t} s – ${msg.replace(/<[^>]+>/g, "")}`);
+  if (S.logLines.length > 200) S.logLines.shift();
   const ol = $("#log");
   ol.prepend(li);
   while (ol.children.length > 60) ol.lastChild.remove();
@@ -472,5 +498,75 @@ function recordPoint(ev, realDefl, forceState) {
   if (S.history.length > 4000) S.history.shift();
 }
 
+/* ---------------- Rapor ---------------- */
+function buildRecord(opts = {}) {
+  const h = S.history;
+  const peak = h.reduce((a, p) => (p.thrust > a.thrust ? p : a), { thrust: 0, rpm: 0 });
+  const ev = S.lastEval;
+  const rec = {
+    date: new Date(), material: mat(), colorName: colorName(), motor: motor(), prop: { ...S.prop }, tempC: S.tempC,
+    ctScale: S.prop.ctScale || 1, mass: ev ? ev.mass : 0, strength: ev ? ev.strength / 1e6 : 0,
+    broken: S.broken, breakRpm: S.breakInfo && S.breakInfo.rpm, breakThrust: S.breakInfo && S.breakInfo.thrust,
+    breakStress: S.breakInfo && S.breakInfo.stress,
+    maxThrust: peak.thrust, maxThrustRpm: peak.rpm,
+    maxStressPct: h.reduce((a, p) => Math.max(a, p.stressPct), 0),
+    maxDefl: h.reduce((a, p) => Math.max(a, p.defl), 0), plastic: S.plastic,
+    duration: h.length ? h[h.length - 1].t : 0, history: h.slice(),
+    log: S.logLines.slice().reverse(),
+    compare: (S.compareRows || []).map(({ m, s }) => ({ name: m.name, brittle: m.brittle, mass: s.mass, warnRpm: Math.round(s.warnRpm || 0) || null,
+      bendRpm: Math.round(s.bendRpm || 0) || null, yieldRpm: Math.round(s.yieldRpm || 0) || null, breakRpm: Math.round(s.breakRpm || 0) || null, bestThrust: s.bestThrust }))
+  };
+  if (opts.withImages !== false) {
+    rec.snapshot = S.breakShot;
+    rec.charts = { thrust: canvasToImage($("#cThrust")), stress: canvasToImage($("#cStress")), defl: canvasToImage($("#cDefl")) };
+  }
+  return rec;
+}
+
+let currentRecord = null;
+async function openReportModal(rec, title) {
+  currentRecord = rec;
+  if (!rec.snapshot) { const c = Scene3D.renderer.domElement; rec.snapshot = { url: Scene3D.snapshot(), w: c.width, h: c.height }; }
+  rec.snapshot = await imageUrlOnBg(rec.snapshot.url, rec.snapshot.w, rec.snapshot.h);
+  $("#rmTitle").textContent = title;
+  $("#rmShot").src = rec.snapshot.url;
+  const st = (k, v, cls = "") => "<div><small>" + k + "</small><b class=\"" + cls + "\">" + v + "</b></div>";
+  $("#rmStats").innerHTML = [
+    st("Pervane", rec.material.name + " · " + rec.colorName),
+    rec.broken ? st("Kırılma devri", fmt(rec.breakRpm) + " dev/dk", "bad") : st("Sonuç", rec.plastic > 0.05 ? "Kalıcı bükülme" : "Hasarsız", rec.plastic > 0.05 ? "warn" : "good"),
+    rec.broken ? st("Kırılma anındaki itki", fmt(rec.breakThrust) + " g") : st("En yüksek gerilme", "%" + fmt(rec.maxStressPct)),
+    rec.broken ? st("Kök gerilmesi", fmt(rec.breakStress, 1) + " / " + fmt(rec.strength, 1) + " MPa", "bad") : st("En büyük bükülme", fmt(rec.maxDefl, 2) + " mm"),
+    st("En yüksek itki", fmt(rec.maxThrust) + " g @ " + fmt(rec.maxThrustRpm)),
+    st("Kayıt", fmt(rec.history.length) + " satır · " + fmt(rec.duration, 1) + " s"),
+    rec.sequence ? st("Sıralı test", rec.sequence.length + " malzeme") : ""
+  ].join("");
+  $("#rmMute").checked = S.muteReport;
+  $("#reportModal").hidden = false;
+  setTimeout(() => $("#reportModal .choice.rec").focus(), 50);
+}
+function closeReportModal() { $("#reportModal").hidden = true; }
+async function exportReport(fmtKey) {
+  const rec = currentRecord;
+  if (!rec) return;
+  try {
+    if (fmtKey === "xlsx" || fmtKey === "both") { Report.excel(rec); toast("📊 Excel dosyası indirildi", "ok"); }
+    if (fmtKey === "docx" || fmtKey === "both") { toast("📝 Word raporu hazırlanıyor…"); await Report.word(rec); toast("📝 Word raporu indirildi", "ok"); }
+    log("Rapor indirildi (" + (fmtKey === "both" ? "Excel + Word" : fmtKey === "xlsx" ? "Excel" : "Word") + ")", "ok");
+    closeReportModal();
+  } catch (err) {
+    console.error(err);
+    toast("Dosya oluşturulamadı: " + err.message, "bad");
+  }
+}
+
+/* ---------------- Bildirim ---------------- */
+function toast(msg, type = "info") {
+  const el = document.createElement("div");
+  el.className = "toast " + type;
+  el.textContent = msg;
+  $("#toasts").appendChild(el);
+  requestAnimationFrame(() => el.classList.add("show"));
+  setTimeout(() => { el.classList.remove("show"); setTimeout(() => el.remove(), 300); }, 3200);
+}
 
 document.addEventListener("DOMContentLoaded", init);
