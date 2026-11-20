@@ -61,7 +61,7 @@ const MOTORS = {
   dji2306: { name: "DJI FPV motoru · 2306 sınıfı · ~1900KV* · 6S", kv: 1900, cells: 6, pmax: 780, imax: 38, mass: 34, propIn: 5.3, stator: 23,
     label: " ", bell: 0x26282c, estimated: "DJI, DJI FPV motorunun stator ölçüsünü ve KV değerini açıklamamıştır; 2306 sınıfı ve ~1900KV, 6S 5\" sınıfına göre tahmindir." },
   djiAvata2: { name: "DJI Avata 2 motoru · ~1505 sınıfı · ~3600KV* · 14,76 V", kv: 3600, cells: 4, pmax: 150, imax: 12, mass: 14, propIn: 2.98, stator: 15,
-    label: "DJI AVATA 2", bell: 0x3f444b, estimated: "DJI, Avata 2 motorunun stator ölçüsünü, KV değerini, gücünü ve akımını açıklamamıştır; ~1505 sınıfı, ~3600KV, 150 W ve 12 A, 3\" kanallı dronlar için tahmindir. Hücre sayısı da yayımlanmamıştır; 14,76 V standart gerilim 4 hücreye karşılık gelir." },
+    label: " ", bell: 0x141518, estimated: "DJI, Avata 2 motorunun stator ölçüsünü, KV değerini, gücünü ve akımını açıklamamıştır; ~1505 sınıfı, ~3600KV, 150 W ve 12 A, 3\" kanallı dronlar için tahmindir. Hücre sayısı da yayımlanmamıştır; 14,76 V standart gerilim 4 hücreye karşılık gelir." },
   // iFlight XING2 2207 1750KV: 12N14P, 30,5 g (kablolu), tepe 36,03 A, 898 W (üretici değerleri)
   xing2207: { name: "iFlight XING2 2207 · 1750KV · 6S", kv: 1750, cells: 6, pmax: 898, imax: 36, mass: 30.5, propIn: 5.1, stator: 22, label: "XING2  2207  1750KV", bell: 0x111827 },
   // iFlight XING2 2809 1250KV: 12N14P, 60,7 g (kablolu), tepe 50 A, 1145 W (üretici değerleri)
@@ -100,12 +100,12 @@ const DRONES = {
     note: "Resmî değerler: kalkış ağırlığı ~795 g (batarya ve pervaneler dahil), köşegen 245 mm, en yüksek hız 140 km/sa, uçuş süresi ~20 dk. Motor KV değeri DJI tarafından açıklanmadığı için tahminidir (*)."
   },
   avata2: {
-    brand: "DJI", name: "DJI Avata 2 (2024)", short: "DJI Avata 2", style: "whoop", body: "avata",
-    motorKey: "djiAvata2", layout: { x: 50, z: 64 }, heightMm: 64,
+    brand: "DJI", name: "DJI Avata 2 (2024)", short: "DJI Avata 2", style: "avata",
+    motorKey: "djiAvata2", layout: { x: 46, z: 62 },
     prop: { diameterIn: 2.98, pitchIn: 3.2, chordMm: 10, thickMm: 1.6, blades: 3 }, propName: "DJI Avata 2 pervanesi 3032S · 75,66 mm · 3 kanat",
-    wheelbaseMm: 162, massG: 370, battery: "DJI Avata 2 akıllı batarya · 2150 mAh · 14,76 V Li-ion · 145 g", frame: 0x4a4e55,
+    wheelbaseMm: 154, massG: 370, battery: "DJI Avata 2 akıllı batarya · 2150 mAh · 14,76 V Li-ion · 145 g", frame: 0x4a4e55,
     parts: "Pervane korumalarıyla tek parça gövde · 185 × 212 × 64 mm · 4 × DJI Avata 2 motoru · 3032S üç kanatlı pervane (75,66 mm) · tek eksenli gimbal, 1/1,3\" sensör, 155° FOV · O4 görüntü aktarımı · alt ve arka görüş sensörleri, alt ToF",
-    note: "Resmî değerler: kalkış ağırlığı ~377 g, ölçüler 185 × 212 × 64 mm, en yüksek hız 27 m/sn (manuel mod), uçuş süresi ~23 dk. DJI motor değerlerini, pervane hatvesini ve motorlar arası mesafeyi yayımlamamıştır: motor (*), hatve (3032S adından 3,2\") ve 162 mm köşegen (dış ölçülerden) tahminidir. Kanat sayısı ve gövde rengi incelemelere dayanır."
+    note: "Resmî değerler: kalkış ağırlığı ~377 g, ölçüler 185 × 212 × 64 mm, en yüksek hız 27 m/sn (manuel mod), uçuş süresi ~23 dk. DJI motor değerlerini, pervane hatvesini ve motorlar arası mesafeyi yayımlamamıştır: motor (*), hatve (3032S adından 3,2\") ve 154 mm köşegen (üstten çekilmiş fotoğraftan ölçülerek) tahminidir. Kanat sayısı ve gövde rengi incelemelere dayanır."
   },
   pavo35: {
     brand: "BETAFPV", name: "BETAFPV Pavo35 · 3,5\" cinewhoop", short: "Pavo35", style: "whoop",

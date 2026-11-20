@@ -1,5 +1,15 @@
 # Sürüm geçmişi
 
+## 1.19.0 — 2026-11-21
+DJI Avata 2 gerçek fotoğraflarına göre baştan çizildi
+- Koruma artık uzun kanal duvarı değil: gövdenin yanlarına ve birbirine yapışık, aşağı doğru genişleyen dört halka
+- Dar ve uzun gövde halkaların üstünde; üstünde girintili panel, durum ışığı ve "dji" logosu
+- Burunda açık yuvada gimbal kamera, iki yanında dikey turuncu şerit
+- Batarya arkada: yanlarında tırtıllı, turuncu çizgili çıkarma düğmeleri; arka yüzde güç düğmesi ve 4 seviye ışığı
+- Alt arkada "AVATA 2" yazısı (2 turuncu), altta soğutuculu karın ve görüş sensörleri
+- Motorlar altta ince kolların ucundaki yuvalarda; pervane göbeklerinde iki vida, iki göbekte turuncu nokta
+- Motor yerleşimi üstten çekilmiş fotoğraftan ölçüldü (köşegen yaklaşık 154 mm, tahmini olarak işaretli)
+
 ## 1.18.0 — 2026-11-21
 DJI FPV gerçek fotoğraflarına göre baştan çizildi
 - Gövde öne doğru yükseliyor: arkada batarya yere yakın, önde kamera yukarıda; üstte parlak füme kubbe ve 6 yarıklı hava girişi
