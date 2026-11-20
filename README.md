@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.12.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.13.0
 
-> **Güncel sürüm: v1.12.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.13.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.12.0** | 2026-11-20 | Çalışma alanı: yeşil kesim matı ve daha canlı sahne |
+| **v1.13.0** | 2026-11-20 | Test standı: ESC, gerçekçi kablolar, kontrol kartı ve bakış açısı düğmesi |
+| v1.12.0 | 2026-11-20 | Çalışma alanı: yeşil kesim matı ve daha canlı sahne |
 | v1.11.0 | 2026-11-20 | Yeni drone modelleri: DJI Avata 2, iFlight Nazgul Evoque F5X V2 ve Chimera7 Pro V2 |
 | v1.10.0 | 2026-11-20 | Yeni drone modelleri: GEPRC CineLog35 V2 ve Happymodel Mobula7 1S |
 | v1.9.0 | 2026-11-20 | Kanat sayısı sayfadan Arduino'ya gönderiliyor |
@@ -39,7 +40,7 @@ Proje iki parçadan oluşur:
 ## Neler yapabilirsin?
 - **6 malzeme:** PLA, PETG, ABS, ASA, Karbon fiber naylon (PA-CF) ve TPU 95A.
 - **İki test düzeneği:** Sol menünün en üstünden seçilir.
-  - 🔧 **Test standı:** Tek motor, yük hücresiyle itki ölçümü (gerçek Arduino düzeneğinin dijital ikizi).
+  - 🔧 **Test standı:** Tek motor, yük hücresiyle itki ölçümü (gerçek Arduino düzeneğinin dijital ikizi). Motorun üç faz kablosu ESC'ye, ESC de bataryaya ve kontrol kartına bağlı görünür (fırçasız motorda üç, fırçalı motorda iki kablo olur). Sahnenin sağ üstündeki **🎥 Bakış** düğmesi serbest bakış ile yandan (motor hizasından) bakış arasında geçiş yapar.
   - 🛸 **FPV drone:** Seçilen drone pede iplerle bağlıdır (tether). Gaz açılıp itki ağırlığı geçince kalkar ve ipler gerilir. Dört pervanenin ikisi saat yönünde, ikisi ters döner. Gösterge, 4 pervanenin toplam itkisini, itki/ağırlık oranını ve toplam akımı gösterir. Bir pervane kırılınca hangi motorun pervanesinin koptuğu yazılır; drone o köşeye yatar, savrulur ve pede düşer. Raporlara drone bilgileri de eklenir.
 - **Drone modelleri (gerçek parçalarla):** Motorların çanında gerçekteki gibi model ve KV yazar; motor boyutu stator çapına göre ölçeklenir.
 

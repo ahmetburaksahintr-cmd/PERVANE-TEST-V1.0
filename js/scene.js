@@ -61,12 +61,31 @@ const Scene3D = {
     this.scene.add(this.rig);
     if (mode === "drone") this.buildDrone(drone);
     else this.buildStand();
-    // Kamera ön ayarı
-    Object.assign(this.orbit, mode === "drone"
-      ? { theta: 0.62, phi: 0.98, dist: Math.max(110, this.droneSpan * 2.7) }
-      : { theta: 0.75, phi: 1.05, dist: 330 });
-    this.orbit.target.set(0, mode === "drone" ? this.droneTargetY : 60, 0);
-    this.updateCamera();
+    // Kamera ön ayarları: "free" (serbest, çapraz) ve "side" (yandan, motor hizasından)
+    const dd = mode === "drone" ? Math.max(110, this.droneSpan * 2.7) : 0;
+    this.views = mode === "drone"
+      ? { free: { theta: 0.62, phi: 0.98, dist: dd, target: [0, this.droneTargetY, 0] },
+          side: { theta: 0, phi: 1.42, dist: dd * 0.9, target: [0, this.droneTargetY, 0] } }
+      : { free: { theta: 0.75, phi: 1.05, dist: 330, target: [0, 60, 0] },
+          side: { theta: 0, phi: 1.3, dist: 340, target: [25, 52, 20] } };
+    this.setView(this.viewName || "free", true);
+  },
+
+  /** Bakış açısını değiştirir; instant değilse kamera yumuşakça kayar */
+  setView(name, instant) {
+    this.viewName = this.views[name] ? name : "free";
+    const v = this.views[this.viewName];
+    if (instant) {
+      Object.assign(this.orbit, { theta: v.theta, phi: v.phi, dist: v.dist });
+      this.orbit.target.set(v.target[0], v.target[1], v.target[2]);
+      this.viewAnim = null;
+      this.updateCamera();
+    } else {
+      // En kısa yoldan dönsün diye açı farkı −π..π aralığına alınır
+      const o = this.orbit;
+      o.theta = v.theta + Math.atan2(Math.sin(o.theta - v.theta), Math.cos(o.theta - v.theta));
+      this.viewAnim = v;
+    }
   },
 
   /* ---------- Zemin: çalışma masası üzerinde yeşil kesim matı ---------- */
@@ -104,7 +123,7 @@ const Scene3D = {
   bindControls() {
     const el = this.renderer.domElement;
     let drag = null;
-    el.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY }; el.setPointerCapture(e.pointerId); });
+    el.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY }; el.setPointerCapture(e.pointerId); this.viewAnim = null; });
     el.addEventListener("pointerup", () => (drag = null));
     el.addEventListener("pointermove", (e) => {
       if (!drag) return;
@@ -115,6 +134,7 @@ const Scene3D = {
     });
     el.addEventListener("wheel", (e) => {
       e.preventDefault();
+      this.viewAnim = null;
       this.orbit.dist = Math.min(900, Math.max(40, this.orbit.dist * (1 + Math.sign(e.deltaY) * 0.08)));
       this.updateCamera();
     }, { passive: false });
@@ -167,6 +187,77 @@ const Scene3D = {
     unit.group.position.set(30, 94, 0);
     scene.add(unit.group);
     this.units.push(Object.assign(unit, { dir: 1, home: unit.group.position.clone() }));
+    this.buildElectronics(scene);
+  },
+
+  /* ---------- Test standı elektroniği: ESC, faz kabloları, batarya, kontrol kartı ----------
+     Fırçasız motorun ÜÇ faz kablosu vardır (fırçalı motorda iki kablo olur); ESC bu üç fazı sırayla besler.
+     Güç: batarya → (kırmızı +, siyah −) → ESC.  Sinyal: kontrol kartı → (3'lü ince kablo) → ESC. */
+  buildElectronics(scene) {
+    const M = (color, o) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.55, metalness: 0.1 }, o || {}));
+    const gold = M(0xd4a72c, { metalness: 0.9, roughness: 0.25 });
+    const black = M(0x0b0d12), silver = M(0xcbd5e1, { metalness: 0.9, roughness: 0.25 });
+    const wire = (pts, r, color) => {
+      const curve = new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(p[0], p[1], p[2])));
+      const m = new THREE.Mesh(new THREE.TubeGeometry(curve, 40, r, 8, false), M(color, { roughness: 0.6 }));
+      m.castShadow = true;
+      scene.add(m);
+      return curve;
+    };
+    const box = (w, h, d, mat, x, y, z, parent) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.castShadow = true; (parent || scene).add(m); return m; };
+
+    // ESC (elektronik hız kontrolcüsü): taban plakasının üstünde, ısıyla daralan kılıf içinde
+    box(46, 9, 24, M(0x1e293b), 23, 12.5, 30);
+    box(26, 9.4, 24.4, M(0xf59e0b), 23, 12.5, 30);                       // etiket bandı
+    const escText = makeFlatText("ESC", "#111827", 16);
+    escText.position.set(23, 17.4, 30);
+    scene.add(escText);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.2, 14, 20), M(0x1d4ed8, { metalness: 0.4 }));   // giriş kondansatörü
+    cap.rotation.x = Math.PI / 2;
+    cap.position.set(41, 13, 45);
+    scene.add(cap);
+    // Üç faz kablosu: motor → altın fiş → ESC
+    const phase = [0xfacc15, 0x2563eb, 0x111827];
+    phase.forEach((c, i) => {
+      const z = 24 + i * 6;
+      const curve = wire([[24 + i * 6, 96, 13], [14 + i * 4, 78, 27], [-10, 44, z], [-9, 17, z], [0, 12.5, z]], 1.25, c);
+      const p = curve.getPoint(0.55), t = curve.getTangent(0.55);
+      const plug = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 1.9, 9, 12), gold);
+      plug.position.copy(p);
+      plug.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), t);
+      scene.add(plug);
+    });
+    // Batarya (6S LiPo) ve güç kabloları: kırmızı (+), siyah (−), XT60 fiş
+    box(36, 28, 78, M(0x1f2937), 122, 14.5, 20);
+    box(36.4, 28.4, 46, M(0xfacc15), 122, 14.5, 24);
+    box(36.8, 29, 9, M(0xdc2626), 122, 14.5, -8);
+    box(9, 8, 16, M(0xeab308), 99.5, 14, 20);                             // XT60
+    wire([[46, 12.5, 27], [66, 17, 31], [84, 13, 27], [95, 14, 23.5]], 1.9, 0xdc2626);
+    wire([[46, 12.5, 33], [66, 15, 38], [86, 11, 30], [95, 14, 16.5]], 1.9, 0x111827);
+    // Kontrol kartı (Arduino): matın üstünde, kameraya doğru eğik sehpada
+    const board = new THREE.Group();
+    board.position.set(-52, 20, 84);
+    board.rotation.x = 0.6;
+    scene.add(board);
+    box(70, 1.6, 54, M(0x0e7490), 0, 0, 0, board);                        // devre kartı
+    box(36, 3.2, 9, black, 4, 2.4, 6, board);                             // işlemci
+    box(13, 11, 16, silver, -30, 6, -14, board);                          // USB girişi
+    box(9, 10, 12, black, -30, 5.5, 12, board);                           // güç girişi
+    for (const z of [-24.5, 24.5]) box(48, 8, 2.6, black, 6, 4.5, z, board);   // pin sıraları
+    box(3, 1.6, 2, new THREE.MeshBasicMaterial({ color: 0x22c55e }), 26, 1.6, -8, board);   // güç ışığı
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 9, 24), M(0x334155));        // gaz potansiyometresi
+    pot.position.set(22, 5, 8);
+    board.add(pot);
+    const knob = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 9), M(0xf8fafc));
+    knob.position.set(22, 10, 5.5);
+    board.add(knob);
+    box(74, 20, 6, M(0x334155), -52, 9.5, 62);                            // sehpa
+    // Sinyal kablosu (beyaz sinyal, kırmızı 5 V, siyah GND): ESC → kontrol kartı
+    [0xf8fafc, 0xdc2626, 0x111827].forEach((c, i) => {
+      const o = (i - 1) * 1.5;
+      wire([[0, 11, 39 + o], [-14, 9.5, 46 + o], [-28, 16, 56 + o], [-34 + o, 30, 62], [-38 + o, 37, 63]], 0.65, c);
+    });
+    wire([[-82, 19, 88], [-100, 6, 96], [-130, 1.5, 108], [-180, 1.5, 150]], 1.6, 0x475569);   // USB kablosu → bilgisayar
   },
 
   /* ---------- Fırçasız motor (test standında 1, drone'da 4 adet kullanılır) ---------- */
@@ -1026,6 +1117,14 @@ const Scene3D = {
    * extra (drone): { tw } → toplam itki / ağırlık oranı (kalkış ve ip gerginliği için)
    */
   frame(dt, rpm, thrustNorm, extra) {
+    // Bakış açısı geçişi
+    if (this.viewAnim) {
+      const v = this.viewAnim, o = this.orbit, k = Math.min(1, dt * 5);
+      o.theta += (v.theta - o.theta) * k; o.phi += (v.phi - o.phi) * k; o.dist += (v.dist - o.dist) * k;
+      o.target.lerp(new THREE.Vector3(v.target[0], v.target[1], v.target[2]), k);
+      if (Math.abs(v.theta - o.theta) + Math.abs(v.phi - o.phi) < 0.002 && Math.abs(v.dist - o.dist) < 0.5) this.viewAnim = null;
+      this.updateCamera();
+    }
     // Görsel dönüş hızı: gerçek devir ekranda izlenemeyecek kadar yüksek → ölçeklendi
     const visOmega = Math.min(55, (rpm / 60) * 2 * Math.PI * 0.035);
     this.angle += visOmega * dt;

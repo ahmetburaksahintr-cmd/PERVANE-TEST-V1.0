@@ -1,5 +1,14 @@
 # Sürüm geçmişi
 
+## 1.13.0 — 2026-11-20
+Test standı: ESC, gerçekçi kablolar, kontrol kartı ve bakış açısı düğmesi
+- Fırçasız motorun üç faz kablosu (altın fişli) motordan ESC'ye iniyor
+- ESC taban plakasında: etiketli gövde ve giriş kondansatörü
+- 6S batarya, XT60 fiş ve kalın kırmızı/siyah güç kabloları
+- Kontrol kartı (Arduino) eğik sehpada: işlemci, USB, pin sıraları, gaz potansiyometresi; ESC'ye üçlü sinyal kablosu, bilgisayara USB kablosu
+- Yeni "Bakış" düğmesi: serbest bakış ile yandan (motor hizasından) bakış arasında yumuşak geçiş; drone düzeneğinde de çalışır
+- Sürükleyince ya da yakınlaştırınca geçiş durur, kontrol sende kalır
+
 ## 1.12.0 — 2026-11-20
 Çalışma alanı: yeşil kesim matı ve daha canlı sahne
 - Düz koyu zemin yerine ahşap masa üstünde yeşil kesim matı

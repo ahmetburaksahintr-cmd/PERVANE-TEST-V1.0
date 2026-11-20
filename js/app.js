@@ -87,6 +87,12 @@ function init() {
   $("#seqBtn").onclick = startSequence;
   $("#csvOut").onclick = exportCsv;
   $("#soundBtn").onclick = toggleSound;
+  // Bakış açısı: serbest (çapraz) ↔ yandan (motor hizasından)
+  $("#viewBtn").onclick = () => {
+    Scene3D.setView(Scene3D.viewName === "side" ? "free" : "side");
+    $("#viewBtn").textContent = Scene3D.viewName === "side" ? "🎥 Bakış: Yandan" : "🎥 Bakış: Serbest";
+    $("#viewBtn").classList.toggle("on", Scene3D.viewName === "side");
+  };
   $("#csvIn").onchange = importCsv;
   $("#serialBtn").onclick = connectSerial;
   $("#calBtn").onclick = calibrate;
