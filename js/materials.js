@@ -63,7 +63,7 @@ const MOTORS = {
   djiAvata2: { name: "DJI Avata 2 motoru · ~1505 sınıfı · ~3600KV* · 14,76 V", kv: 3600, cells: 4, pmax: 150, imax: 12, mass: 14, propIn: 2.98, stator: 15,
     label: " ", bell: 0x141518, estimated: "DJI, Avata 2 motorunun stator ölçüsünü, KV değerini, gücünü ve akımını açıklamamıştır; ~1505 sınıfı, ~3600KV, 150 W ve 12 A, 3\" kanallı dronlar için tahmindir. Hücre sayısı da yayımlanmamıştır; 14,76 V standart gerilim 4 hücreye karşılık gelir." },
   // iFlight XING2 2207 1750KV: 12N14P, 30,5 g (kablolu), tepe 36,03 A, 898 W (üretici değerleri)
-  xing2207: { name: "iFlight XING2 2207 · 1750KV · 6S", kv: 1750, cells: 6, pmax: 898, imax: 36, mass: 30.5, propIn: 5.1, stator: 22, label: "XING2  2207  1750KV", bell: 0x111827 },
+  xing2207: { name: "iFlight XING2 2207 · 1750KV · 6S", kv: 1750, cells: 6, pmax: 898, imax: 36, mass: 30.5, propIn: 5.1, stator: 22, label: "XING2  2207  1750KV", bell: 0x2b2e34 },
   // iFlight XING2 2809 1250KV: 12N14P, 60,7 g (kablolu), tepe 50 A, 1145 W (üretici değerleri)
   xing2809: { name: "iFlight XING2 2809 · 1250KV · 6S", kv: 1250, cells: 6, pmax: 1145, imax: 50, mass: 60.7, propIn: 7.5, stator: 28, label: "XING2  2809  1250KV", bell: 0x111827 },
   bf2006: { name: "BETAFPV LAVA 2006 · 2400KV · 6S", kv: 2400, cells: 6, pmax: 330, imax: 26, mass: 22, propIn: 3.5, stator: 20, label: "LAVA  2006  2400KV", bell: 0x6b7078, ring: 0xf97316 },
@@ -150,12 +150,13 @@ const DRONES = {
     note: "İki kanatlı pervane kullanan 1S tiny whoop. Resmî ağırlık 24 g (bataryasız), ölçüler 99 × 99 × 40 mm; 1S 450 mAh batarya ile ~37 g. Çizim üreticinin ürün fotoğrafındaki yarı saydam füme şase ve delikli siyah kanopiye göredir (şase saydam beyaz olarak da satılır)."
   },
   evoqueF5: {
-    brand: "iFlight", name: "iFlight Nazgul Evoque F5X V2 · 6S HD (DJI O3)", short: "Nazgul Evoque F5", style: "freestyle",
-    motorKey: "xing2207", layout: { x: 70, z: 88 }, armMm: 6, sidePanels: 0x334155,
+    brand: "iFlight", name: "iFlight Nazgul Evoque F5X V2 · 6S HD (DJI O3)", short: "Nazgul Evoque F5", style: "iflight",
+    iflight: { accent: 0x39e75f, front: 83, rear: -105, w: 38, ant: "stubby", dipole: "rear", dipoleSpan: 116, top: "hex", batt: [77, 39, 44], battText: ["FULLSEND", "6S 1550mAh", "150C"] },
+    motorKey: "xing2207", layout: { x: 72, z: 86 },
     prop: { diameterIn: 5.1, pitchIn: 3.5, chordMm: 13, thickMm: 2.4, blades: 3 }, propName: "iFlight Nazgul F5 · 5,1\" · 3 kanat",
-    wheelbaseMm: 225, massG: 670, battery: "6S 1550 mAh LiPo (XT60) · iFlight Fullsend, 253 g", accent: 0x38bdf8,
-    parts: "225 mm \"squashed X\" şase, 6 mm kollar, ışıklı yan paneller · 4 × XING2 2207 1750KV · BLITZ Mini F722 + BLITZ Mini E55 4'ü 1 arada ESC · DJI O3 hava ünitesi · Nazgul F5 üç kanatlı pervane",
-    note: "5\" freestyle dronu. Ağırlık 433 g (bataryasız), ölçüler 172 × 145 × 36 mm, en yüksek hız 190 km/sa. iFlight O3 sürümünün sayfasını kaldırdığı için ağırlık satıcı listelerinden alındı; motor, pervane, şase ve batarya değerleri iFlight'ın kendi sayfalarındandır. Motorların şase üzerindeki tam konumu yayımlanmadığından çizimdeki yerleşim yaklaşıktır."
+    wheelbaseMm: 225, massG: 670, battery: "6S 1550 mAh LiPo (XT60) · iFlight Fullsend, 253 g",
+    parts: "225 mm \"squashed X\" karbon şase, 6 mm kollar, yeşil ışıklı yan paneller, motorların altında yeşil TPU koruyucular · 4 × XING2 2207 1750KV · BLITZ Mini F722 + BLITZ Mini E55 4'ü 1 arada ESC · DJI O3 hava ünitesi · Nazgul F5 üç kanatlı pervane",
+    note: "5\" freestyle dronu. Ağırlık 433 g (bataryasız), ölçüler 172 × 145 × 36 mm, en yüksek hız 190 km/sa. iFlight O3 sürümünün sayfasını kaldırdığı için ağırlık satıcı listelerinden alındı; motor, pervane, şase ve batarya değerleri iFlight'ın kendi sayfalarındandır. Motor yerleşimi üreticinin üstten görünüş çiziminden ölçülmüştür; batarya ve kayışların görünüşü ise geneldir."
   },
   chimera7: {
     brand: "iFlight", name: "iFlight Chimera7 Pro V2 · 7,5\" uzun menzil (DJI O3)", short: "Chimera7 Pro V2", style: "freestyle",

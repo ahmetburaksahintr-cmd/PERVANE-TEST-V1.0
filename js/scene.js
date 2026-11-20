@@ -478,7 +478,7 @@ const Scene3D = {
     this.rig.add(body);
     this.droneLeds = [];
     const ctx = { d, R, s, pos, rM, motor };
-    const style = { dji: this.styleDji, avata: this.styleAvata, whoop: this.styleWhoop, cine: this.styleCine, tiny: this.styleTiny }[d.style] || this.styleFreestyle;
+    const style = { dji: this.styleDji, avata: this.styleAvata, whoop: this.styleWhoop, cine: this.styleCine, tiny: this.styleTiny, iflight: this.styleIflight }[d.style] || this.styleFreestyle;
     const info = style.call(this, body, ctx);
     this.droneBaseY = info.baseY;
     this.droneTargetY = info.baseY + info.topY * 0.6;
@@ -1002,6 +1002,154 @@ const Scene3D = {
           if (u.dir === 1) { u.markA = true; u.markColor = 0xff7a1a; }
         }
       }
+    };
+  },
+
+  /**
+   * iFlight karbon şaseler (resmî ürün görsellerine göre; yer = y 0, ön = +x). Ayarlar d.iflight içinde:
+   *  · Uzun, dar, kapalı gövde: alt plaka + ışıklı yan paneller + oyuklu karbon üst plaka
+   *  · 6 mm karbon kollar; her motorun altında renkli TPU koruyucu (aynı zamanda ayak)
+   *  · Burunda köşeli siyah TPU kamera kafesi, üstünde GoPro tipi iki dişli bağlantı
+   *  · Üstte kaymaz ped ve iki kayışla bağlı batarya; arkada XT60
+   *  · Nazgul Evoque F5X V2: yeşil vurgular, arkada V biçiminde iki kısa silindir anten ve yatay T anten
+   *  · Chimera7 Pro V2: kırmızı vurgular, öne açılan "deadcat" kollar, arkada altıgen başlı iki uzun anten,
+   *    kırmızı braketli dik kamçı anten, burunda yatay T anten, kuyrukta GPS modülü
+   */
+  styleIflight(body, { d, pos }) {
+    const C = (h) => new THREE.Color(h).convertSRGBToLinear();
+    const M = (color, o) => new THREE.MeshStandardMaterial(Object.assign({ color: C(color), metalness: 0.15, roughness: 0.6 }, o || {}));
+    const cfg = d.iflight || {}, accent = cfg.accent != null ? cfg.accent : 0x39e75f;
+    const black = M(0x0d0e11, { metalness: 0.25, roughness: 0.5 }), tpu = M(accent, { roughness: 0.75 }), darkTpu = M(0x17181c, { roughness: 0.8 });
+    const glow = () => new THREE.MeshBasicMaterial({ color: accent, transparent: true });
+    const carbon = (wMm, dMm) => {
+      const t = carbonTexture().clone();
+      t.wrapS = t.wrapT = THREE.RepeatWrapping;
+      t.repeat.set(Math.max(1, wMm / 12), Math.max(1, dMm / 12));
+      t.needsUpdate = true;
+      return new THREE.MeshStandardMaterial({ map: t, metalness: 0.35, roughness: 0.38 });
+    };
+    const add = (mesh, x, y, z) => { mesh.position.set(x, y, z); body.add(mesh); return mesh; };
+    const box = (w, h, dp, mat, x, y, z) => add(new THREE.Mesh(new THREE.BoxGeometry(w, h, dp), mat), x, y, z);
+    const cyl = (r, len, mat, x, y, z, axis) => {
+      const m = add(new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 24), mat), x, y, z);
+      if (axis === "x") m.rotation.z = Math.PI / 2; else if (axis === "z") m.rotation.x = Math.PI / 2;
+      return m;
+    };
+    const F = cfg.front || 83, Rr = cfg.rear || -105, W = cfg.w || 38, len = F - Rr, cx = (F + Rr) / 2;
+    const armY = 9, armT = 6, botY = armY + armT / 2, panelH = cfg.panelH || 24, topY = botY + 3 + panelH;   // üst plakanın altı
+    const motorY = botY;
+
+    // Kollar: gövdedeki bağlantı noktasından motora; uçta motor yatağı ve altında TPU koruyucu/ayak
+    pos.forEach(([x, z], i) => {
+      const root = cfg.roots ? cfg.roots[i] : [0, 0];
+      const dx = x - root[0], dz = z - root[1], L = Math.hypot(dx, dz), a = Math.atan2(dz, dx);
+      const arm = box(L, armT, cfg.armW || 15, carbon(L, 15), root[0] + dx / 2, armY, root[1] + dz / 2);
+      arm.rotation.y = -a;
+      cyl(17, armT, carbon(34, 34), x, armY, z);
+      // TPU koruyucu: motor yatağını alttan saran parça, dışa doğru tampon çıkıntısı
+      cyl(18.5, 7, tpu, x, 3.5, z);
+      const bump = box(14, 9, 22, tpu, x + Math.cos(a) * 16, 5.5, z + Math.sin(a) * 16);
+      bump.rotation.y = -a;
+      for (let k = 0; k < 4; k++) cyl(1.6, 1, M(0xbfc4cb, { metalness: 0.5 }), x + Math.cos(a + Math.PI / 4 + k * Math.PI / 2) * 8, botY + 0.5, z + Math.sin(a + Math.PI / 4 + k * Math.PI / 2) * 8);
+    });
+
+    // Gövde: alt plaka, ışıklı yan paneller, oyuklu üst plaka, aralayıcılar
+    box(len, 3, W, carbon(len, W), cx, botY + 1.5, 0);
+    box(len - 30, 2, W, carbon(len - 30, W), cx - 10, topY + 1, 0);
+    const pl = len - 42, pcx = cx - 14;
+    for (const zs of [-1, 1]) {
+      box(pl, panelH, 1.8, black, pcx, botY + 3 + panelH / 2, zs * (W / 2 - 0.9));
+      // Panelin köşeli ışıklı oyukları
+      for (let k = 0; k < 5; k++) {
+        const led = new THREE.Mesh(new THREE.BoxGeometry(9, 2.2, 0.6), glow());
+        led.position.set(pcx - pl / 2 + 14 + k * (pl - 28) / 4, botY + 3 + panelH * (k % 2 ? 0.66 : 0.36), zs * (W / 2 + 0.1));
+        led.rotation.z = (k % 2 ? -1 : 1) * 0.6;
+        body.add(led);
+        this.droneLeds.push(led);
+      }
+      for (const x of [pcx - pl / 2 + 3, pcx, pcx + pl / 2 - 3]) cyl(2.4, panelH, M(0x2a2c31, { metalness: 0.6, roughness: 0.35 }), x, botY + 3 + panelH / 2, zs * (W / 2 - 3.4));
+    }
+    box(pl - 8, panelH - 4, W - 8, M(0x15171b), pcx, botY + 3 + panelH / 2, 0);            // içerideki elektronik (karanlık)
+    // Üst plakadaki oyuklar ve iFlight logosu
+    const cut = M(0x07080a, { roughness: 0.9 });
+    if (cfg.top === "slots") {
+      for (let k = 0; k < 7; k++) for (const zs of [-1, 1]) box(16, 0.5, 5, cut, cx + 52 - k * 24, topY + 2.1, zs * 8.5);
+    } else {
+      for (let k = 0; k < 4; k++) {
+        const hx = add(new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 0.5, 6), cut), cx + 22 - k * 24, topY + 2.1, 0);
+        hx.scale.x = 1.5;
+      }
+      for (let k = 0; k < 3; k++) for (const zs of [-1, 1]) box(9, 0.5, 3, cut, cx + 10 - k * 24, topY + 2.1, zs * 13);
+    }
+    const logo = label3d(["iFlight"], 16, 4.4, null, "#6b7280");
+    logo.rotation.order = "YXZ";
+    logo.rotation.set(-Math.PI / 2, -Math.PI / 2, 0);
+    add(logo, F - 48, topY + 2.2, 0);
+
+    // Burun: köşeli siyah TPU kamera kafesi, DJI O3 kamera ve GoPro tipi bağlantı
+    const nx = F - 26;
+    body.add(prism([[nx, botY - 4], [nx, topY + 3], [nx + 14, topY + 3], [F, topY - 8], [F + 3, botY + 4], [F - 6, botY - 4]], W - 6, 2.5, darkTpu));
+    const cam = new THREE.Group();
+    cam.position.set(F - 4, botY + panelH * 0.52, 0);
+    cam.rotation.z = 0.3;
+    cam.add(new THREE.Mesh(new THREE.BoxGeometry(14, 19, 21), black));
+    addLens(cam, 7.4, 9, black);
+    body.add(cam);
+    for (const zs of [-1, 1]) box(4, 14, 3, black, nx - 4, topY + 9, zs * 4.5);
+    cyl(4, 12, black, nx - 4, topY + 16, 0, "z");
+    box(16, 3, 20, black, nx - 4, topY + 3.5, 0);
+
+    // Batarya: kaymaz ped üstünde, iki kayışla bağlı
+    const [bl, bh, bw] = cfg.batt || [77, 39, 44], bx = cfg.battX != null ? cfg.battX : cx - 12, by = topY + 2.6;
+    box(bl - 6, 1, Math.min(bw, W) - 2, M(0x30333a, { roughness: 0.95 }), bx, by, 0);
+    box(bl, bh, bw, M(0x16181c), bx, by + 0.5 + bh / 2, 0);
+    const lab = flatLabel(cfg.battText || ["FULLSEND", "6S"], Math.min(48, bl * 0.5), Math.min(30, bw * 0.7), "#16181c", "#f8fafc");
+    lab.position.set(bx, by + bh + 0.6, 0);
+    body.add(lab);
+    for (const sx of [-1, 1]) {
+      box(14, bh + 1.2, bw + 1.2, M(0x0b0c0e, { roughness: 0.9 }), bx + sx * bl * 0.3, by + 0.5 + bh / 2, 0);
+      const st = flatLabel(["iFlight"], 12, 10, "#0b0c0e", "#e5e7eb");
+      st.position.set(bx + sx * bl * 0.3, by + bh + 1.2, 0);
+      body.add(st);
+    }
+    // Arka: XT60 fiş ve antenler
+    box(9, 8, 16, M(0xeab308), Rr + 8, topY + 5, 0);
+    box(16, 12, W - 8, darkTpu, Rr + 4, topY - 3, 0);
+    const long = cfg.ant === "long", alen = long ? 100 : 26;
+    for (const zs of [-1, 1]) {
+      const a = [Rr + 2, topY + 3, zs * 7], dirV = new THREE.Vector3(-0.62, 0.72, zs * 0.3).normalize();
+      const b = [a[0] + dirV.x * alen, a[1] + dirV.y * alen, a[2] + dirV.z * alen];
+      body.add(capsule(a, b, long ? 1.5 : 2.1, black));
+      const head = long ? new THREE.Mesh(new THREE.IcosahedronGeometry(8.5, 0), black) : new THREE.Mesh(new THREE.CylinderGeometry(6.2, 6.2, 17, 24), black);
+      head.position.set(b[0] + dirV.x * (long ? 6 : 8), b[1] + dirV.y * (long ? 6 : 8), b[2] + dirV.z * (long ? 6 : 8));
+      head.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirV);
+      body.add(head);
+    }
+    // Yatay T anten (ince çubuk, uçlarında küçük başlık)
+    const dipole = (x, y, span) => {
+      cyl(1.2, span, black, x, y, 0, "z");
+      for (const zs of [-1, 1]) cyl(1.9, 10, black, x, y, zs * (span / 2 - 5), "z");
+      box(7, 6, 9, darkTpu, x, y, 0);
+    };
+    if (cfg.dipole === "front") dipole(F + 2, botY - 2, cfg.dipoleSpan || 147);
+    else dipole(Rr + 6, botY + 8, cfg.dipoleSpan || 116);
+    let top = by + bh + 2;
+    if (cfg.whip) {                                           // renkli braketli dik kamçı anten (sol arka)
+      box(10, 22, 6, tpu, Rr + 30, topY + 10, -(W / 2 + 4));
+      box(12, 4, 10, tpu, Rr + 30, topY + 20, -(W / 2 + 6));
+      body.add(capsule([Rr + 30, topY + 20, -(W / 2 + 9)], [Rr + 30, topY + 108, -(W / 2 + 9)], 0.9, black));
+      top = Math.max(top, topY + 110);
+    }
+    if (cfg.gps) {                                            // kuyrukta kare GPS modülü
+      box(24, 8, 24, black, Rr - 10, topY - 2, 0);
+      const g = flatLabel(["iFlight", "GPS"], 16, 14, "#0d0e11", "#9ca3af");
+      g.position.set(Rr - 10, topY + 2.1, 0);
+      body.add(g);
+      box(12, 4, 12, darkTpu, Rr - 2, topY - 4, 0);
+    }
+    return {
+      baseY: 2, motorY, topY: top, attachY: 2,
+      after: () => { for (const u of this.units) u.stripe.visible = false; }
     };
   },
 

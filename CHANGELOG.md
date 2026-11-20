@@ -1,5 +1,14 @@
 # Sürüm geçmişi
 
+## 1.25.0 — 2026-11-21
+iFlight Nazgul Evoque F5X V2 resmî görsellerine göre baştan çizildi
+- Uzun, dar, kapalı gövde: alt plaka, yeşil ışıklı köşeli oyuklu siyah yan paneller ve oyuklu karbon üst plaka
+- Dokulu 6 mm karbon kollar; her motorun altında parlak yeşil TPU koruyucu (aynı zamanda ayak)
+- Burunda köşeli siyah TPU kamera kafesi içinde DJI O3 kamera, üstünde GoPro tipi iki dişli bağlantı
+- Arkada V biçiminde iki kısa silindir anten, aralarında XT60 fiş ve yatay T anten
+- Üstte kaymaz ped üzerinde, iki "iFlight" kayışıyla bağlı Fullsend 6S 1550 mAh batarya
+- Motor yerleşimi üreticinin üstten görünüş çiziminden ölçüldü (motorlar arası 144 × 172 mm, köşegen 225 mm)
+
 ## 1.24.0 — 2026-11-21
 Happymodel Mobula7 1S gerçek fotoğraflarına göre baştan çizildi
 - Tek parça yarı saydam füme şase: ince açık halkalar, halka başına 4 kol, halkaların altında küçük ayaklar

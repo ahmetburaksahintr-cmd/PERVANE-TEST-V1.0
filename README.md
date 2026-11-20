@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.24.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.25.0
 
-> **Güncel sürüm: v1.24.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.25.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.24.0** | 2026-11-21 | Happymodel Mobula7 1S gerçek fotoğraflarına göre baştan çizildi |
+| **v1.25.0** | 2026-11-21 | iFlight Nazgul Evoque F5X V2 resmî görsellerine göre baştan çizildi |
+| v1.24.0 | 2026-11-21 | Happymodel Mobula7 1S gerçek fotoğraflarına göre baştan çizildi |
 | v1.23.0 | 2026-11-21 | GEPRC CineLog35 V2 gerçek görsellerine göre baştan çizildi (itici düzen) |
 | v1.22.0 | 2026-11-21 | BETAFPV Meteor75 Pro gerçek görsellerine göre baştan çizildi |
 | v1.21.0 | 2026-11-21 | BETAFPV Pavo20 Pro gerçek görsellerine göre baştan çizildi (itici düzen) |
