@@ -1,5 +1,14 @@
 # Sürüm geçmişi
 
+## 1.5.0 — 2026-11-20
+DJI FPV tasarımı DJI'ın resmî bilgilerine göre yenilendi
+- Gövde: mat koyu gri PA66 + %30 karbon fiber kabuk, parlak şeffaf siyah üst kapak ve öne bakan soğutma yarıkları
+- Kollar PA6 + %40 cam elyaf; motorların altında uca doğru incelen uzun iniş ayakları (toplam yükseklik ≈ 127 mm)
+- 10 gösterge ışığı: ön ayakların önünde 2 kırmızı şerit, motorların arkasında 4, kolların arkasında 4
+- "A" motorların pervane yuvasında kırmızı yay, "A" pervanelerde kırmızı işaret
+- Burnun altında tek eksenli gimbal kamera; ön görüş sensörü (stereo), alt görüş sensörleri, alt ToF ve 300 lm alt ışık
+- Arkadan takılan akıllı batarya ve kapasite LED'leri; koyu motor çanlarında "DJI FPV 2306" yazısı
+
 ## 1.4.1 — 2026-11-20
 Sürüm geçmişine madde madde açıklama
 - Sürüm betiği artık mesajdaki maddeleri CHANGELOG.md'ye yazıyor (önceden sadece dosya listesi yazıyordu)

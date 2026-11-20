@@ -59,7 +59,7 @@ const MOTORS = {
   m1404: { name: "1404 · 3800KV · 4S", kv: 3800, cells: 4, pmax: 330, imax: 20, mass: 9, propIn: 3, stator: 14, label: "1404  3800KV" },
   // Hazır drone motorları
   dji2306: { name: "DJI FPV motoru · 2306 sınıfı · ~1900KV* · 6S", kv: 1900, cells: 6, pmax: 780, imax: 38, mass: 34, propIn: 5.3, stator: 23,
-    label: "DJI FPV  2306", bell: 0x9ca3af, estimated: "DJI, DJI FPV motorunun stator ölçüsünü ve KV değerini açıklamamıştır; 2306 sınıfı ve ~1900KV, 6S 5\" sınıfına göre tahmindir." },
+    label: "DJI FPV  2306", bell: 0x0d0e10, estimated: "DJI, DJI FPV motorunun stator ölçüsünü ve KV değerini açıklamamıştır; 2306 sınıfı ve ~1900KV, 6S 5\" sınıfına göre tahmindir." },
   bf2006: { name: "BETAFPV 2006 · 2400KV · 6S", kv: 2400, cells: 6, pmax: 330, imax: 26, mass: 22, propIn: 3.5, stator: 20, label: "BETAFPV  2006  2400KV", bell: 0x1f2937 },
   bf1104: { name: "BETAFPV LAVA 1104 · 7200KV · 3S", kv: 7200, cells: 3, pmax: 50, imax: 9, mass: 7, propIn: 2.2, stator: 11, label: "LAVA  1104  7200KV", bell: 0x7c3aed },
   bf1102: { name: "BETAFPV 1102 · 22000KV · 1S", kv: 22000, cells: 1, pmax: 14, imax: 5, mass: 3.3, propIn: 1.77, stator: 11, label: "1102  22000KV", bell: 0x2563eb }
@@ -85,7 +85,7 @@ const DRONES = {
     motorKey: "dji2306", layout: { x: 70, z: 100 },
     prop: { diameterIn: 5.3, pitchIn: 2.8, chordMm: 13, thickMm: 2.6, blades: 3 }, propName: "DJI 5328S · 3 kanat · hızlı takma",
     wheelbaseMm: 245, massG: 771, battery: "DJI FPV akıllı batarya · 6S 2000 mAh · 22,2 V · 295 g", accent: 0x6b7280,
-    parts: "Kapalı gövde · 245 mm köşegen · 4 × DJI FPV motoru · 5328S üç kanatlı pervane · tek eksenli gimbal kamera (4K/60) · iniş ayaklarında anten",
+    parts: "PA66 + %30 karbon fiber gövde · PA6 + %40 cam elyaf kollar · şeffaf siyah üst kapak · 245 mm köşegen · 4 × DJI FPV motoru · 5328S üç kanatlı pervane (A/B, kırmızı işaretli) · tek eksenli gimbal, 1/2.3\" CMOS, 150° FOV · ön/alt görüş sensörü, alt ToF, 300 lm alt ışık · 10 gösterge ışığı",
     note: "Resmî değerler: kalkış ağırlığı ~795 g (batarya ve pervaneler dahil), köşegen 245 mm, en yüksek hız 140 km/sa, uçuş süresi ~20 dk. Motor KV değeri DJI tarafından açıklanmadığı için tahminidir (*)."
   },
   pavo35: {
