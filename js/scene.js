@@ -198,12 +198,13 @@ const Scene3D = {
   },
 
   /* ---------- Pervane geometrisi ---------- */
-  buildProp(prop, mat) {
+  buildProp(prop, mat, colorSpec) {
     if (this.propGroup) {
       this.propPivot.remove(this.propGroup);
       this.propGroup.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
     }
-    if (this.flyingBlade) { this.scene.remove(this.flyingBlade); this.flyingBlade = null; }
+    if (this.flyingBlade) { this.scene.remove(this.flyingBlade.mesh); this.flyingBlade = null; }
+    if (this.breakLabel) { this.scene.remove(this.breakLabel); this.breakLabel = null; }
     this.debris.forEach((d) => this.scene.remove(d.mesh));
     this.debris = [];
 
@@ -213,10 +214,20 @@ const Scene3D = {
     const NS = 28, NC = 14;
     this.blades = [];
     this.propGroup = new THREE.Group();
-    this.material = new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.15, roughness: 0.45, side: THREE.DoubleSide });
+    // Renk / yüzey özellikleri (filament görünümü)
+    const spec = colorSpec || { mat: true };
+    this.setColorSpec(spec, mat);
+    const surf = { vertexColors: true, metalness: 0.12, roughness: 0.45, side: THREE.DoubleSide };
+    if (spec.metal) Object.assign(surf, { metalness: 0.55, roughness: 0.28 }); // ipek/metalik parlaklık
+    if (spec.clear) Object.assign(surf, { transparent: true, opacity: 0.55, roughness: 0.1, metalness: 0 });
+    if (spec.glow) Object.assign(surf, { emissive: new THREE.Color(spec.hex), emissiveIntensity: 0.45 });
+    this.material = new THREE.MeshStandardMaterial(surf);
 
     // Göbek
-    const hub = new THREE.Mesh(new THREE.CylinderGeometry(r0 + 1, r0 + 1, 7, 32), new THREE.MeshStandardMaterial({ color: mat.color, roughness: 0.4 }));
+    const hubColor = new THREE.Color();
+    this.baseColor(0, 0, hubColor);
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(r0 + 1, r0 + 1, 7, 32),
+      new THREE.MeshStandardMaterial(Object.assign({}, surf, { vertexColors: false, color: hubColor })));
     hub.castShadow = true;
     this.hub = hub;
     this.propGroup.add(hub);
@@ -258,13 +269,38 @@ const Scene3D = {
       const holder = new THREE.Group();
       holder.rotation.y = bi * Math.PI;
       holder.add(mesh);
+      // Kök uyarı halkası: kırılma sınırına yaklaşınca kırmızı yanıp söner
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(Math.max(4, prop.chordMm * 0.45), 0.9, 8, 28),
+        new THREE.MeshBasicMaterial({ color: 0xff2d2d, transparent: true, opacity: 0, depthWrite: false }));
+      ring.rotation.y = Math.PI / 2;
+      ring.position.x = r0 + 3;
+      holder.add(ring);
       this.propGroup.add(holder);
-      this.blades.push({ mesh, holder, base, NS, NC, L, r0 });
+      this.blades.push({ mesh, holder, ring, base, NS, NC, L, r0, index: bi });
     }
     this.propPivot.add(this.propGroup);
     this.R = R;
-    this.matColor = new THREE.Color(mat.color);
     this.deform(0, 0, 0, false);
+  },
+
+  /** Seçilen filament rengini (düz, gökkuşağı, çift renk) hazırlar */
+  setColorSpec(spec, mat) {
+    this.colorSpec = spec;
+    // Renkler ekranda doğru (soluk değil) görünsün diye sRGB → doğrusal dönüşüm
+    const hex = (h) => new THREE.Color(h).convertSRGBToLinear();
+    if (spec.gradient) this._grad = spec.gradient.map(hex);
+    else if (spec.duo) this._duo = spec.duo.map(hex);
+    else this._solid = hex(spec.mat ? mat.color : spec.hex);
+  },
+  /** Kanat (bi) ve kök→uç konumuna (t: 0–1) göre pervanenin kendi rengi */
+  baseColor(bi, t, out) {
+    const s = this.colorSpec || {};
+    if (s.gradient) {
+      const g = this._grad, x = Math.min(0.9999, Math.max(0, t)) * (g.length - 1), i = Math.floor(x);
+      return out.copy(g[i]).lerp(g[i + 1], x - i);
+    }
+    if (s.duo) return out.copy(this._duo[bi % 2]);
+    return out.copy(this._solid).lerp(new THREE.Color(0xffffff), 0.06 * (1 - t));
   },
 
   /**
@@ -302,7 +338,12 @@ const Scene3D = {
         const ang = Math.atan(slope);
         const tNorm = i / NS;
         const local = Math.max(0, stressRatio * Math.pow(1 - tNorm, 1.15));
-        if (heatmap) heatColor(local, color); else color.copy(this.matColor).lerp(new THREE.Color(0xffffff), 0.08 * (1 - tNorm));
+        // Pervanenin kendi rengi; gerilme arttıkça zorlanan bölge sarı → kırmızıya döner
+        this.baseColor(bl.index, tNorm, color);
+        if (heatmap) {
+          const f = smoothstep(0.3, 0.92, local);
+          if (f > 0) color.lerp(heatColor(local, this._heat || (this._heat = new THREE.Color())), f);
+        }
         for (let j = 0; j < NC; j++) {
           const k = i * NC + j;
           const [, cx, cz, twist] = bl.base[k];
@@ -316,6 +357,11 @@ const Scene3D = {
           col.setXYZ(k, color.r, color.g, color.b);
         }
       }
+      // Kök uyarı halkası: gerilme %75'i aşınca yanıp söner
+      if (bl.ring) {
+        const warn = Math.max(0, (stressRatio - 0.75) / 0.25);
+        bl.ring.material.opacity = heatmap && warn > 0 ? Math.min(1, warn) * (0.45 + 0.45 * Math.sin(performance.now() / 70)) : 0;
+      }
       pos.needsUpdate = true;
       col.needsUpdate = true;
       bl.mesh.geometry.computeVertexNormals();
@@ -328,6 +374,13 @@ const Scene3D = {
     const bl = this.blades && this.blades.find((b) => !b.detached);
     if (!bl) return;
     bl.detached = true;
+    // Kırılma noktası işareti: kopan kanadın kökünde sabit kırmızı halka + etiket
+    if (bl.ring) { bl.ring.material.opacity = 1; bl.ring.material.color.set(0xff1f3d); bl.ring.scale.setScalar(1.25); }
+    const rootPos = new THREE.Vector3(bl.r0 + 3, 0, 0);
+    bl.holder.localToWorld(rootPos);
+    this.breakLabel = makeLabel("💥 Kırılma noktası: kanat kökü", "#ff4d6d");
+    this.breakLabel.position.copy(rootPos).add(new THREE.Vector3(0, 34, 0));
+    this.scene.add(this.breakLabel);
     // Dünya konumunu koruyarak sahneye taşı
     const mesh = bl.mesh;
     mesh.updateMatrixWorld();
@@ -340,7 +393,9 @@ const Scene3D = {
     const v = Math.min(900, (rpm / 60) * 2 * Math.PI * (this.R * 0.5) * 0.004); // görsel ölçekli
     this.flyingBlade = { mesh, vel: tangential.multiplyScalar(-v).add(new THREE.Vector3(0, 40, 0)), spin: new THREE.Vector3(Math.random() * 18, 24, Math.random() * 12) };
     // Kırık parçacıkları
-    const shardMat = new THREE.MeshStandardMaterial({ color: this.matColor, roughness: 0.5 });
+    const shardColor = new THREE.Color();
+    this.baseColor(bl.index, 0.5, shardColor);
+    const shardMat = new THREE.MeshStandardMaterial({ color: shardColor, roughness: 0.5, metalness: this.material.metalness });
     const origin = new THREE.Vector3();
     this.propPivot.getWorldPosition(origin);
     for (let i = 0; i < 40; i++) {
@@ -414,6 +469,32 @@ const Scene3D = {
   }
 };
 
+function smoothstep(a, b, x) {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+}
+
+/** 3D sahnede her zaman kameraya bakan yazı etiketi */
+function makeLabel(text, color) {
+  const c = document.createElement("canvas");
+  const ctx = c.getContext("2d");
+  ctx.font = "bold 44px Segoe UI, system-ui, sans-serif";
+  const w = Math.ceil(ctx.measureText(text).width) + 48;
+  c.width = w; c.height = 84;
+  ctx.font = "bold 44px Segoe UI, system-ui, sans-serif";
+  ctx.fillStyle = "rgba(10,13,24,.85)";
+  ctx.strokeStyle = color; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(3, 3, w - 6, 78, 22) : ctx.rect(3, 3, w - 6, 78); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#fff"; ctx.textBaseline = "middle";
+  ctx.fillText(text, 24, 44);
+  const tex = new THREE.CanvasTexture(c);
+  tex.encoding = THREE.sRGBEncoding;
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+  sprite.scale.set(w / 6, 84 / 6, 1);
+  sprite.renderOrder = 10;
+  return sprite;
+}
+
 /** Gerilme oranına göre renk: yeşil → sarı → turuncu → kırmızı */
 function heatColor(x, out) {
   const stops = [[0, 0x22c55e], [0.5, 0xeab308], [0.8, 0xf97316], [1, 0xef4444]];
@@ -422,7 +503,7 @@ function heatColor(x, out) {
     if (x <= stops[i][0] || i === stops.length - 1) {
       const [x0, c0] = stops[i - 1], [x1, c1] = stops[i];
       const t = Math.min(1, (x - x0) / (x1 - x0));
-      return out.set(c0).lerp(new THREE.Color(c1), t);
+      return out.set(c0).lerp(new THREE.Color(c1), t).convertSRGBToLinear();
     }
   }
   return out;

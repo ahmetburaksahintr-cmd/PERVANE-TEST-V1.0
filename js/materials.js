@@ -56,3 +56,27 @@ const MOTORS = {
   m3115: { name: "3115 · 900KV · 6S", kv: 900, cells: 6, pmax: 1300, imax: 55, mass: 70, propIn: 9 },
   m1404: { name: "1404 · 3800KV · 4S", kv: 3800, cells: 4, pmax: 330, imax: 20, mass: 9, propIn: 3 }
 };
+
+/* Pervane renkleri (filament renkleri)
+   hex: düz renk · metal: ipek/metalik parlaklık · clear: yarı saydam
+   glow: karanlıkta parlayan · gradient: kanat boyunca renk geçişi
+   duo: her kanat ayrı renk · mat: seçili malzemenin kendi rengi */
+const PROP_COLORS = [
+  { k: "mat", name: "Malzeme rengi", mat: true },
+  { k: "black", name: "Siyah", hex: "#1f2430" },
+  { k: "white", name: "Beyaz", hex: "#eef2f7" },
+  { k: "red", name: "Kırmızı", hex: "#e11d48" },
+  { k: "orange", name: "Turuncu", hex: "#f97316" },
+  { k: "yellow", name: "Sarı", hex: "#facc15" },
+  { k: "green", name: "Yeşil", hex: "#22c55e" },
+  { k: "teal", name: "Turkuaz", hex: "#14b8a6" },
+  { k: "blue", name: "Mavi", hex: "#2563eb" },
+  { k: "purple", name: "Mor", hex: "#7c3aed" },
+  { k: "pink", name: "Pembe", hex: "#ec4899" },
+  { k: "gold", name: "İpek altın", hex: "#d4a72c", metal: true },
+  { k: "silver", name: "İpek gümüş", hex: "#c3c9d4", metal: true },
+  { k: "clear", name: "Şeffaf", hex: "#cfe9ff", clear: true },
+  { k: "glow", name: "Fosforlu", hex: "#a3e635", glow: true },
+  { k: "rainbow", name: "Gökkuşağı", gradient: ["#ef4444", "#f59e0b", "#facc15", "#22c55e", "#3b82f6", "#a855f7"] },
+  { k: "duo", name: "Çift renk", duo: ["#f97316", "#2563eb"] }
+];

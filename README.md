@@ -1,6 +1,14 @@
-# 🌀 Pervane Test Laboratuvarı
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.1.0
 
-**Sürüm 1.0.0**
+> **Güncel sürüm: v1.1.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+
+## 📦 Sürümler
+<!-- SURUMLER:BASLA -->
+| Sürüm | Tarih | Öne çıkanlar |
+|---|---|---|
+| **v1.1.0** | 2026-11-20 | Pervane renkleri: 17 renk, kırılma noktasının renk ve halkayla işaretlenmesi, sürüm takibi |
+| v1.0.0 | 2026-11-20 | İlk sürüm: 3D test laboratuvarı, 6 filament, 4 motor, grafikler, Arduino test düzeneği |
+<!-- SURUMLER:BITIS -->
 
 **TÜBİTAK 4006 araştırma projesi:** 3D baskıyla üretilen pervanelerde filament malzemesinin itki, gerilme ve bükülmeye etkisi.
 
@@ -22,8 +30,19 @@ Proje iki parçadan oluşur:
   - ⚠️ Sınırda
   - ↪️ Aşırı esneme
   - 🟠 Kalıcı bükülme (akma)
+  - 🔴 Kırılma eşiği (kırılgan malzemelerde)
   - 💥 Kırılma: kanat kökten kopar ve fırlar
-- **Gerilme renk haritası:** Kanatların gerilmesi yeşilden kırmızıya renklenir. "Bükülme abartma" ayarı küçük esnemeleri görünür kılar.
+- **17 pervane rengi:**
+  - Düz renkler: siyah, beyaz, kırmızı, turuncu, sarı, yeşil, turkuaz, mavi, mor, pembe
+  - Özel görünümler: metalik ipek altın ve gümüş, yarı saydam şeffaf, parlayan fosforlu
+  - Çok renkli: kanat boyunca gökkuşağı, her kanadı farklı çift renk
+  - Serbest seçim: istediğin özel renk
+- **Gerilme renk haritası:**
+  - Pervane dururken seçtiğin renkte görünür.
+  - Devir arttıkça zorlanan bölge sarı → turuncu → kırmızıya döner; böylece kırılma noktası renkle belli olur.
+  - Sınıra yaklaşınca (%75'in üstü) kanat kökünde kırmızı bir uyarı halkası yanıp söner.
+  - Kırılınca kökte "Kırılma noktası" etiketi çıkar.
+  - "Bükülme abartma" ayarı küçük esnemeleri görünür kılar.
 - **Hepsini sırayla canlı test et:** 6 malzemeyi arka arkaya test eder ve karşılaştırma tablosunu doldurur. Sonuçları CSV olarak indirip raporunda kullanabilirsin.
 - **Gerçek veri ve kalibrasyon:**
   - Arduino'dan gelen ölçümler itki grafiğinde **beyaz noktalar** olarak görünür.
@@ -58,3 +77,30 @@ Kod ve bağlantı şeması: `arduino/pervane_itki_testi.ino`.
 - Titreşim, yorulma, burkulma ve baskı kusurları modele dahil değildir.
 - Malzeme değerleri tipik teknik föy değerleridir.
 - Bu yüzden gerçek ölçümle kalibrasyon, projenin en değerli bilimsel kısmıdır.
+
+## Sürüm takibi ve GitHub'a otomatik yükleme
+Sürümler [SemVer](https://semver.org/lang/tr/) kuralıyla numaralanır:
+- `1.0.x`: küçük düzeltmeler
+- `1.x.0`: yeni özellikler
+- `x.0.0`: büyük değişiklikler
+
+Her sürümün ayrıntısı [CHANGELOG.md](CHANGELOG.md) dosyasında yazılıdır.
+
+- **Otomatik yükleme:**
+  - Windows Görev Zamanlayıcı'daki `PervaneTest-OtomatikSurum` görevi 15 dakikada bir projeyi kontrol eder.
+  - Değişiklik varsa ve 10 dakikadır hiçbir dosyaya dokunulmadıysa sürümü artırır (`1.1.0 → 1.1.1`).
+  - Ardından `CHANGELOG.md`'yi günceller ve yeni sürümü `vX.Y.Z` etiketiyle GitHub'a gönderir.
+  - Ne yaptığı `tools/surum-gunlugu.log` dosyasına yazılır.
+- **Hemen yüklemek için:** `surum-yayinla.bat` dosyasına çift tıkla.
+  - Yeni bir özellik eklediysen komut satırında `surum-yayinla.bat minor` kullan.
+  - Büyük bir değişiklik yaptıysan `surum-yayinla.bat major` kullan.
+- **Otomatik yüklemeyi kapatmak için:**
+  `powershell -ExecutionPolicy Bypass -File tools\otomatik-yuklemeyi-kur.ps1 -Kaldir`
+- **Tekrar açmak için:** Aynı komutu `-Kaldir` olmadan çalıştır.
+
+## Kullanılan açık kaynak kütüphaneler
+Hepsi `vendor/` klasöründedir; sayfa internetsiz çalışır.
+
+| Kütüphane | Sürüm | Görevi | Lisans |
+|---|---|---|---|
+| [three.js](https://threejs.org) | r149 | 3D sahne | MIT |

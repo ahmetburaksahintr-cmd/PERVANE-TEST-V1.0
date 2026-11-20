@@ -11,6 +11,7 @@
   <header class="top">
     <div class="brand">🌀 <b>Pervane Test Laboratuvarı</b><span>3D baskı malzemelerinin itki · gerilme · bükülme testi</span></div>
     <div class="top-actions">
+      <span class="badge ver" id="appVersion"></span>
       <span class="badge">TÜBİTAK 4006 · Araştırma projesi</span>
       <button class="icon" id="soundBtn" title="Motor sesi">🔇</button>
     </div>
@@ -25,24 +26,30 @@
         <p id="matNote" class="note"></p>
       </section>
       <section>
-        <h3>2 · Fırçasız motor</h3>
+        <h3>2 · Pervane rengi</h3>
+        <div id="colorList" class="color-list"></div>
+        <label class="custom-color">Özel renk <input type="color" id="customColor" value="#ff6b00"></label>
+        <p class="note">Pervane sıfırken seçtiğin renkte görünür; zorlandıkça kırılacağı bölge <b class="warn">sarı</b> → <b class="bad">kırmızı</b> olur ve kökte uyarı halkası yanıp söner.</p>
+      </section>
+      <section>
+        <h3>3 · Fırçasız motor</h3>
         <select id="motorSel"></select>
         <div id="motorInfo" class="kv small"></div>
       </section>
       <section>
-        <h3>3 · Pervane geometrisi</h3>
+        <h3>4 · Pervane geometrisi</h3>
         <label>Çap <b id="vDia"></b><input type="range" id="dia" min="3" max="10" step="0.5"></label>
         <label>Hatve (pitch) <b id="vPitch"></b><input type="range" id="pitch" min="2" max="7" step="0.1"></label>
         <label>Kök veter genişliği <b id="vChord"></b><input type="range" id="chord" min="6" max="22" step="0.5"></label>
         <label>Kök kalınlığı <b id="vThick"></b><input type="range" id="thick" min="1.2" max="5" step="0.1"></label>
       </section>
       <section>
-        <h3>4 · Ortam</h3>
+        <h3>5 · Ortam</h3>
         <label>Pervane sıcaklığı <b id="vTemp"></b><input type="range" id="temp" min="15" max="90" step="1"></label>
         <p class="note">Motor ısındıkça pervane göbeği de ısınır; PLA ~55 °C'de yumuşamaya başlar.</p>
       </section>
       <section>
-        <h3>5 · Görünüm</h3>
+        <h3>6 · Görünüm</h3>
         <label>Bükülme abartma <b id="vExag"></b><input type="range" id="exag" min="1" max="10" step="1"></label>
         <label class="check"><input type="checkbox" id="heat" checked> Gerilme renk haritası</label>
       </section>
@@ -52,6 +59,7 @@
     <section class="stage panel">
       <div id="view3d"></div>
       <div class="hud">
+        <div class="hud-title" id="hTitle"></div>
         <div class="hud-main">
           <div><span class="big" id="hRpm">0</span><small>devir/dk</small></div>
           <div><span class="big" id="hThrust">0</span><small>gram itki</small></div>
@@ -64,9 +72,10 @@
           <div><small>Verim</small><b id="hEff">–</b></div>
           <div><small>Pervane kütlesi</small><b id="hMass">–</b></div>
         </div>
+        <div class="limit"><div class="limit-head"><small>Kırılma sınırına yakınlık</small><b id="hLimitTxt">%0</b></div><div class="limit-bar"><i id="hLimit"></i></div></div>
         <div id="hState" class="state ok">HAZIR</div>
       </div>
-      <div class="legend-heat"><span>Gerilme</span><i></i><small>güvenli → sınır</small></div>
+      <div class="legend-heat"><span>Gerilme</span><i id="legendBar"></i><small>pervane rengi → kırılma</small></div>
       <div class="hint">🖱️ Sürükle: döndür · Tekerlek: yakınlaştır · Dönüş hızı ekranda yavaşlatılmıştır</div>
       <div class="controls">
         <label class="throttle">Gaz <b id="vThr">0%</b><input type="range" id="thr" min="0" max="100" step="1" value="0"></label>
@@ -124,6 +133,7 @@
   </section>
 
   <script src="vendor/three.min.js"></script>
+  <script src="js/version.js"></script>
   <script src="js/materials.js"></script>
   <script src="js/physics.js"></script>
   <script src="js/charts.js"></script>

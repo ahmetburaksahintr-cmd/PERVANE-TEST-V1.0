@@ -11,7 +11,8 @@ const S = {
   tempC: 25, exag: 3, heat: true,
   throttle: 0, rpm: 0, plastic: 0, broken: false, bentLogged: false, warnLogged: false, yieldLogged: false,
   ramp: null, seq: null, history: [], measured: [], lastEval: null, t0: performance.now(),
-  sound: false, results: {}
+  sound: false, results: {},
+  colorKey: "mat", customHex: "#ff6b00", simT: 0, lastRecT: -1
 };
 
 const mat = () => MATERIALS[S.matKey];
@@ -42,6 +43,16 @@ function init() {
   bindRange("#thr", (v) => { S.throttle = v / 100; stopRamp(); });
   $("#heat").onchange = (e) => { S.heat = e.target.checked; };
 
+  // Pervane renkleri
+  $("#colorList").innerHTML = PROP_COLORS.map((c) => {
+    const bg = c.gradient ? `linear-gradient(135deg, ${c.gradient.join(",")})`
+      : c.duo ? `linear-gradient(135deg, ${c.duo[0]} 50%, ${c.duo[1]} 50%)`
+      : c.mat ? "conic-gradient(#3b82f6, #22c55e, #f97316, #a855f7, #374151, #ec4899, #3b82f6)" : c.hex;
+    return `<button class="swatch ${c.metal ? "metal" : ""} ${c.clear ? "clear" : ""} ${c.glow ? "glow" : ""}" data-k="${c.k}" title="${c.name}" style="--sw:${bg}"><i></i><span>${c.name}</span></button>`;
+  }).join("");
+  $("#colorList").onclick = (e) => { const b = e.target.closest(".swatch"); if (b) selectColor(b.dataset.k); };
+  $("#customColor").oninput = (e) => { S.customHex = e.target.value; selectColor("custom"); };
+
   $("#rampBtn").onclick = () => startRamp();
   $("#stopBtn").onclick = () => { stopRamp(); S.seq = null; S.throttle = 0; syncInputs(); };
   $("#resetBtn").onclick = () => newProp("Yeni pervane takıldı");
@@ -53,6 +64,7 @@ function init() {
   $("#calBtn").onclick = calibrate;
   $("#clearMeas").onclick = () => { S.measured = []; S.prop.ctScale = 1; updateMeasInfo(); refreshCompare(); };
 
+  $("#appVersion").textContent = "v" + APP_VERSION;
   Scene3D.init($("#view3d"));
   selectMaterial("PLA", true);
   syncInputs();
@@ -86,7 +98,9 @@ function newProp(logMsg) {
   if (!S.seq) { S.ramp = null; S.throttle = 0; }
   S.broken = false; S.plastic = 0; S.rpm = Math.min(S.rpm, 0); S.history = [];
   S.warnLogged = S.yieldLogged = S.bentLogged = false;
-  Scene3D.buildProp(S.prop, mat());
+  Scene3D.buildProp(S.prop, mat(), colorSpec());
+  S.simT = 0; S.lastRecT = -1;
+  updateLegend();
   if (logMsg) log(logMsg, "info");
   refreshCompare();
   syncInputs();
@@ -95,7 +109,7 @@ function newProp(logMsg) {
 /* ---------------- Otomatik rampa testi ---------------- */
 function startRamp(onDone) {
   if (S.broken) newProp(`${mat().name} için yeni pervane takıldı`);
-  S.history = [];
+  S.history = []; S.simT = 0; S.lastRecT = -1;
   S.ramp = { t: 0, onDone };
   S.throttle = 0;
   log(`Rampa testi başladı (${mat().name}, ${S.tempC} °C)`, "info");
@@ -167,11 +181,9 @@ function loop(now) {
   Scene3D.deform(S.broken ? 0 : visDefl, stressRatio, S.plastic * S.exag, S.heat);
   Scene3D.frame(dt, S.rpm, ev.thrustG / 1500);
 
-  // Geçmiş (grafikler)
-  if (S.rpm > 200 && (S.history.length === 0 || Math.abs(S.history[S.history.length - 1].rpm - S.rpm) > 120)) {
-    S.history.push({ rpm: S.rpm, thrust: ev.thrustG, stress: ev.sigma / 1e6, defl: realDefl });
-    if (S.history.length > 600) S.history.shift();
-  }
+  // Ölçüm kaydı: simülasyon zamanıyla saniyede 10 satır (grafikler)
+  S.simT += dt;
+  if (S.rpm > 200 && S.simT - S.lastRecT >= 0.1) { S.lastRecT = S.simT; recordPoint(ev, realDefl); }
   updateHud(ev, realDefl);
   if (!loop.f || now - loop.f > 120) { loop.f = now; drawCharts(ev); }
   updateSound();
@@ -196,6 +208,7 @@ function checkEvents(ev) {
   if (ev.sigma >= ev.strength) {
     S.broken = true;
     S.throttle = 0;
+    recordPoint(ev, ev.delta * 1000, "KIRILDI");
     Scene3D.breakBlade(ev.rpm);
     log(`💥 ${fmt(ev.rpm)} devir: KIRILMA — kök gerilmesi ${fmt(ev.sigma / 1e6, 1)} MPa ≥ dayanım ${fmt(ev.strength / 1e6, 1)} MPa`, "bad");
     syncInputs();
@@ -222,10 +235,18 @@ function updateHud(ev, realDefl) {
   let cls = "ok", txt = S.rpm < 100 ? "HAZIR" : "GÜVENLİ";
   if (S.broken) { cls = "bad"; txt = "💥 KIRILDI"; }
   else if (S.plastic > 0.05) { cls = "warn"; txt = "🟠 KALICI BÜKÜLME"; }
+  else if (ev.state === "yield") { cls = "bad"; txt = "🔴 KIRILMA EŞİĞİNDE"; }
   else if (ev.ratio >= 0.12) { cls = "warn"; txt = "↪️ AŞIRI ESNEME"; }
   else if (ev.state === "warn") { cls = "warn"; txt = "⚠️ SINIRDA"; }
   st.className = "state " + cls;
   st.textContent = txt;
+  // Başlık: malzeme + renk
+  $("#hTitle").innerHTML = `<i style="background:${legendStart()}"></i>${mat().name} · ${colorName()}`;
+  // Kırılma sınırına yakınlık çubuğu
+  const lim = S.broken ? 100 : Math.min(100, pctS);
+  $("#hLimit").style.width = lim + "%";
+  $("#hLimitTxt").textContent = S.broken ? "KIRILDI" : "%" + fmt(lim);
+  $("#hLimitTxt").style.color = lim >= 100 ? "var(--bad)" : lim > 75 ? "var(--warn)" : "var(--text)";
 }
 
 /* ---------------- Grafikler ---------------- */
@@ -404,5 +425,52 @@ function updateSound() {
   audio.osc2.frequency.setTargetAtTime(f * 1.5, audio.ctx.currentTime, 0.05);
   audio.gain.gain.setTargetAtTime(Math.min(0.08, S.rpm / 400000), audio.ctx.currentTime, 0.1);
 }
+
+
+/* ---------------- Pervane rengi ---------------- */
+function colorSpec() {
+  if (S.colorKey === "custom") return { k: "custom", name: "Özel renk", hex: S.customHex };
+  return PROP_COLORS.find((c) => c.k === S.colorKey) || PROP_COLORS[0];
+}
+function colorName() {
+  const c = colorSpec();
+  return c.mat ? mat().name + " rengi" : c.name;
+}
+function legendStart() {
+  const c = colorSpec();
+  if (c.gradient) return "linear-gradient(90deg," + c.gradient.join(",") + ")";
+  if (c.duo) return "linear-gradient(90deg," + c.duo[0] + " 50%," + c.duo[1] + " 50%)";
+  return c.mat ? "#" + mat().color.toString(16).padStart(6, "0") : c.hex;
+}
+function updateLegend() {
+  const c = colorSpec();
+  const start = c.gradient ? c.gradient[2] : c.duo ? c.duo[0] : c.mat ? "#" + mat().color.toString(16).padStart(6, "0") : c.hex;
+  $("#legendBar").style.background = "linear-gradient(90deg, " + start + " 0%, " + start + " 30%, #eab308 62%, #f97316 80%, #ef4444 100%)";
+  document.querySelectorAll(".swatch").forEach((b) => b.classList.toggle("active", b.dataset.k === S.colorKey));
+  $("#customColor").closest("label").classList.toggle("active", S.colorKey === "custom");
+}
+function selectColor(k) {
+  S.colorKey = k;
+  newProp(colorName() + " " + mat().name + " pervane takıldı");
+}
+
+/* ---------------- Ölçüm kaydı ---------------- */
+function stateLabel(ev) {
+  if (S.broken) return "KIRILDI";
+  if (S.plastic > 0.05) return "KALICI BÜKÜLME";
+  if (ev.state === "yield") return "KIRILMA EŞİĞİNDE";
+  if (ev.ratio >= 0.12) return "AŞIRI ESNEME";
+  if (ev.state === "warn") return "SINIRDA";
+  return "GÜVENLİ";
+}
+function recordPoint(ev, realDefl, forceState) {
+  S.history.push({
+    t: S.simT, rpm: S.rpm, thrust: ev.thrustG, stress: ev.sigma / 1e6, stressPct: (ev.sigma / ev.strength) * 100,
+    defl: realDefl, plastic: S.plastic, power: ev.power, current: ev.current, eff: ev.efficiency, sf: ev.sf,
+    state: forceState || stateLabel(ev)
+  });
+  if (S.history.length > 4000) S.history.shift();
+}
+
 
 document.addEventListener("DOMContentLoaded", init);

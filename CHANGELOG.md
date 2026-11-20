@@ -1,5 +1,14 @@
 # Sürüm geçmişi
 
+## 1.1.0 — 2026-11-20
+Pervane renkleri
+- 17 pervane rengi: düz renkler, ipek altın/gümüş, şeffaf, fosforlu, gökkuşağı, çift renk ve özel renk
+- Pervane sıfırda kendi renginde; zorlandıkça kırılma bölgesi sarı → turuncu → kırmızıya döner
+- Kökte yanıp sönen uyarı halkası; kırılınca "Kırılma noktası" etiketi; kırık parçalar pervane renginde
+- Gösterge: malzeme/renk başlığı ve kırılma sınırına yakınlık çubuğu
+- Kırılgan malzemelerde "kırılma eşiğinde" durumu
+- Sürüm takibi: başlıkta sürüm rozeti, otomatik sürüm yükleme araçları (tools/), README'de sürümler tablosu
+
 ## 1.0.0 — 2026-11-20
 İlk sürüm.
 - 3D test standı, fırçasız motor ve esneyen pervane (three.js)
