@@ -1,5 +1,14 @@
 # Sürüm geçmişi
 
+## 1.17.0 — 2026-11-21
+Arayüz: başlığın altında mini sekmeler, kırmızı TÜBİTAK rozeti
+- Alttaki üç bölüm (Grafikler ve karşılaştırma, Ölçümler ve kayıtlar, Nasıl hesaplanıyor?) başlığın altındaki ince şeride mini sekmeler olarak taşındı
+- Dördüncü sekme Laboratuvar: 3D sahne ve ayarlar; sayfa artık aşağı kaydırmadan ekrana sığıyor
+- Başka bir sekmedeyken test arka planda sürer; grafikler ve rapor görselleri etkilenmez
+- Sekmelerde canlı işaretler: test sürerken yeşil nokta, kırılmada işaret, günlükteki kayıt sayısı
+- Son açık sekme hatırlanır
+- "TÜBİTAK 4006 · Araştırma projesi" rozeti kırmızı yapıldı
+
 ## 1.16.0 — 2026-11-21
 Uçuş bölümü: drone'u klavyeyle uçur
 - Test düzeneğine üçüncü sekme eklendi: Uçuş. Seçili drone açık bir alanda klavyeyle uçuruluyor

@@ -9,6 +9,7 @@
 </head>
 <body>
   <header class="top">
+    <div class="top-row">
     <div class="brand">
       <span class="logo" aria-hidden="true">
         <svg viewBox="0 0 32 32" fill="#fff">
@@ -23,13 +24,21 @@
       <div class="brand-text"><b>Pervane Test Laboratuvarı</b><span>3D baskı malzemelerinin itki · gerilme · bükülme testi</span></div>
     </div>
     <div class="top-actions">
-      <span class="badge">TÜBİTAK 4006 · Araştırma projesi</span>
+      <span class="badge tubitak">TÜBİTAK 4006 · Araştırma projesi</span>
       <span class="badge ver" id="appVersion"></span>
       <button class="icon" id="soundBtn" title="Motor sesi">🔇</button>
     </div>
+    </div>
+    <!-- Sayfa sekmeleri: başlığın altındaki ince şerit -->
+    <nav class="tabs" id="pageTabs" role="tablist" aria-label="Sayfa bölümleri">
+      <button class="tab active" role="tab" aria-selected="true" data-page="lab"><span aria-hidden="true">🧪</span> Laboratuvar</button>
+      <button class="tab" role="tab" aria-selected="false" data-page="results"><span aria-hidden="true">📈</span> Grafikler ve karşılaştırma <i class="tab-chip" id="tabResults"></i></button>
+      <button class="tab" role="tab" aria-selected="false" data-page="data"><span aria-hidden="true">🔌</span> Ölçümler ve kayıtlar <i class="tab-chip" id="tabData"></i></button>
+      <button class="tab" role="tab" aria-selected="false" data-page="model"><span aria-hidden="true">🔬</span> Nasıl hesaplanıyor?</button>
+    </nav>
   </header>
 
-  <main class="layout">
+  <main class="layout page active" data-page="lab">
     <!-- SOL: Ayarlar -->
     <aside class="panel side">
       <section>
@@ -135,7 +144,7 @@
   <!-- ALT: Grafikler, karşılaştırma, gerçek veri -->
   <section class="bottom">
     <!-- SONUÇLAR: tıklanınca açılan kartlar -->
-    <div class="group" id="grpResults">
+    <div class="group page" id="grpResults" data-page="results">
       <div class="group-head">
         <div class="group-title"><span class="eyebrow">Sonuçlar</span><h2>Grafikler ve karşılaştırma</h2></div>
         <div class="group-actions">
@@ -181,7 +190,7 @@
     </div>
 
     <!-- VERİLER: tıklanınca açılan kartlar -->
-    <div class="group" id="grpData">
+    <div class="group page" id="grpData" data-page="data">
       <div class="group-head">
         <div class="group-title"><span class="eyebrow">Veriler</span><h2>Ölçümler ve kayıtlar</h2></div>
         <div class="group-actions">
@@ -236,7 +245,7 @@
     </div>
 
     <!-- MODEL: yöntem -->
-    <div class="group" id="grpModel">
+    <div class="group page" id="grpModel" data-page="model">
       <div class="group-head">
         <div class="group-title"><span class="eyebrow">Model</span><h2>Nasıl hesaplanıyor?</h2></div>
       </div>

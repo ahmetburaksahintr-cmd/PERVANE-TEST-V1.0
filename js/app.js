@@ -96,6 +96,11 @@ function init() {
   $("#clearMeas").onclick = () => { S.measured = []; S.prop.ctScale = 1; updateMeasInfo(); refreshCompare(); };
 
   initAccordions();
+  // Sayfa sekmeleri (başlığın altındaki şerit)
+  $("#pageTabs").onclick = (e) => { const b = e.target.closest(".tab"); if (b) showPage(b.dataset.page); };
+  let savedPage = "lab";
+  try { savedPage = localStorage.getItem(PAGE_KEY) || "lab"; } catch (e) { /* özel pencere */ }
+  showPage(document.querySelector(`.page[data-page="${savedPage}"]`) ? savedPage : "lab", false);
   $("#logFilters").onclick = (e) => {
     const b = e.target.closest(".pill");
     if (!b) return;
@@ -371,6 +376,8 @@ function updateHud(ev, realDefl) {
   // Grafik kartının rozeti (kart kapalıyken de anlık değeri gösterir)
   const cc = $("#chartsChip");
   const ccTxt = S.broken ? "💥 Kırıldı" : S.rpm < 100 ? "Hazır" : `${fmt(Math.round(S.rpm / 100) * 100)} dev/dk · ${fmt(ev.thrustG)} g`;
+  const tr = $("#tabResults"), trTxt = S.broken ? "💥" : S.rpm < 100 ? "" : "●";
+  if (tr.textContent !== trTxt) { tr.textContent = trTxt; tr.className = "tab-chip" + (S.broken ? " bad" : " live"); }
   if (cc.textContent !== ccTxt) { cc.textContent = ccTxt; cc.className = "chip" + (S.broken ? " bad" : S.rpm < 100 ? "" : pctS > 75 ? " warn" : " on"); }
   // Başlık: (drone) + malzeme + renk
   $("#hTitle").innerHTML = `<i style="background:${legendStart()}"></i>${isDrone() ? "🛸 " + drone().short + " · " : ""}${mat().name} · ${colorName()}`;
@@ -657,6 +664,10 @@ function updateLogHead(msg, type) {
   const chip = $("#logChip");
   chip.textContent = `${n} kayıt`;
   chip.className = "chip" + (n ? " on" : "");
+  // Sekmedeki küçük sayaç; uyarı ya da kırılma gelince renklenir
+  const tc = $("#tabData");
+  tc.textContent = n ? String(n) : "";
+  if (type === "bad" || type === "warn") tc.className = "tab-chip " + type; else if (!n) tc.className = "tab-chip";
   $("#logEmpty").hidden = n > 0;
   const last = $("#logLast");
   if (!msg) { last.textContent = "Henüz kayıt yok"; last.className = "log-last"; return; }
@@ -669,6 +680,21 @@ function updateLogHead(msg, type) {
 function paintRange(el) {
   const min = Number(el.min) || 0, max = Number(el.max) || 100;
   el.style.setProperty("--p", `${((Number(el.value) - min) / (max - min || 1)) * 100}%`);
+}
+
+/* ---------------- Sayfa sekmeleri ----------------
+   Laboratuvar (3D sahne + ayarlar) ile sonuç/veri/yöntem bölümleri arasında geçiş.
+   Gizli sayfalar genişliğini korur (display:none değil); böylece grafikler ve 3D sahne
+   arka planda çizilmeye devam eder ve rapor görselleri etkilenmez. */
+const PAGE_KEY = "pervane.sayfa";
+function showPage(name, save = true) {
+  S.page = name;
+  document.querySelectorAll(".page").forEach((el) => { const on = el.dataset.page === name; el.classList.toggle("active", on); el.inert = !on; });
+  document.querySelectorAll("#pageTabs .tab").forEach((b) => { const on = b.dataset.page === name; b.classList.toggle("active", on); b.setAttribute("aria-selected", String(on)); });
+  document.body.dataset.page = name;
+  if (typeof Fly !== "undefined") Fly.keys.clear();            // başka sekmedeyken drone kendi kendine gitmesin
+  if (save) { try { localStorage.setItem(PAGE_KEY, name); } catch (e) { /* özel pencere: hatırlanmaz */ } window.scrollTo(0, 0); }
+  if (name === "lab" && Scene3D.renderer) Scene3D.resize();
 }
 
 /* ---------------- Açılır-kapanır kartlar ---------------- */

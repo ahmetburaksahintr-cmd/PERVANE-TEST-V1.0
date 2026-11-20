@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.16.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.17.0
 
-> **Güncel sürüm: v1.16.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.17.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.16.0** | 2026-11-21 | Uçuş bölümü: drone'u klavyeyle uçur |
+| **v1.17.0** | 2026-11-21 | Arayüz: başlığın altında mini sekmeler, kırmızı TÜBİTAK rozeti |
+| v1.16.0 | 2026-11-21 | Uçuş bölümü: drone'u klavyeyle uçur |
 | v1.15.0 | 2026-11-21 | Test standı: devir ekranı, dönen potansiyometre ve ayrıntılı elektronik |
 | v1.14.0 | 2026-11-20 | Geniş ekran yerleşimi: sayfa tüm genişliği kullanıyor |
 | v1.13.0 | 2026-11-20 | Test standı: ESC, gerçekçi kablolar, kontrol kartı ve bakış açısı düğmesi |
@@ -41,6 +42,7 @@ Proje iki parçadan oluşur:
 **Not:** "USB'den canlı oku" özelliği yalnızca Chrome ve Edge'de çalışır.
 
 ## Neler yapabilirsin?
+- **Sayfa sekmeleri:** Başlığın altındaki ince şeritte dört sekme var: 🧪 Laboratuvar (3D sahne ve ayarlar), 📈 Grafikler ve karşılaştırma, 🔌 Ölçümler ve kayıtlar, 🔬 Nasıl hesaplanıyor? Başka bir sekmedeyken de test arka planda sürer; sekmelerdeki küçük işaretler canlı testi, uyarıları ve kayıt sayısını gösterir.
 - **6 malzeme:** PLA, PETG, ABS, ASA, Karbon fiber naylon (PA-CF) ve TPU 95A.
 - **Üç test düzeneği:** Sol menünün en üstünden seçilir.
   - 🔧 **Test standı:** Tek motor, yük hücresiyle itki ölçümü (gerçek Arduino düzeneğinin dijital ikizi). Motorun üç faz kablosu ESC'ye, ESC de bataryaya ve kontrol kartına bağlı görünür (fırçasız motorda üç, fırçalı motorda iki kablo olur). Sahnenin sağ üstündeki **🎥 Bakış** düğmesi serbest bakış ile yandan (motor hizasından) bakış arasında geçiş yapar.

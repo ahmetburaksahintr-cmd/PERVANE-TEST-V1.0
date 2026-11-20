@@ -160,7 +160,7 @@ const Fly = {
 
 /* Klavye: yalnızca uçuş bölümünde ve yazı kutusu/liste odakta değilken */
 function flyKey(e, down) {
-  if (typeof S === "undefined" || S.rig !== "fly") return;
+  if (typeof S === "undefined" || S.rig !== "fly" || (S.page && S.page !== "lab")) return;
   if (!["KeyW", "KeyA", "KeyS", "KeyD", "KeyQ", "KeyE", "KeyZ", "KeyX"].includes(e.code)) return;
   if (e.ctrlKey || e.altKey || e.metaKey) return;
   const t = e.target;

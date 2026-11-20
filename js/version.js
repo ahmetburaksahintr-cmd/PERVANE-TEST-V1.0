@@ -1,2 +1,2 @@
 /* Bu dosya tools/surum-yayinla.ps1 tarafından otomatik güncellenir. */
-const APP_VERSION = "1.16.0";
+const APP_VERSION = "1.17.0";

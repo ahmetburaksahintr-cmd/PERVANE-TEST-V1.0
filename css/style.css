@@ -557,3 +557,35 @@ kbd { display: inline-grid; place-items: center; min-width: 30px; height: 30px; 
 .hud-fly p { grid-column: 1 / -1; margin: 2px 0 0; font-size: .74rem; color: #7dd3fc; min-height: 1em; }
 .hud-fly p:empty { display: none; }
 [hidden] { display: none !important; }
+
+/* ---- Üst şerit: başlığın altında mini sayfa sekmeleri ---- */
+.top { display: block; padding-bottom: 0; }
+.top-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.badge.tubitak { color: #ff4d5e; border-color: rgba(255, 77, 94, .45); background: rgba(255, 77, 94, .1); font-weight: 700; }
+.tabs { display: flex; gap: 2px; margin-top: 8px; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { position: relative; flex: none; display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: .76rem; font-weight: 600;
+  padding: 7px 13px 9px; border-radius: 9px 9px 0 0; cursor: pointer; white-space: nowrap; transition: color .15s, background .15s; }
+.tab:hover { color: var(--text); background: rgba(255, 255, 255, .05); }
+.tab::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 0; height: 2px; border-radius: 2px; background: transparent; transition: background .15s; }
+.tab.active { color: var(--text); background: rgba(123, 140, 255, .12); }
+.tab.active::after { background: linear-gradient(90deg, #6d7cff, #a66bff); }
+.tab:focus-visible { outline: 2px solid #8b9bff; outline-offset: -2px; }
+.tab-chip { font-style: normal; font-size: .66rem; font-weight: 700; min-width: 18px; padding: 1px 6px; border-radius: 99px; text-align: center; background: rgba(255, 255, 255, .09); color: var(--muted); }
+.tab-chip:empty { display: none; }
+.tab-chip.live { color: var(--good); background: rgba(52, 211, 153, .14); }
+.tab-chip.warn { color: var(--warn); background: rgba(245, 158, 11, .16); }
+.tab-chip.bad { color: var(--bad); background: rgba(239, 68, 68, .18); }
+/* Gizli sayfa: yer kaplamaz ama genişliğini korur (grafikler ve 3D sahne çizilmeye devam eder) */
+.page:not(.active) { position: absolute; left: 0; right: 0; height: 0; min-height: 0; overflow: hidden; visibility: hidden; pointer-events: none; padding-top: 0; padding-bottom: 0; }
+.bottom { padding-top: 0; }
+body:not([data-page="lab"]) .bottom { padding-top: 14px; }
+body[data-page="lab"] .bottom { padding-bottom: 0; }
+body[data-page="lab"] .foot { padding-top: 0; padding-bottom: 14px; }
+.bottom .group.page.active { max-width: 1900px; width: 100%; margin: 0 auto; }
+@media (min-width: 1101px) {
+  /* Üst çubuk sekme şeridiyle yükseldi: yapışkan yan panel ve sahne yüksekliği buna göre */
+  .side { top: 118px; max-height: calc(100vh - 136px); }
+  .stage { min-height: max(620px, calc(100vh - 178px)); }
+}
+@media (max-width: 760px) { .tab { font-size: .72rem; padding: 6px 10px 8px; } }
