@@ -57,6 +57,8 @@ const Scene3D = {
     this.blades = [];
     this.droneFail = null;
     this.lift = 0;
+    this.oled = null;
+    this.potKnob = null;
     this.rig = new THREE.Group();
     this.scene.add(this.rig);
     if (mode === "drone") this.buildDrone(drone);
@@ -172,10 +174,6 @@ const Scene3D = {
     const label = new THREE.Mesh(new THREE.BoxGeometry(24, 13, 13.2), new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.5 }));
     label.position.set(-10, 84, 0);
     scene.add(label);
-    const wire = new THREE.Mesh(new THREE.TorusGeometry(30, 1.6, 8, 40, Math.PI), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
-    wire.position.set(-62, 70, 18);
-    wire.rotation.y = Math.PI / 2;
-    scene.add(wire);
     // Motor bağlantı plakası
     const mount = new THREE.Mesh(new THREE.CylinderGeometry(22, 22, 4, 32), metal);
     mount.position.set(30, 92, 0);
@@ -209,9 +207,14 @@ const Scene3D = {
     // ESC (elektronik hız kontrolcüsü): taban plakasının üstünde, ısıyla daralan kılıf içinde
     box(46, 9, 24, M(0x1e293b), 23, 12.5, 30);
     box(26, 9.4, 24.4, M(0xf59e0b), 23, 12.5, 30);                       // etiket bandı
-    const escText = makeFlatText("ESC", "#111827", 16);
-    escText.position.set(23, 17.4, 30);
+    const escText = flatLabel(["ESC 45A", "2-6S LiPo · BLHeli_32"], 25, 22, "#f59e0b", "#111827");
+    escText.position.set(23, 17.35, 30);
     scene.add(escText);
+    for (let i = 0; i < 5; i++) box(1.2, 3.2, 20, silver, 38.2 + i * 1.7, 18.4, 30);          // soğutucu kanatları
+    box(9, 1.2, 21, silver, 41.6, 17.2, 30);
+    for (let i = 0; i < 6; i++) box(3.4, 1.6, 2.6, black, 3 + (i % 3) * 2.2 * 1.6, 17.6, 24 + Math.floor(i / 3) * 12);   // MOSFET'ler
+    for (let i = 0; i < 3; i++) box(3, 1.4, 3.6, gold, 1.4, 13, 24 + i * 6);                    // faz lehim pedleri
+    for (const z of [27, 33]) box(3, 1.6, 4, gold, 44.6, 12.6, z);                              // güç lehim pedleri
     const cap = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.2, 14, 20), M(0x1d4ed8, { metalness: 0.4 }));   // giriş kondansatörü
     cap.rotation.x = Math.PI / 2;
     cap.position.set(41, 13, 45);
@@ -232,6 +235,18 @@ const Scene3D = {
     box(36.4, 28.4, 46, M(0xfacc15), 122, 14.5, 24);
     box(36.8, 29, 9, M(0xdc2626), 122, 14.5, -8);
     box(9, 8, 16, M(0xeab308), 99.5, 14, 20);                             // XT60
+    const batTop = flatLabel(["LiPo 6S", "1300 mAh", "22,2 V · 120C", "28,9 Wh"], 30, 40, "#facc15", "#111827");
+    batTop.rotation.z = -Math.PI / 2;
+    batTop.position.set(122, 28.95, 24);
+    scene.add(batTop);
+    const warn = flatLabel(["⚠ YANICI", "Gözetimsiz şarj etme"], 34, 9, "#dc2626", "#ffffff");
+    warn.rotation.z = -Math.PI / 2;
+    warn.position.set(122, 29.3, -8);
+    scene.add(warn);
+    box(37.4, 3, 78.4, M(0x111827), 122, 2, 20);                          // alt koruma bandı
+    // Denge (balans) fişi: 7 ince kablo ve beyaz JST-XH fiş
+    for (let i = 0; i < 7; i++) wire([[106 + i * 0.4, 24, -17], [98, 14, -24 - i * 0.5], [92, 4, -30 - i], [88, 2.4, -33 - i * 1.6]], 0.45, i === 0 ? 0x111827 : i === 6 ? 0xdc2626 : [0xf8fafc, 0xfacc15, 0x2563eb, 0x22c55e, 0xf97316][i - 1]);
+    box(6, 4, 14, M(0xf8fafc), 86, 2.6, -38);
     wire([[46, 12.5, 27], [66, 17, 31], [84, 13, 27], [95, 14, 23.5]], 1.9, 0xdc2626);
     wire([[46, 12.5, 33], [66, 15, 38], [86, 11, 30], [95, 14, 16.5]], 1.9, 0x111827);
     // Kontrol kartı (Arduino): matın üstünde, kameraya doğru eğik sehpada
@@ -240,17 +255,52 @@ const Scene3D = {
     board.rotation.x = 0.6;
     scene.add(board);
     box(70, 1.6, 54, M(0x0e7490), 0, 0, 0, board);                        // devre kartı
-    box(36, 3.2, 9, black, 4, 2.4, 6, board);                             // işlemci
+    box(36, 3.2, 9, black, 0, 2.4, 15, board);                            // işlemci (ATmega328P)
+    const silk = flatLabel(["ARDUINO UNO"], 30, 5, "#0e7490", "#e0f2fe");
+    silk.position.set(2, 0.95, 22.4);
+    board.add(silk);
+    box(5, 3, 5, silver, -20, 2.3, 22, board);                            // sıfırlama düğmesi
+    box(2.4, 1.6, 2.4, M(0xdc2626), -20, 4.4, 22, board);
+    box(9, 3, 4, silver, -12, 2.3, 2, board);                             // kristal (16 MHz)
+    box(7, 2.4, 7, black, -16, 2, -10, board);                            // USB-seri çipi
+    for (const [x, z] of [[-22, 4], [-22, 9]]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.6, 6, 16), silver); c.position.set(x, 3.8, z); board.add(c); }   // kondansatörler
+    for (let i = 0; i < 6; i++) box(1, 5, 1, gold, 28 + (i % 3) * 2.5, 3.3, 18 + Math.floor(i / 3) * 2.5, board);   // ICSP pinleri
+    box(2.4, 1.4, 1.6, new THREE.MeshBasicMaterial({ color: 0xf59e0b }), -6, 1.5, -20, board);   // TX
+    box(2.4, 1.4, 1.6, new THREE.MeshBasicMaterial({ color: 0xf59e0b }), -2, 1.5, -20, board);   // RX
+    // Küçük OLED ekran: devri ve gazı gösterir (her karede güncellenir)
+    for (const [x, z] of [[-11, -19], [15, -19], [-11, -3], [15, -3]]) box(1.6, 6, 1.6, gold, x, 3.8, z, board);
+    box(30, 1.4, 20, M(0x111827), 2, 7.4, -11, board);
+    const oc = document.createElement("canvas");
+    oc.width = 256; oc.height = 128;
+    const otex = new THREE.CanvasTexture(oc);
+    otex.encoding = THREE.sRGBEncoding;
+    const screen = new THREE.Mesh(new THREE.PlaneGeometry(26, 13), new THREE.MeshBasicMaterial({ map: otex }));
+    screen.rotation.x = -Math.PI / 2;
+    screen.position.set(2, 8.2, -11.6);
+    board.add(screen);
+    this.oled = { ctx: oc.getContext("2d"), tex: otex, key: "" };
+    this.drawOled(0, 0);
     box(13, 11, 16, silver, -30, 6, -14, board);                          // USB girişi
     box(9, 10, 12, black, -30, 5.5, 12, board);                           // güç girişi
     for (const z of [-24.5, 24.5]) box(48, 8, 2.6, black, 6, 4.5, z, board);   // pin sıraları
-    box(3, 1.6, 2, new THREE.MeshBasicMaterial({ color: 0x22c55e }), 26, 1.6, -8, board);   // güç ışığı
-    const pot = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 9, 24), M(0x334155));        // gaz potansiyometresi
-    pot.position.set(22, 5, 8);
+    box(3, 1.6, 2, new THREE.MeshBasicMaterial({ color: 0x22c55e }), 2, 1.6, -20, board);    // güç ışığı
+    // Gaz potansiyometresi: düğmesi gaza (dolayısıyla devire) göre döner
+    box(13, 3, 13, M(0x1d4ed8), 27, 2.3, -10, board);
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(5.5, 6, 9, 28), M(0x334155, { metalness: 0.5, roughness: 0.35 }));
+    pot.position.set(27, 8, -10);
     board.add(pot);
-    const knob = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 9), M(0xf8fafc));
-    knob.position.set(22, 10, 5.5);
+    const knob = new THREE.Group();
+    knob.position.set(27, 12.6, -10);
+    const pointer = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.4, 6), M(0xf8fafc));
+    pointer.position.z = -2.6;
+    knob.add(pointer);
     board.add(knob);
+    this.potKnob = knob;
+    for (let i = 0; i <= 6; i++) {                                          // kadran çizgileri (0–100 %)
+      const a = (-135 + i * 45) * Math.PI / 180;
+      const tick = box(0.8, 0.6, 2.2, M(0xe2e8f0), 27 + Math.sin(a) * 8.4, 1.1, -10 - Math.cos(a) * 8.4, board);
+      tick.rotation.y = -a;
+    }
     box(74, 20, 6, M(0x334155), -52, 9.5, 62);                            // sehpa
     // Sinyal kablosu (beyaz sinyal, kırmızı 5 V, siyah GND): ESC → kontrol kartı
     [0xf8fafc, 0xdc2626, 0x111827].forEach((c, i) => {
@@ -258,6 +308,22 @@ const Scene3D = {
       wire([[0, 11, 39 + o], [-14, 9.5, 46 + o], [-28, 16, 56 + o], [-34 + o, 30, 62], [-38 + o, 37, 63]], 0.65, c);
     });
     wire([[-82, 19, 88], [-100, 6, 96], [-130, 1.5, 108], [-180, 1.5, 150]], 1.6, 0x475569);   // USB kablosu → bilgisayar
+  },
+
+  /** Kontrol kartındaki OLED ekranı çizer (değer değişmedikçe yeniden çizmez) */
+  drawOled(rpm, throttle) {
+    const o = this.oled, r = Math.round(rpm / 10) * 10, t = Math.round(throttle * 100), key = r + "|" + t;
+    if (!o || o.key === key) return;
+    o.key = key;
+    const c = o.ctx;
+    c.fillStyle = "#020617"; c.fillRect(0, 0, 256, 128);
+    c.fillStyle = "#67e8f9"; c.textBaseline = "alphabetic";
+    c.font = "700 20px Consolas, monospace"; c.textAlign = "left"; c.fillText("DEVIR/DK", 10, 26);
+    c.textAlign = "right"; c.fillText("GAZ %" + t, 246, 26);
+    c.font = "700 62px Consolas, monospace"; c.textAlign = "center"; c.fillText(r.toLocaleString("tr-TR"), 128, 88);
+    c.strokeStyle = "#67e8f9"; c.lineWidth = 2; c.strokeRect(10, 100, 236, 16);
+    c.fillRect(13, 103, 230 * t / 100, 10);
+    o.tex.needsUpdate = true;
   },
 
   /* ---------- Fırçasız motor (test standında 1, drone'da 4 adet kullanılır) ---------- */
@@ -1117,6 +1183,12 @@ const Scene3D = {
    * extra (drone): { tw } → toplam itki / ağırlık oranı (kalkış ve ip gerginliği için)
    */
   frame(dt, rpm, thrustNorm, extra) {
+    // Kontrol kartı: ekranda devir, potansiyometre gaza göre döner (0 → −135°, %100 → +135°)
+    if (this.oled) this.drawOled(rpm, this.throttle || 0);
+    if (this.potKnob) {
+      const want = -((-135 + 270 * Math.min(1, Math.max(0, this.throttle || 0))) * Math.PI) / 180;
+      this.potKnob.rotation.y += (want - this.potKnob.rotation.y) * Math.min(1, dt * 12);
+    }
     // Bakış açısı geçişi
     if (this.viewAnim) {
       const v = this.viewAnim, o = this.orbit, k = Math.min(1, dt * 5);
@@ -1292,6 +1364,28 @@ function cuttingMatTexture(wMm, dMm) {
   const tex = new THREE.CanvasTexture(c);
   tex.encoding = THREE.sRGBEncoding;
   return tex;
+}
+
+/** Yatay yüzeye yatık etiket (satır satır yazı, renkli zemin) */
+function flatLabel(lines, wMm, dMm, bg, fg) {
+  const k = 16, c = document.createElement("canvas");
+  c.width = Math.round(wMm * k); c.height = Math.round(dMm * k);
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = fg; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  const rowH = c.height / lines.length;
+  lines.forEach((t, i) => {
+    let size = Math.min(rowH * (i === 0 ? 0.78 : 0.6), 200);
+    ctx.font = `800 ${size}px Segoe UI, system-ui, sans-serif`;
+    while (ctx.measureText(t).width > c.width * 0.92 && size > 8) { size -= 2; ctx.font = `800 ${size}px Segoe UI, system-ui, sans-serif`; }
+    ctx.fillText(t, c.width / 2, rowH * (i + 0.5));
+  });
+  const tex = new THREE.CanvasTexture(c);
+  tex.encoding = THREE.sRGBEncoding;
+  tex.anisotropy = 8;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(wMm, dMm), new THREE.MeshBasicMaterial({ map: tex }));
+  m.rotation.x = -Math.PI / 2;
+  return m;
 }
 
 /** Kamera merceği (+x yönüne bakan) */

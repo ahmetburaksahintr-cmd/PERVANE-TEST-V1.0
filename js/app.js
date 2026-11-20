@@ -285,6 +285,7 @@ function loop(now) {
   const stressRatio = ev.sigma / ev.strength;
   Scene3D.deform(S.broken ? 0 : visDefl, stressRatio, S.plastic * S.exag, S.heat);
   S.droneEval = isDrone() ? droneEval(ev) : null;
+  Scene3D.throttle = S.throttle;                  // kontrol kartındaki potansiyometre ve ekran için
   Scene3D.frame(dt, S.rpm, ev.thrustG / 1500, S.droneEval ? { tw: S.droneEval.tw } : null);
 
   // Ölçüm kaydı: simülasyon zamanıyla saniyede 10 satır (grafikler + Excel)

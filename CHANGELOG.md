@@ -1,5 +1,14 @@
 # Sürüm geçmişi
 
+## 1.15.0 — 2026-11-21
+Test standı: devir ekranı, dönen potansiyometre ve ayrıntılı elektronik
+- Kontrol kartına küçük bir ekran eklendi: devir ve gaz yüzdesi canlı görünüyor
+- Karttaki gaz potansiyometresi gaza göre dönüyor; çevresinde kadran çizgileri var
+- Kontrol kartı ayrıntıları: işlemci, sıfırlama düğmesi, kristal, kondansatörler, ICSP pinleri, TX/RX ışıkları, kart yazısı
+- ESC ayrıntıları: "45A 2-6S" etiketi, soğutucu kanatları, MOSFET'ler ve lehim pedleri
+- Batarya ayrıntıları: kapasite/gerilim etiketi, uyarı bandı, denge (balans) fişi ve kabloları
+- Direğin yanındaki boşta duran kırmızı kablo kaldırıldı
+
 ## 1.14.0 — 2026-11-20
 Geniş ekran yerleşimi: sayfa tüm genişliği kullanıyor
 - Sayfanın sağında ve solunda kalan boşluklar kaldırıldı; yerleşim artık ekran genişliğine göre esniyor
