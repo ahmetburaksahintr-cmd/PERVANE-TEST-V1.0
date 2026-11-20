@@ -21,35 +21,48 @@
     <!-- SOL: Ayarlar -->
     <aside class="panel side">
       <section>
-        <h3>1 · Filament (malzeme)</h3>
+        <h3>1 · Test düzeneği</h3>
+        <div class="seg" id="rigSeg">
+          <button data-rig="stand" class="active">🔧 Test standı</button>
+          <button data-rig="drone">🛸 FPV drone</button>
+        </div>
+        <div id="dronePick" hidden>
+          <select id="droneSel"></select>
+          <div id="droneInfo" class="kv small"></div>
+          <p id="droneNote" class="note"></p>
+        </div>
+      </section>
+      <section>
+        <h3>2 · Filament (malzeme)</h3>
         <div id="matList" class="mat-list"></div>
         <p id="matNote" class="note"></p>
       </section>
       <section>
-        <h3>2 · Pervane rengi</h3>
+        <h3>3 · Pervane rengi</h3>
         <div id="colorList" class="color-list"></div>
         <label class="custom-color">Özel renk <input type="color" id="customColor" value="#ff6b00"></label>
         <p class="note">Pervane sıfırken seçtiğin renkte görünür; zorlandıkça kırılacağı bölge <b class="warn">sarı</b> → <b class="bad">kırmızı</b> olur ve kökte uyarı halkası yanıp söner.</p>
       </section>
       <section>
-        <h3>3 · Fırçasız motor</h3>
+        <h3>4 · Fırçasız motor</h3>
         <select id="motorSel"></select>
         <div id="motorInfo" class="kv small"></div>
+        <p id="motorLock" class="note" hidden>🔒 Drone modunda motor ve pervane çapı drone modeline göre sabittir.</p>
       </section>
       <section>
-        <h3>4 · Pervane geometrisi</h3>
+        <h3>5 · Pervane geometrisi</h3>
         <label>Çap <b id="vDia"></b><input type="range" id="dia" min="3" max="10" step="0.5"></label>
         <label>Hatve (pitch) <b id="vPitch"></b><input type="range" id="pitch" min="2" max="7" step="0.1"></label>
         <label>Kök veter genişliği <b id="vChord"></b><input type="range" id="chord" min="6" max="22" step="0.5"></label>
         <label>Kök kalınlığı <b id="vThick"></b><input type="range" id="thick" min="1.2" max="5" step="0.1"></label>
       </section>
       <section>
-        <h3>5 · Ortam</h3>
+        <h3>6 · Ortam</h3>
         <label>Pervane sıcaklığı <b id="vTemp"></b><input type="range" id="temp" min="15" max="90" step="1"></label>
         <p class="note">Motor ısındıkça pervane göbeği de ısınır; PLA ~55 °C'de yumuşamaya başlar.</p>
       </section>
       <section>
-        <h3>6 · Görünüm</h3>
+        <h3>7 · Görünüm</h3>
         <label>Bükülme abartma <b id="vExag"></b><input type="range" id="exag" min="1" max="10" step="1"></label>
         <label class="check"><input type="checkbox" id="heat" checked> Gerilme renk haritası</label>
       </section>
@@ -71,6 +84,11 @@
           <div><small>Güç / akım</small><b id="hPower">–</b></div>
           <div><small>Verim</small><b id="hEff">–</b></div>
           <div><small>Pervane kütlesi</small><b id="hMass">–</b></div>
+        </div>
+        <div class="hud-drone" id="hDrone" hidden>
+          <div><small>Toplam itki (4 pervane)</small><b id="hDThrust">–</b></div>
+          <div><small>İtki / ağırlık</small><b id="hDTw">–</b></div>
+          <div><small>Toplam akım</small><b id="hDAmp">–</b></div>
         </div>
         <div class="limit"><div class="limit-head"><small>Kırılma sınırına yakınlık</small><b id="hLimitTxt">%0</b></div><div class="limit-bar"><i id="hLimit"></i></div></div>
         <div id="hState" class="state ok">HAZIR</div>

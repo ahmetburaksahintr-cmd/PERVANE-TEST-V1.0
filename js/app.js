@@ -6,6 +6,7 @@ const $ = (s) => document.querySelector(s);
 const fmt = (n, d = 0) => Number(n).toLocaleString("tr-TR", { maximumFractionDigits: d, minimumFractionDigits: d });
 
 const S = {
+  rig: "stand", droneKey: "fpv5", standCfg: null,
   matKey: "PLA", motorKey: "m2207",
   prop: { diameterIn: 5, pitchIn: 4.3, chordMm: 12, thickMm: 2.4, ctScale: 1 },
   tempC: 25, exag: 3, heat: true,
@@ -17,6 +18,8 @@ const S = {
 
 const mat = () => MATERIALS[S.matKey];
 const motor = () => MOTORS[S.motorKey];
+const drone = () => DRONES[S.droneKey];
+const isDrone = () => S.rig === "drone";
 const maxRpm = () => Physics.maxRpm(motor(), Physics.geometry(S.prop));
 
 /* ---------------- Başlatma ---------------- */
@@ -31,6 +34,17 @@ function init() {
     S.motorKey = e.target.value;
     S.prop.diameterIn = motor().propIn;
     syncInputs(); newProp("Motor değişti");
+  };
+
+  // Test düzeneği: test standı veya FPV drone
+  $("#rigSeg").onclick = (e) => { const b = e.target.closest("button"); if (b) setRig(b.dataset.rig); };
+  $("#droneSel").innerHTML = Object.entries(DRONES).map(([k, d]) => `<option value="${k}">${d.name}</option>`).join("");
+  $("#droneSel").value = S.droneKey;
+  $("#droneSel").onchange = (e) => {
+    S.droneKey = e.target.value;
+    applyDrone();
+    Scene3D.setRig("drone", drone());
+    newProp(`🛸 ${drone().name} test düzeneğine alındı`);
   };
 
   const bindRange = (id, apply) => { $(id).oninput = (e) => { apply(Number(e.target.value)); syncInputs(); }; };
@@ -91,6 +105,7 @@ function syncInputs() {
   $("#temp").value = S.tempC; $("#vTemp").textContent = `${S.tempC} °C`;
   $("#exag").value = S.exag; $("#vExag").textContent = S.exag === 1 ? "gerçek" : `×${S.exag}`;
   $("#thr").value = Math.round(S.throttle * 100); $("#vThr").textContent = `${Math.round(S.throttle * 100)}%`;
+  if (isDrone()) updateDroneInfo();
   const m = motor();
   $("#motorInfo").innerHTML = `<span>KV</span><b>${m.kv}</b><span>Gerilim</span><b>${m.cells}S · ${fmt(m.cells * 3.7, 1)} V</b>
     <span>Maks. güç</span><b>${m.pmax} W</b><span>Bu pervaneyle maks. devir</span><b>${fmt(maxRpm())}</b>`;
@@ -115,6 +130,51 @@ function newProp(logMsg) {
   if (logMsg) log(logMsg, "info");
   refreshCompare();
   syncInputs();
+}
+
+/* ---------------- Test düzeneği (stand / FPV drone) ---------------- */
+function setRig(mode) {
+  if (S.rig === mode) return;
+  S.seq = null;
+  if (mode === "drone") {
+    S.standCfg = { motorKey: S.motorKey, diameterIn: S.prop.diameterIn };
+    S.rig = mode;
+    applyDrone();
+  } else {
+    S.rig = mode;
+    if (S.standCfg) { S.motorKey = S.standCfg.motorKey; S.prop.diameterIn = S.standCfg.diameterIn; }
+  }
+  document.querySelectorAll("#rigSeg button").forEach((b) => b.classList.toggle("active", b.dataset.rig === mode));
+  $("#dronePick").hidden = $("#hDrone").hidden = $("#motorLock").hidden = mode !== "drone";
+  $("#motorSel").disabled = $("#dia").disabled = mode === "drone";
+  $("#motorSel").value = S.motorKey;
+  Scene3D.setRig(mode, drone());
+  newProp(mode === "drone" ? `🛸 FPV drone düzeneği: ${drone().name} (4 × ${motor().name})` : "🔧 Test standına geçildi (tek motor + yük hücresi)");
+}
+
+/** Drone modelinin motorunu ve pervane ölçüsünü uygular */
+function applyDrone() {
+  const d = drone();
+  S.motorKey = d.motorKey;
+  Object.assign(S.prop, d.prop);
+  $("#motorSel").value = S.motorKey;
+  $("#droneNote").innerHTML = `<b>Donanım:</b> ${d.parts}<br>${d.note}`;
+  updateDroneInfo();
+}
+function updateDroneInfo() {
+  const d = drone(), m = MOTORS[d.motorKey];
+  const propMass = Physics.evaluate({ mat: mat(), motor: m, prop: S.prop, rpm: 0, tempC: S.tempC }).mass;
+  $("#droneInfo").innerHTML = `<span>Şase</span><b>${d.wheelbaseMm} mm X</b><span>Motorlar</span><b>4 × ${m.name}</b>
+    <span>Pervane</span><b>4 × ${d.prop.diameterIn}" (2 CW + 2 CCW)</b><span>Batarya</span><b>${d.battery}</b>
+    <span>Kalkış ağırlığı</span><b>${fmt(d.massG + 4 * propMass)} g</b>`;
+}
+
+/** Drone için 4 pervanenin toplamı (kırık pervane %25 itki verir) */
+function droneEval(ev) {
+  const d = drone();
+  const total = S.broken ? ev.thrustG * 13 : ev.thrustG * 4;
+  const auw = d.massG + 4 * ev.mass;
+  return { total, auw, tw: total / auw, amps: ev.current * 4, power: ev.power * 4 };
 }
 
 /* ---------------- Otomatik rampa testi ---------------- */
@@ -199,7 +259,8 @@ function loop(now) {
   const visDefl = Math.min(L * 1.1, realDefl * S.exag);
   const stressRatio = ev.sigma / ev.strength;
   Scene3D.deform(S.broken ? 0 : visDefl, stressRatio, S.plastic * S.exag, S.heat);
-  Scene3D.frame(dt, S.rpm, ev.thrustG / 1500);
+  S.droneEval = isDrone() ? droneEval(ev) : null;
+  Scene3D.frame(dt, S.rpm, ev.thrustG / 1500, S.droneEval ? { tw: S.droneEval.tw } : null);
 
   // Ölçüm kaydı: simülasyon zamanıyla saniyede 10 satır (grafikler + Excel)
   S.simT += dt;
@@ -231,6 +292,10 @@ function checkEvents(ev) {
     S.breakInfo = { rpm: ev.rpm, thrust: ev.thrustG, stress: ev.sigma / 1e6, strength: ev.strength / 1e6 };
     recordPoint(ev, ev.delta * 1000, "KIRILDI");
     Scene3D.breakBlade(ev.rpm);
+    if (isDrone()) {
+      S.breakInfo.where = Scene3D.brokenLabel;
+      log(`🛸 ${Scene3D.brokenLabel} pervanesi koptu → drone dengesini kaybetti, kalan 3 motorla savrularak pede düştü`, "bad");
+    }
     // Kırılma anının görüntüsü (parçalar havadayken) ve indirme sorusu
     setTimeout(() => { S.breakShot = { url: Scene3D.snapshot(), w: Scene3D.renderer.domElement.width, h: Scene3D.renderer.domElement.height }; }, 350);
     if (!S.seq && !S.muteReport) setTimeout(() => { if (S.broken) openReportModal(buildRecord(), "💥 Pervane kırıldı!"); }, 1600);
@@ -264,8 +329,16 @@ function updateHud(ev, realDefl) {
   else if (ev.state === "warn") { cls = "warn"; txt = "⚠️ SINIRDA"; }
   st.className = "state " + cls;
   st.textContent = txt;
-  // Başlık: malzeme + renk
-  $("#hTitle").innerHTML = `<i style="background:${legendStart()}"></i>${mat().name} · ${colorName()}`;
+  // Başlık: (drone) + malzeme + renk
+  $("#hTitle").innerHTML = `<i style="background:${legendStart()}"></i>${isDrone() ? "🛸 " + drone().short + " · " : ""}${mat().name} · ${colorName()}`;
+  if (S.droneEval) {
+    const de = S.droneEval;
+    $("#hDThrust").textContent = `${fmt(de.total)} g`;
+    $("#hDTw").textContent = S.rpm < 100 ? "–" : `${fmt(de.tw, 1)} : 1`;
+    $("#hDTw").style.color = S.rpm < 100 ? "" : de.tw < 1 ? "var(--warn)" : "var(--good)";
+    $("#hDTw").title = de.tw < 1 ? "İtki ağırlıktan az: drone kalkamaz" : "Drone kalkar (ipler gergin)";
+    $("#hDAmp").textContent = `${fmt(de.amps)} A`;
+  }
   // Kırılma sınırına yakınlık çubuğu
   const lim = S.broken ? 100 : Math.min(100, pctS);
   $("#hLimit").style.width = lim + "%";
@@ -505,6 +578,7 @@ function buildRecord(opts = {}) {
   const ev = S.lastEval;
   const rec = {
     date: new Date(), material: mat(), colorName: colorName(), motor: motor(), prop: { ...S.prop }, tempC: S.tempC,
+    rig: rigInfo(peak, ev),
     ctScale: S.prop.ctScale || 1, mass: ev ? ev.mass : 0, strength: ev ? ev.strength / 1e6 : 0,
     broken: S.broken, breakRpm: S.breakInfo && S.breakInfo.rpm, breakThrust: S.breakInfo && S.breakInfo.thrust,
     breakStress: S.breakInfo && S.breakInfo.stress,
@@ -523,6 +597,16 @@ function buildRecord(opts = {}) {
   return rec;
 }
 
+/** Raporlar için test düzeneği özeti */
+function rigInfo(peak, ev) {
+  if (!isDrone()) return { mode: "stand", name: "Test standı (tek motor + yük hücresi)" };
+  const d = drone(), auw = d.massG + 4 * (ev ? ev.mass : 0);
+  return {
+    mode: "drone", name: `FPV drone – ${d.name}`, short: d.short, battery: d.battery, wheelbaseMm: d.wheelbaseMm, auw,
+    maxTotalThrust: peak.thrust * 4, maxTw: (peak.thrust * 4) / auw, where: S.breakInfo && S.breakInfo.where
+  };
+}
+
 let currentRecord = null;
 async function openReportModal(rec, title) {
   currentRecord = rec;
@@ -532,6 +616,7 @@ async function openReportModal(rec, title) {
   $("#rmShot").src = rec.snapshot.url;
   const st = (k, v, cls = "") => "<div><small>" + k + "</small><b class=\"" + cls + "\">" + v + "</b></div>";
   $("#rmStats").innerHTML = [
+    rec.rig.mode === "drone" ? st("Düzenek", "🛸 " + rec.rig.short + " · İ/A " + fmt(rec.rig.maxTw, 1) + ":1") : "",
     st("Pervane", rec.material.name + " · " + rec.colorName),
     rec.broken ? st("Kırılma devri", fmt(rec.breakRpm) + " dev/dk", "bad") : st("Sonuç", rec.plastic > 0.05 ? "Kalıcı bükülme" : "Hasarsız", rec.plastic > 0.05 ? "warn" : "good"),
     rec.broken ? st("Kırılma anındaki itki", fmt(rec.breakThrust) + " g") : st("En yüksek gerilme", "%" + fmt(rec.maxStressPct)),

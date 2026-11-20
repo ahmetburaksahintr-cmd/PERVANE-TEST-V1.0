@@ -12,13 +12,21 @@ const Report = {
     const d = rec.date;
     const pad = (n) => String(n).padStart(2, "0");
     const stamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
-    return `pervane-testi_${clean(rec.material.name)}_${clean(rec.colorName)}_${stamp}`;
+    return `${rec.rig && rec.rig.mode === "drone" ? "drone-testi" : "pervane-testi"}_${clean(rec.material.name)}_${clean(rec.colorName)}_${stamp}`;
   },
 
   summaryRows(rec) {
     const r1 = (v, d = 1) => (v == null ? "–" : Math.round(v * 10 ** d) / 10 ** d);
     return [
       ["Test tarihi", rec.date.toLocaleString("tr-TR")],
+      ["Test düzeneği", rec.rig ? rec.rig.name : "Test standı"],
+      ...(rec.rig && rec.rig.mode === "drone" ? [
+        ["Drone kalkış ağırlığı (g)", Math.round(rec.rig.auw)],
+        ["Batarya", rec.rig.battery],
+        ["En yüksek toplam itki – 4 pervane (g)", Math.round(rec.rig.maxTotalThrust)],
+        ["En yüksek itki / ağırlık oranı", r1(rec.rig.maxTw)],
+        ["Kırılan pervane", rec.broken ? rec.rig.where || "–" : "–"]
+      ] : []),
       ["Malzeme", `${rec.material.name} (${rec.material.full})`],
       ["Pervane rengi", rec.colorName],
       ["Motor", rec.motor.name],
@@ -118,10 +126,12 @@ const Report = {
 
     const children = [
       new D.Paragraph({ heading: D.HeadingLevel.TITLE, children: [new D.TextRun({ text: "Pervane Test Raporu" })] }),
-      P(`${m.name} · ${rec.colorName} · ${rec.motor.name}`, { r: { size: 26, color: "4F46E5", bold: true } }),
+      P(`${m.name} · ${rec.colorName} · ${rec.motor.name}${rec.rig && rec.rig.mode === "drone" ? " · 🛸 " + rec.rig.short + " FPV drone" : ""}`, { r: { size: 26, color: "4F46E5", bold: true } }),
       P(`Tarih: ${rec.date.toLocaleString("tr-TR")} · Pervane Test Laboratuvarı v${typeof APP_VERSION !== "undefined" ? APP_VERSION : ""}`, { r: { color: "666666", size: 18 } }),
       H("1. Sonuç"),
-      P(verdict),
+      P(verdict + (rec.rig && rec.rig.mode === "drone"
+        ? ` Test, ${rec.rig.short} FPV drone üzerinde 4 pervaneyle bağlı (tether) olarak yapıldı: kalkış ağırlığı ${fmtTR(rec.rig.auw)} g, en yüksek toplam itki ${fmtTR(rec.rig.maxTotalThrust)} g, itki/ağırlık oranı ${fmtTR(rec.rig.maxTw, 1)}:1.${rec.broken && rec.rig.where ? ` Kırılan pervane: ${rec.rig.where}; drone bu köşeye yatarak dengesini kaybetti.` : ""}`
+        : "")),
       image(rec.snapshot, 560),
       rec.snapshot && caption(rec.broken ? "Şekil 1 – Kırılma anı (3D simülasyon). Kırmızı halka kırılma noktasını gösterir." : "Şekil 1 – Test sonundaki pervane (3D simülasyon)."),
       H("2. Test koşulları ve ölçülen değerler"),

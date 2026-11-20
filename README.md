@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.2.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.3.0
 
-> **Güncel sürüm: v1.2.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.3.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.2.0** | 2026-11-20 | Excel, Word ve rapor çıktıları: kırılınca indirme penceresi, Excel veri dosyası, grafikli Word raporu |
+| **v1.3.0** | 2026-11-20 | FPV drone test düzeneği: 5" freestyle drone üzerinde 4 pervaneyle kırılma testi |
+| v1.2.0 | 2026-11-20 | Excel, Word ve rapor çıktıları: kırılınca indirme penceresi, Excel veri dosyası, grafikli Word raporu |
 | v1.1.0 | 2026-11-20 | Pervane renkleri: 17 renk, kırılma noktasının renk ve halkayla işaretlenmesi, sürüm takibi |
 | v1.0.0 | 2026-11-20 | İlk sürüm: 3D test laboratuvarı, 6 filament, 4 motor, grafikler, Arduino test düzeneği |
 <!-- SURUMLER:BITIS -->
@@ -24,6 +25,9 @@ Proje iki parçadan oluşur:
 
 ## Neler yapabilirsin?
 - **6 malzeme:** PLA, PETG, ABS, ASA, Karbon fiber naylon (PA-CF) ve TPU 95A.
+- **İki test düzeneği:** Sol menünün en üstünden seçilir.
+  - 🔧 **Test standı:** Tek motor, yük hücresiyle itki ölçümü (gerçek Arduino düzeneğinin dijital ikizi).
+  - 🛸 **FPV drone:** 5" freestyle FPV drone (225 mm karbon X şase, 4 × 2207 1950KV, 6S 1100 mAh, yaklaşık 645 g). Dört pervanenin ikisi saat yönünde, ikisi ters döner. Drone pede iplerle bağlıdır: gaz açılıp itki ağırlığı geçince kalkar ve ipler gerilir. Gösterge, 4 pervanenin toplam itkisini, itki/ağırlık oranını ve toplam akımı gösterir. Bir pervane kırılınca hangi motorun pervanesinin koptuğu yazılır; drone o köşeye yatar, savrulur ve pede düşer. Raporlara drone bilgileri de eklenir. Yeni drone modelleri sonraki sürümlerde eklenecek.
 - **4 fırçasız motor:** 1404 3800KV, 2207 1950KV, 2806.5 1300KV ve 3115 900KV.
 - **Pervane geometrisi:** Çap, hatve, kök veter genişliği ve kök kalınlığı değiştirilebilir. Göbek sıcaklığı da ayarlanabilir; PLA'nın ısıyla yumuşamasını görebilirsin.
 - **Otomatik rampa testi:** Gaz 11 saniyede %0'dan %100'e çıkar. Pervane sırayla şu aşamalardan geçer:

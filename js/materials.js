@@ -57,6 +57,24 @@ const MOTORS = {
   m1404: { name: "1404 · 3800KV · 4S", kv: 3800, cells: 4, pmax: 330, imax: 20, mass: 9, propIn: 3 }
 };
 
+/* FPV drone modelleri (bağlı / tether kırılma testi)
+   motorKey: kullanılan motor · prop: şasenin aldığı pervane · massG: pervanesiz kalkış ağırlığı (batarya dahil)
+   Yeni modeller bu listeye eklenir; arayüz ve 3D sahne otomatik uyum sağlar. */
+const DRONES = {
+  fpv5: {
+    name: '5" Freestyle FPV · X şase',
+    short: '5" Freestyle',
+    motorKey: "m2207",
+    prop: { diameterIn: 5, pitchIn: 4.3, chordMm: 12, thickMm: 2.4 },
+    wheelbaseMm: 225,
+    massG: 630,
+    battery: "6S 1100 mAh LiPo",
+    accent: 0xf97316,
+    parts: "225 mm karbon X şase · 4 × 2207 1950KV · 4in1 45A ESC · F7 uçuş kartı · analog/HD FPV kamera · TPU parçalar",
+    note: "Freestyle ve yarış için en yaygın sınıf. Drone yere bağlıdır (tether); gaz açılınca kalkar ve ipler gerilir. Pervanelerden biri kırılınca o köşeye yatar ve pede düşer."
+  }
+};
+
 /* Pervane renkleri (filament renkleri)
    hex: düz renk · metal: ipek/metalik parlaklık · clear: yarı saydam
    glow: karanlıkta parlayan · gradient: kanat boyunca renk geçişi

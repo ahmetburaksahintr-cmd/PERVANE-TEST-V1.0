@@ -205,3 +205,15 @@ canvas.bars { width: 100%; height: 220px; display: block; margin-top: 14px; }
   .rm-top, .rm-choices { grid-template-columns: 1fr; }
   .color-list { grid-template-columns: repeat(6, 1fr); }
 }
+
+/* Test düzeneği seçimi (stand / FPV drone) */
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 4px; margin-bottom: 10px; }
+.seg button { border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 700; padding: 9px 6px; border-radius: 9px; cursor: pointer; transition: background .15s, color .15s; }
+.seg button:hover { color: var(--text); }
+.seg button.active { background: linear-gradient(135deg, #6366f1, #f97316); color: #fff; box-shadow: 0 4px 14px rgba(99, 102, 241, .35); }
+select:disabled, input[type=range]:disabled { opacity: .45; cursor: not-allowed; }
+.hud-drone { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; padding: 8px; border-radius: 10px; background: rgba(249, 115, 22, .1); border: 1px solid rgba(249, 115, 22, .35); }
+.hud-drone[hidden] { display: none; }
+.hud-drone div { display: flex; flex-direction: column; }
+.hud-drone small { color: var(--muted); font-size: .68rem; }
+.hud-drone b { font-size: .95rem; }
