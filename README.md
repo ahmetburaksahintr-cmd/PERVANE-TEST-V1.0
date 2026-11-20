@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.10.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.11.0
 
-> **Güncel sürüm: v1.10.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.11.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.10.0** | 2026-11-20 | Yeni drone modelleri: GEPRC CineLog35 V2 ve Happymodel Mobula7 1S |
+| **v1.11.0** | 2026-11-20 | Yeni drone modelleri: DJI Avata 2, iFlight Nazgul Evoque F5X V2 ve Chimera7 Pro V2 |
+| v1.10.0 | 2026-11-20 | Yeni drone modelleri: GEPRC CineLog35 V2 ve Happymodel Mobula7 1S |
 | v1.9.0 | 2026-11-20 | Kanat sayısı sayfadan Arduino'ya gönderiliyor |
 | v1.8.2 | 2026-11-20 | Arduino itki ölçümü düzeltmesi: sahte 0 g satırları gönderilmiyor |
 | v1.8.1 | 2026-11-20 | Arduino güvenlik kilidi: gaz açıkken motor devreye girmez |
@@ -45,11 +46,16 @@ Proje iki parçadan oluşur:
   |---|---|---|---|---|---|
   | 5" Freestyle (genel yapım) | Açık karbon X şase | 4 × 2207 1950KV | 5043, 2 kanat | 6S 1100 mAh | ~645 g |
   | DJI FPV (2021) | Kapalı gövde, gimbal kamera | 4 × DJI FPV motoru, 2306 sınıfı, ~1900KV* | DJI 5328S, 3 kanat | 6S 2000 mAh, 295 g | ~795 g |
+  | DJI Avata 2 (2024) | Tek parça kanallı gövde, gimbal kamera | 4 × DJI Avata 2 motoru, ~1505 sınıfı, ~3600KV* | DJI 3032S, 75,66 mm, 3 kanat | 2150 mAh, 14,76 V, 145 g | ~377 g |
   | BETAFPV Pavo35 | 3,5" cinewhoop (kanallı) | 4 × 2006 2400KV | Gemfan D90S, 3 kanat | 6S 1100 mAh | ~450 g |
   | BETAFPV Pavo20 Pro | 2,2" cinewhoop (kanallı) | 4 × LAVA 1104 7200KV | 2,2", 3 kanat | 3S 450 mAh | ~108 g |
   | BETAFPV Meteor75 Pro | 1S tiny whoop | 4 × 1102 22000KV | Gemfan 45 mm, 3 kanat | 1S 550 mAh | ~48 g |
   | GEPRC CineLog35 V2 HD O3 | 3,5" cinewhoop (kanallı) | 4 × SPEEDX2 2105.5 2650KV | HQProp DT90MMX3, 3 kanat | 6S 1300 mAh, 207 g | ~496 g |
   | Happymodel Mobula7 1S | 1S tiny whoop | 4 × RS0802 20000KV | Gemfan 1610-2, 40 mm, 2 kanat | 1S 450 mAh | ~38 g |
+  | iFlight Nazgul Evoque F5X V2 (O3) | 5" freestyle, ışıklı yan paneller | 4 × XING2 2207 1750KV | Nazgul F5, 5,1", 3 kanat | 6S 1550 mAh, 253 g | ~690 g |
+  | iFlight Chimera7 Pro V2 (O3) | 7,5" uzun menzil, GPS | 4 × XING2 2809 1250KV | HQProp 7.5X3.7X3, 3 kanat | 6S 3300 mAh, 442 g | ~1165 g |
+
+  DJI Avata 2'de DJI'ın yayımlamadığı değerler (motor, pervane hatvesi, motorlar arası mesafe) tahminidir. Happymodel RS0802 motorunun güç ve akım sınırı da tahminidir. iFlight, O3 sürümlerinin sayfalarını kaldırdığı için bu iki modelin ağırlıkları satıcı listelerinden alınmıştır.
 
   \* DJI, DJI FPV motorunun stator ölçüsünü ve KV değerini açıklamamıştır; bu değerler tahminidir. Ağırlık, köşegen, batarya ve pervane bilgileri üreticilerin ve satıcıların yayımladığı değerlerdendir. Hatve ve kanat kesiti ise pervanenin 3D baskı karşılığı için yaklaşık değerlerdir.
 

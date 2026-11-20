@@ -744,6 +744,8 @@ const Scene3D = {
       rs.position.set(-xr - 0.6, ductTop * 0.3, zs * hullW * 0.26);
       body.add(rs);
     }
+    // Gövdenin üstündeki durum göstergesi (normal uçuşta yeşil)
+    this.addLed(body, 5, 1, 3, -4, topY - 6.4, 0, 0x22c55e);
     return { baseY: 2, motorY, topY, attachY: 0 };
   },
 

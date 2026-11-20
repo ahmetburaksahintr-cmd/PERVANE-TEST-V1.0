@@ -1,5 +1,14 @@
 # Sürüm geçmişi
 
+## 1.11.0 — 2026-11-20
+Yeni drone modelleri: DJI Avata 2, iFlight Nazgul Evoque F5X V2 ve Chimera7 Pro V2
+- DJI Avata 2 (2024): pervane korumalarıyla tek parça gövde, arkadan takılan batarya, gimbal kamera; 3032S üç kanatlı pervane, 2150 mAh 14,76 V batarya, ~377 g
+- iFlight Nazgul Evoque F5X V2 (DJI O3): 225 mm şase, ışıklı yan paneller, XING2 2207 1750KV, Nazgul F5 5,1" üç kanatlı pervane
+- iFlight Chimera7 Pro V2 (DJI O3): 327 mm deadcat şase, GPS, XING2 2809 1250KV, HQProp 7.5X3.7X3 pervane; listedeki en büyük model
+- DJI'ın yayımlamadığı Avata 2 değerleri (motor, pervane hatvesi, motorlar arası mesafe) tahmini olarak işaretlendi
+- iFlight O3 sayfalarını kaldırdığı için bu iki modelin ağırlıkları satıcı listelerinden alındı; motor, pervane ve şase değerleri iFlight'ın kendi sayfalarından
+- Drone listesine iFlight marka grubu eklendi; README tablosu güncellendi
+
 ## 1.10.0 — 2026-11-20
 Yeni drone modelleri: GEPRC CineLog35 V2 ve Happymodel Mobula7 1S
 - GEPRC CineLog35 V2 HD O3: 3,5" kanallı sinema dronu, SPEEDX2 2105.5 2650KV (6S), HQProp DT90MMX3 üç kanatlı pervane, 142 mm, 285,8 g (bataryasız)
