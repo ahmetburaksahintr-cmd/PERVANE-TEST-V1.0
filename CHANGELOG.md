@@ -1,5 +1,15 @@
 # Sürüm geçmişi
 
+## 1.18.0 — 2026-11-21
+DJI FPV gerçek fotoğraflarına göre baştan çizildi
+- Gövde öne doğru yükseliyor: arkada batarya yere yakın, önde kamera yukarıda; üstte parlak füme kubbe ve 6 yarıklı hava girişi
+- Arka motorlar ön motorlardan yüksekte; ön kollar alttan, arka kollar üstten çıkıyor
+- İniş ayakları yalnızca ön motorların altında, önlerinde beyaz ışık şeridi; arka taraf bataryanın lastik ayaklarına oturuyor
+- Burunda açık kafes içinde gimbal kamera ve yanında gimbal motoru; altında iki ön görüş sensörlü çene çubuğu ve "dji" yazılı sensör bölmesi
+- Motorların alt yarısı gümüş bantlı; çandaki uydurma yazı kaldırıldı (gerçek motorda yazı yok), "A" motorlarda kırmızı halka
+- Gövdenin iki yanında beyaz "FPV" yazısı ve vidalı gümüş plaka; bataryanın arkasında düğme ve 4 seviye ışığı
+- Kaynak: DJI destek sayfasındaki resmî görsel ve inceleme fotoğrafları
+
 ## 1.17.0 — 2026-11-21
 Arayüz: başlığın altında mini sekmeler, kırmızı TÜBİTAK rozeti
 - Alttaki üç bölüm (Grafikler ve karşılaştırma, Ölçümler ve kayıtlar, Nasıl hesaplanıyor?) başlığın altındaki ince şeride mini sekmeler olarak taşındı

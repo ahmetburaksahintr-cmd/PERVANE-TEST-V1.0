@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.17.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.18.0
 
-> **Güncel sürüm: v1.17.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.18.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.17.0** | 2026-11-21 | Arayüz: başlığın altında mini sekmeler, kırmızı TÜBİTAK rozeti |
+| **v1.18.0** | 2026-11-21 | DJI FPV gerçek fotoğraflarına göre baştan çizildi |
+| v1.17.0 | 2026-11-21 | Arayüz: başlığın altında mini sekmeler, kırmızı TÜBİTAK rozeti |
 | v1.16.0 | 2026-11-21 | Uçuş bölümü: drone'u klavyeyle uçur |
 | v1.15.0 | 2026-11-21 | Test standı: devir ekranı, dönen potansiyometre ve ayrıntılı elektronik |
 | v1.14.0 | 2026-11-20 | Geniş ekran yerleşimi: sayfa tüm genişliği kullanıyor |

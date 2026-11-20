@@ -59,7 +59,7 @@ const MOTORS = {
   m1404: { name: "1404 · 3800KV · 4S", kv: 3800, cells: 4, pmax: 330, imax: 20, mass: 9, propIn: 3, stator: 14, label: "1404  3800KV" },
   // Hazır drone motorları
   dji2306: { name: "DJI FPV motoru · 2306 sınıfı · ~1900KV* · 6S", kv: 1900, cells: 6, pmax: 780, imax: 38, mass: 34, propIn: 5.3, stator: 23,
-    label: "DJI FPV  2306", bell: 0x0d0e10, estimated: "DJI, DJI FPV motorunun stator ölçüsünü ve KV değerini açıklamamıştır; 2306 sınıfı ve ~1900KV, 6S 5\" sınıfına göre tahmindir." },
+    label: " ", bell: 0x26282c, estimated: "DJI, DJI FPV motorunun stator ölçüsünü ve KV değerini açıklamamıştır; 2306 sınıfı ve ~1900KV, 6S 5\" sınıfına göre tahmindir." },
   djiAvata2: { name: "DJI Avata 2 motoru · ~1505 sınıfı · ~3600KV* · 14,76 V", kv: 3600, cells: 4, pmax: 150, imax: 12, mass: 14, propIn: 2.98, stator: 15,
     label: "DJI AVATA 2", bell: 0x3f444b, estimated: "DJI, Avata 2 motorunun stator ölçüsünü, KV değerini, gücünü ve akımını açıklamamıştır; ~1505 sınıfı, ~3600KV, 150 W ve 12 A, 3\" kanallı dronlar için tahmindir. Hücre sayısı da yayımlanmamıştır; 14,76 V standart gerilim 4 hücreye karşılık gelir." },
   // iFlight XING2 2207 1750KV: 12N14P, 30,5 g (kablolu), tepe 36,03 A, 898 W (üretici değerleri)

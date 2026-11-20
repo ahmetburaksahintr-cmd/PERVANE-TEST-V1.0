@@ -408,7 +408,7 @@ const Scene3D = {
     blur.rotation.x = -Math.PI / 2;
     blur.position.y = 26;
     bellG.add(blur);
-    const unit = { group: g, bell: bellG, pivot, blur, bellMat, labelMat, s: 1 };
+    const unit = { group: g, bell: bellG, pivot, blur, bellMat, labelMat, stripe, baseRing, s: 1 };
     this.styleMotor(unit, motor);
     return unit;
   },
@@ -482,7 +482,7 @@ const Scene3D = {
     const labels = ["M1 sağ ön", "M2 sağ arka", "M3 sol arka", "M4 sol ön"];
     pos.forEach(([x, z], i) => {
       const unit = this.createMotorUnit(motor);
-      unit.group.position.set(x, info.motorY, z);
+      unit.group.position.set(x, typeof info.motorY === "function" ? info.motorY(i, x, z) : info.motorY, z);
       body.add(unit.group);
       this.units.push(Object.assign(unit, { dir: dirs[i], label: labels[i], home: unit.group.position.clone() }));
     });
@@ -636,138 +636,149 @@ const Scene3D = {
   },
 
   /**
-   * DJI FPV (2021) – DJI'ın resmî bilgilerine göre:
-   *  · Gövde çoğunlukla siyah; üst kapak şeffaf siyah (veya yeşil) plastik
-   *  · Gövde kabuğu PA66 + %30 karbon fiber, kollar PA6 + %40 cam elyaf
-   *  · 10 gösterge: ön iniş ayaklarının önünde 2, motorların arkasında 4, kolların arkasında 4
-   *  · "A" motorların pervane yuvasında kırmızı yay, "A" pervanelerde kırmızı işaret
-   *  · Ön görüş sensörü, alt görüş sensörü, alt ToF sensörü, 300 lümen alt yardımcı ışık
-   *  · Tek eksenli (tilt) gimbal; pervanesiz 178 × 232 × 127 mm, köşegen 245 mm
+   * DJI FPV (2021) – DJI'ın destek sayfası ve ürün fotoğraflarına göre (yer = y 0, ön = +x):
+   *  · Gövde öne doğru yükselir: arkada batarya yere yakın, önde kamera yukarıda
+   *  · Üstte parlak, yarı saydam füme kubbe; önünde 6 yarıklı hava girişi
+   *  · Burunda açık kafes içinde tek eksenli gimbal kamera; altında iki yanında ön görüş
+   *    sensörü olan çene çubuğu ve "dji" yazılı alt sensör bölmesi
+   *  · Ön kollar alttan, arka kollar üstten çıkar: arka motorlar ön motorlardan yüksektedir
+   *  · İniş ayakları yalnızca ön motorların altında (önlerinde beyaz ışık şeridi); arka, bataryanın lastik ayaklarına oturur
+   *  · Motorların alt yarısı gümüş bantlı; "A" motorların pervane yuvası kırmızı işaretli
+   *  · Gövdenin iki yanında beyaz "FPV" yazısı ve vidalı gümüş plaka
+   *  · Pervaneli ölçü 255 × 312 × 127 mm, köşegen 245 mm
    */
   styleDji(body, { d, pos }) {
-    // Renkler fotoğraftaki tonda görünsün diye sRGB → doğrusal dönüşüm
     const C = (h) => new THREE.Color(h).convertSRGBToLinear();
-    const shell = new THREE.MeshStandardMaterial({ color: C(0x3a3d42), metalness: 0.2, roughness: 0.66 });      // PA66-CF, mat koyu gri
-    const armMat = new THREE.MeshStandardMaterial({ color: C(0x33363b), metalness: 0.15, roughness: 0.7 });     // PA6-GF
-    const cover = new THREE.MeshStandardMaterial({ color: C(d.cover || 0x202328), metalness: 0.5, roughness: 0.1, transparent: true, opacity: 0.94 }); // şeffaf siyah üst kapak (parlak)
-    const black = new THREE.MeshStandardMaterial({ color: C(0x0e0f12), metalness: 0.3, roughness: 0.45 });
-    const grey = new THREE.MeshStandardMaterial({ color: C(0xa4a9b0), metalness: 0.55, roughness: 0.35 });
+    const M = (color, o) => new THREE.MeshStandardMaterial(Object.assign({ color: C(color), metalness: 0.2, roughness: 0.62 }, o || {}));
+    const shell = M(0x3b3e43), dark = M(0x2a2c30), armMat = M(0x34373c, { roughness: 0.7 });
+    const cover = M(d.cover || 0x15171a, { metalness: 0.55, roughness: 0.08, transparent: true, opacity: 0.9 });
+    const black = M(0x0c0d10, { metalness: 0.3, roughness: 0.45 });
+    const silver = M(0xd3d7dd, { metalness: 0.35, roughness: 0.32 });
     const red = new THREE.MeshBasicMaterial({ color: 0xff2d3d });
+    const add = (mesh, x, y, z) => { mesh.position.set(x, y, z); body.add(mesh); return mesh; };
+    const box = (w, h, dp, mat, x, y, z) => add(new THREE.Mesh(new THREE.BoxGeometry(w, h, dp), mat), x, y, z);
+    const cyl = (r, len, mat, x, y, z, axis) => {
+      const m = add(new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 28), mat), x, y, z);
+      if (axis === "x") m.rotation.z = Math.PI / 2; else if (axis === "z") m.rotation.x = Math.PI / 2;
+      return m;
+    };
+    const W = 52;                                             // gövde genişliği (kenar yumuşatması hariç)
 
-    // Gövde (yan profil, ön = +x): arkada yüksek, öne doğru inen sırt, dik burun, altta çene
-    body.add(prism([[-48, -22], [-48, 28], [-12, 36], [36, 33], [58, 22], [66, 4], [62, -12], [44, -24], [-20, -26]], 48, 5, shell));
-    // Şeffaf siyah üst kapak (parlak) + öne bakan soğutma yarıkları
-    body.add(prism([[-30, 34], [36, 35], [56, 24], [50, 20], [30, 28], [-30, 29]], 40, 3, cover));
-    for (let i = 0; i < 4; i++) {
-      const slit = new THREE.Mesh(new THREE.BoxGeometry(2.2, 9, 3.2), black);
-      slit.position.set(57.5 - i * 1.2, 15.5 - i * 0.2, -9 + i * 6);
-      slit.rotation.z = -0.55;
-      body.add(slit);
+    // Ana gövde (yan profil): kuyruk altta, burun yukarıda
+    body.add(prism([[-94, 6], [-99, 40], [-78, 68], [-40, 84], [0, 86], [30, 84], [44, 78], [46, 52], [36, 36], [10, 26], [-40, 10]], W, 5, shell));
+    // Arkadan takılan akıllı batarya (gövdenin arka yarısı, bir ton koyu) ve arka yüzü
+    body.add(prism([[-98, 9], [-103, 41], [-82, 69], [-50, 83], [-46, 58], [-62, 13]], W - 2, 4.5, dark));
+    const rear = new THREE.Group();
+    rear.position.set(-106, 26, 0);
+    rear.rotation.z = -0.16;
+    body.add(rear);
+    const btn = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.2, 1.6, 24), silver);
+    btn.rotation.z = Math.PI / 2;
+    btn.position.set(0, 2, -10);
+    rear.add(btn);
+    for (let i = 0; i < 4; i++) this.addLed(rear, 1, 2.4, 3.2, -0.2, 2, 0 + i * 5, 0x22c55e);
+    for (const z of [-14, 14]) cyl(5, 4, black, -80, 3.2, z);                       // bataryanın lastik ayakları
+    // Parlak füme üst kubbe
+    const dome = add(new THREE.Mesh(new THREE.SphereGeometry(1, 40, 24, 0, Math.PI * 2, 0, Math.PI * 0.56), cover), 0, 77, 0);
+    dome.scale.set(47, 37, 32.6);
+    dome.rotation.z = -0.22;
+    // Hava girişi (6 yarık) – kubbenin önündeki çıkıntı
+    const brow = box(13, 13, 32, shell, 44, 93, 0);
+    brow.rotation.z = -0.38;
+    for (let i = 0; i < 6; i++) {
+      const slit = box(1.4, 8.5, 2.6, black, 50.6, 91.4, -10 + i * 4);
+      slit.rotation.z = -0.38;
     }
-    // Yan havalandırma panelleri (açık gri, nervürlü)
-    for (const zs of [-1, 1]) {
-      const panel = new THREE.Mesh(new THREE.BoxGeometry(34, 14, 1.4), grey);
-      panel.position.set(-14, 8, zs * 29.6);
-      body.add(panel);
-      for (let i = 0; i < 6; i++) {
-        const rib = new THREE.Mesh(new THREE.BoxGeometry(1.2, 12, 1), black);
-        rib.position.set(-28 + i * 5.6, 8, zs * 30.6);
-        body.add(rib);
-      }
+    // Kamera kafesi: üst ve alt çubuk, iki dikme, dört vida
+    box(15, 4, 38, dark, 51, 82, 0);
+    box(17, 4, 42, dark, 51, 52, 0);
+    for (const z of [-19, 19]) {
+      box(4.5, 30, 4.5, dark, 56.5, 67, z);
+      for (const y of [80, 54]) cyl(1.5, 1.2, silver, 59.4, y, z, "x");
     }
-    // Arkadan takılan akıllı batarya (6S 2000 mAh) + kapasite LED'leri
-    body.add(prism([[-92, -16], [-92, 22], [-52, 26], [-52, -18]], 42, 4, shell));
-    const latch = new THREE.Mesh(new THREE.BoxGeometry(6, 26, 30), black);
-    latch.position.set(-97.5, 4, 0);
-    body.add(latch);
-    for (let i = 0; i < 4; i++) this.addLed(body, 1, 2.2, 4, -100.8, 4, -7.5 + i * 5, 0x22c55e);
-
-    // Ön görüş sensörü (stereo, burnun üstünde)
-    for (const z of [-15, 15]) {
-      const vs = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 3.4, 2, 20), black);
-      vs.rotation.z = Math.PI / 2;
-      vs.position.set(65.5, 10, z);
-      body.add(vs);
-      const glass = new THREE.Mesh(new THREE.CircleGeometry(2.4, 20), new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.9, roughness: 0.05 }));
+    // Tek eksenli gimbal kamera (1/2.3" CMOS, 150° FOV) ve yanındaki gimbal motoru
+    const cam = new THREE.Group();
+    cam.position.set(52, 67, -3);
+    cam.rotation.z = -0.1;
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(10.5, 11.5, 15, 32), black);
+    barrel.rotation.z = Math.PI / 2;
+    barrel.position.x = 6;
+    cam.add(barrel);
+    const camBack = new THREE.Mesh(new THREE.BoxGeometry(12, 20, 22), dark);
+    camBack.position.x = -6;
+    cam.add(camBack);
+    addLens(cam, 8.2, 12, black);
+    body.add(cam);
+    cyl(8.5, 10, M(0x55595f, { metalness: 0.5, roughness: 0.4 }), 52, 67, 15, "z");
+    cyl(6, 0.8, M(0x8a8f96, { metalness: 0.6, roughness: 0.35 }), 52, 67, 20.2, "z");
+    // Çene çubuğu ve iki yanındaki ön görüş sensörleri
+    box(12, 9, 58, dark, 43, 42, 0);
+    for (const z of [-27, 27]) {
+      cyl(6.8, 10, black, 49, 42, z, "x");
+      const glass = add(new THREE.Mesh(new THREE.CircleGeometry(4.6, 24), new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.9, roughness: 0.05 })), 54.2, 42, z);
       glass.rotation.y = Math.PI / 2;
-      glass.position.set(66.6, 10, z);
-      body.add(glass);
     }
-    // Tek eksenli gimbal ve kamera (1/2.3" CMOS, 150° FOV) – burnun altında
-    const gim = new THREE.Group();
-    gim.position.set(60, -14, 0);
-    for (const z of [-17, 17]) {
-      const arm = new THREE.Mesh(new THREE.BoxGeometry(12, 18, 4), black);
-      arm.position.set(4, -4, z);
-      gim.add(arm);
+    // "dji" yazılı alt sensör bölmesi: alt görüş sensörleri, ToF ve yardımcı ışık
+    box(24, 15, 26, dark, 37, 29, 0);
+    const logo = label3d(["dji"], 13, 7, null, "#c9ced6");
+    logo.rotation.y = Math.PI / 2;
+    add(logo, 49.2, 29, 0);
+    for (const x of [30, 42]) cyl(3.4, 1.2, black, x, 21.2, 0);
+    box(6, 1.2, 10, black, 14, 23.6, 0);
+    this.addLed(body, 9, 1, 12, -6, 19.4, 0, 0xffffff);
+    // Yanlarda vidalı gümüş plaka ve beyaz "FPV" yazısı
+    for (const zs of [-1, 1]) {
+      const plate = prism([[-8, 60], [22, 76], [18, 50]], 1.4, 0.4, silver);
+      plate.position.z = zs * (W / 2 + 5.6);
+      body.add(plate);
+      for (const [x, y] of [[-4, 61], [19, 73], [16, 53]]) cyl(1.3, 0.8, dark, x, y, zs * (W / 2 + 6.6), "z");
+      const txt = label3d(["FPV"], 17, 7.5, null, "#f8fafc");
+      if (zs < 0) txt.rotation.y = Math.PI;
+      add(txt, -30, 72, zs * (W / 2 + 5.7));
     }
-    const motorDisc = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 4, 24), shell);
-    motorDisc.rotation.x = Math.PI / 2;
-    motorDisc.position.set(4, -6, 20);
-    gim.add(motorDisc);
-    const camBody = new THREE.Group();
-    camBody.position.set(8, -7, 0);
-    camBody.rotation.z = -0.15;                          // hafif aşağı eğik (tilt)
-    camBody.add(new THREE.Mesh(new THREE.BoxGeometry(18, 18, 28), shell));
-    addLens(camBody, 7.5, 12, black);
-    gim.add(camBody);
-    body.add(gim);
-    // Alt görüş sensörleri, ToF ve 300 lümen yardımcı ışık
-    for (const x of [6, 22]) {
-      const ds = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 1.5, 20), black);
-      ds.position.set(x, -27.6, 0);
-      body.add(ds);
-    }
-    const tof = new THREE.Mesh(new THREE.BoxGeometry(6, 1.2, 10), black);
-    tof.position.set(-6, -27.4, 0);
-    body.add(tof);
-    this.addLed(body, 8, 1, 12, -22, -27.6, 0, 0xffffff);
 
-    // Kollar (gövdeden motorlara), motor yuvası ve uzun iniş ayakları
-    const legLen = 66;                                   // toplam yükseklik ≈ 127 mm (resmî)
+    // Kollar: ön kollar alttan (çene hizası), arka kollar üstten çıkar
+    const frontY = 68, rearY = 94;                            // motor tabanı yükseklikleri
     for (const [x, z] of pos) {
-      const front = x > 0;
-      const sx = front ? 30 : -34, sz = Math.sign(z) * 22;
-      const dx = x - sx, dz = z - sz, len = Math.hypot(dx, dz);
-      const ang = -Math.atan2(dz, dx);
-      const arm = prism([[0, -6], [len, -4], [len, 5], [0, 7]], 12, 2, armMat);
-      arm.position.set(sx, 0, sz);
-      arm.rotation.y = ang;
+      const front = x > 0, zs = Math.sign(z), my = front ? frontY : rearY;
+      const from = front ? [30, 46, zs * 22] : [-32, 84, zs * 22];
+      const arm = capsule(from, [x, my - 6, z], 7.5, armMat);
+      arm.scale.z = 0.62;                                     // kanat profili gibi yassı
       body.add(arm);
-      // Motor yuvası (motorun altındaki silindir)
-      const pod = new THREE.Mesh(new THREE.CylinderGeometry(17, 16, 12, 32), armMat);
-      pod.position.set(x, -2, z);
-      body.add(pod);
-      // İniş ayağı: motor yuvasından aşağı inen, uca doğru incelen gövde
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(11, 6, legLen, 24), armMat);
-      leg.position.set(x, -8 - legLen / 2, z);
-      body.add(leg);
-      const foot = new THREE.Mesh(new THREE.SphereGeometry(6.5, 16, 10), black);
-      foot.position.set(x, -8 - legLen, z);
-      body.add(foot);
-      // Göstergeler: motorun arkası, kolun arkası, ön ayakların önü
-      this.addLed(body, 2, 4, 7, x - 17.2, 0, z, 0x22c55e);
-      const k = 0.55;
-      this.addLed(body, 2, 3, 8, sx + dx * k - 6.2, 0, sz + dz * k, 0xff2d3d);
+      // Motor yuvası
+      add(new THREE.Mesh(new THREE.CylinderGeometry(17, 16, 12, 32), armMat), x, my - 6, z);
       if (front) {
-        const ledStrip = new THREE.Mesh(new THREE.BoxGeometry(1.6, 18, 5), new THREE.MeshBasicMaterial({ color: 0xff2d3d, transparent: true }));
-        ledStrip.position.set(x + 8.6, -8 - legLen + 15, z);
-        ledStrip.rotation.z = -0.07;
-        body.add(ledStrip);
-        this.droneLeds.push(ledStrip);
+        // İniş ayağı: uca doğru incelir, önünde beyaz ışık şeridi
+        add(new THREE.Mesh(new THREE.CylinderGeometry(11, 5.2, my - 16, 24), armMat), x, (my - 12 + 4) / 2, z);
+        add(new THREE.Mesh(new THREE.SphereGeometry(5.6, 16, 10), black), x, 4.2, z);
+        const strip = this.addLed(body, 1.5, 24, 4.6, x + 7.4, 22, z, 0xf8fafc);
+        strip.rotation.z = -0.08;
+      } else {
+        const cap = add(new THREE.Mesh(new THREE.SphereGeometry(16, 28, 14, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), armMat), x, my - 12, z);
+        cap.scale.y = 0.7;
       }
+      // Göstergeler: motorun arkasında yeşil, kolun arkasında kırmızı
+      this.addLed(body, 2, 4, 7, x - 17.2, my - 6, z, 0x22c55e);
+      this.addLed(body, 2, 3, 9, from[0] + (x - from[0]) * 0.55 - 7, from[1] + (my - 6 - from[1]) * 0.55, from[2] + (z - from[2]) * 0.55, 0xff2d3d);
     }
-    const bottomY = 8 + legLen + 6.5;                    // ayak ucu
     return {
-      baseY: 2 + bottomY, motorY: 4, topY: 40, attachY: -bottomY,
-      // "A" motorlar (saat yönü): pervane yuvasında kırmızı yay, pervanede kırmızı işaret
+      baseY: 2, motorY: (i, x) => (x > 0 ? frontY : rearY), topY: 127, attachY: (u) => (u.home.x > 0 ? 8 : rearY - 22),
       after: () => {
         for (const u of this.units) {
+          // Motorun alt yarısı gümüş bantlı, üstü koyu; çan üzerinde yazı yok
+          const band = new THREE.Mesh(new THREE.CylinderGeometry(15.3, 15.6, 8.5, 40), silver);
+          band.position.y = 7;
+          u.group.add(band);
+          u.stripe.visible = false;
+          // Pervane yuvası: gri kapak; "A" motorlarda (saat yönü) kırmızı halka ve pervanede kırmızı işaret
+          const hubCap = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 6.5, 1, 24), M(0x8a8f96, { metalness: 0.5 }));
+          hubCap.position.y = 21.9;
+          u.bell.add(hubCap);
           if (u.dir !== 1) continue;
-          const arc = new THREE.Mesh(new THREE.TorusGeometry(13.6, 0.9, 6, 40, Math.PI * 1.2), red);
-          arc.rotation.x = Math.PI / 2;
-          arc.position.y = 21.6;
-          u.bell.add(arc);
+          const ring = new THREE.Mesh(new THREE.TorusGeometry(9.2, 1.3, 8, 40), red);
+          ring.rotation.x = Math.PI / 2;
+          ring.position.y = 21.8;
+          u.bell.add(ring);
           u.markA = true;
         }
       }
@@ -1411,7 +1422,7 @@ const Scene3D = {
     const v = new THREE.Vector3();
     this.units.forEach((u, i) => {
       const a = this.tetherAnchors[i];
-      v.set(u.home.x, this.tetherAttachY, u.home.z).applyMatrix4(body.matrix);
+      v.set(u.home.x, typeof this.tetherAttachY === "function" ? this.tetherAttachY(u) : this.tetherAttachY, u.home.z).applyMatrix4(body.matrix);
       arr.setXYZ(i * 2, a.x, a.y, a.z);
       arr.setXYZ(i * 2 + 1, v.x, v.y, v.z);
     });
@@ -1515,6 +1526,36 @@ function grassTexture() {
   const tex = new THREE.CanvasTexture(c);
   tex.encoding = THREE.sRGBEncoding;
   return tex;
+}
+
+/** Dik yüzeye yapıştırılan yazı (+z'ye bakar). bg null ise zemin saydamdır; yazı dışında bir şey görünmez. */
+function label3d(lines, wMm, hMm, bg, fg, weight) {
+  const k = 20, c = document.createElement("canvas");
+  c.width = Math.round(wMm * k); c.height = Math.round(hMm * k);
+  const ctx = c.getContext("2d");
+  if (bg) { ctx.fillStyle = bg; ctx.fillRect(0, 0, c.width, c.height); }
+  ctx.fillStyle = fg; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  const rowH = c.height / lines.length;
+  lines.forEach((t, i) => {
+    let size = rowH * 0.86;
+    const font = () => `${weight || 800} ${size}px "Segoe UI", system-ui, sans-serif`;
+    ctx.font = font();
+    while (ctx.measureText(t).width > c.width * 0.94 && size > 8) { size -= 2; ctx.font = font(); }
+    ctx.fillText(t, c.width / 2, rowH * (i + 0.52));
+  });
+  const tex = new THREE.CanvasTexture(c);
+  tex.encoding = THREE.sRGBEncoding;
+  tex.anisotropy = 8;
+  return new THREE.Mesh(new THREE.PlaneGeometry(wMm, hMm), new THREE.MeshBasicMaterial({ map: tex, transparent: !bg, depthWrite: !!bg }));
+}
+
+/** İki nokta arasında yuvarlak uçlu çubuk (kol, boru, anten sapı) */
+function capsule(a, b, r, mat) {
+  const A = new THREE.Vector3(a[0], a[1], a[2]), B = new THREE.Vector3(b[0], b[1], b[2]), dir = B.clone().sub(A);
+  const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, dir.length(), 6, 16), mat);
+  m.position.copy(A).add(B).multiplyScalar(0.5);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+  return m;
 }
 
 /** Kamera merceği (+x yönüne bakan) */
