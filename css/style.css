@@ -526,3 +526,21 @@ code { background: rgba(13, 17, 33, .8); border-color: var(--line); }
 .view-btn:focus-visible { outline: 2px solid #8b9bff; outline-offset: 2px; }
 .view-btn.on { background: rgba(109, 124, 255, .32); border-color: #8b9bff; }
 @media (max-width: 760px) { .view-btn { top: 12px; right: 12px; } }
+
+/* ---- Geniş ekran yerleşimi: sayfa tüm genişliği kullanır (yanlarda boşluk kalmaz) ---- */
+.layout, .bottom, .foot { max-width: none; }
+.layout { grid-template-columns: clamp(320px, 21vw, 480px) minmax(0, 1fr); padding-inline: clamp(16px, 1.4vw, 36px); }
+.bottom, .foot { padding-inline: clamp(16px, 1.4vw, 36px); }
+@media (min-width: 1101px) {
+  /* 3D sahne ekran yüksekliğini doldurur: üst çubuk + boşluklar düşülür */
+  .stage { min-height: max(660px, calc(100vh - 112px)); }
+}
+@media (min-width: 1900px) {
+  html { font-size: 17px; }
+  .charts { gap: 22px; }
+  .hud { transform-origin: top left; }
+}
+@media (min-width: 2400px) {
+  html { font-size: 18.5px; }
+  .acc-grid { gap: 22px; }
+}

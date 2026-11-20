@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.13.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.14.0
 
-> **Güncel sürüm: v1.13.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.14.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.13.0** | 2026-11-20 | Test standı: ESC, gerçekçi kablolar, kontrol kartı ve bakış açısı düğmesi |
+| **v1.14.0** | 2026-11-20 | Geniş ekran yerleşimi: sayfa tüm genişliği kullanıyor |
+| v1.13.0 | 2026-11-20 | Test standı: ESC, gerçekçi kablolar, kontrol kartı ve bakış açısı düğmesi |
 | v1.12.0 | 2026-11-20 | Çalışma alanı: yeşil kesim matı ve daha canlı sahne |
 | v1.11.0 | 2026-11-20 | Yeni drone modelleri: DJI Avata 2, iFlight Nazgul Evoque F5X V2 ve Chimera7 Pro V2 |
 | v1.10.0 | 2026-11-20 | Yeni drone modelleri: GEPRC CineLog35 V2 ve Happymodel Mobula7 1S |

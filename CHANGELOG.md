@@ -1,5 +1,13 @@
 # Sürüm geçmişi
 
+## 1.14.0 — 2026-11-20
+Geniş ekran yerleşimi: sayfa tüm genişliği kullanıyor
+- Sayfanın sağında ve solunda kalan boşluklar kaldırıldı; yerleşim artık ekran genişliğine göre esniyor
+- Yan panel ekrana göre 320-480 piksel arasında genişliyor
+- 3D sahne ekran yüksekliğini dolduruyor
+- Çok geniş ekranlarda (1900 piksel ve üstü) yazılar ve göstergeler orantılı büyüyor
+- Test standının varsayılan kamerası geri alındı; ESC, kontrol kartı ve batarya kadrajda kalıyor
+
 ## 1.13.0 — 2026-11-20
 Test standı: ESC, gerçekçi kablolar, kontrol kartı ve bakış açısı düğmesi
 - Fırçasız motorun üç faz kablosu (altın fişli) motordan ESC'ye iniyor

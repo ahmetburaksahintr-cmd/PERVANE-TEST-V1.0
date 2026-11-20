@@ -66,7 +66,7 @@ const Scene3D = {
     this.views = mode === "drone"
       ? { free: { theta: 0.62, phi: 0.98, dist: dd, target: [0, this.droneTargetY, 0] },
           side: { theta: 0, phi: 1.42, dist: dd * 0.9, target: [0, this.droneTargetY, 0] } }
-      : { free: { theta: 0.75, phi: 1.05, dist: 330, target: [0, 60, 0] },
+      : { free: { theta: 0.75, phi: 1.05, dist: 410, target: [22, 46, 12] },
           side: { theta: 0, phi: 1.3, dist: 340, target: [25, 52, 20] } };
     this.setView(this.viewName || "free", true);
   },
