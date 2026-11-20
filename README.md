@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.28.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.29.0
 
-> **Güncel sürüm: v1.28.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.29.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.28.0** | 2026-11-21 | Gerçekçi motor sesi: yayımlanmış ölçümlere göre, gerçek devire bağlı |
+| **v1.29.0** | 2026-11-21 | Bağlı drone testine ekranlı tartı ve asılabilir ağırlıklar |
+| v1.28.0 | 2026-11-21 | Gerçekçi motor sesi: yayımlanmış ölçümlere göre, gerçek devire bağlı |
 | v1.27.0 | 2026-11-21 | Test standı gerçek bir itki standı gibi baştan tasarlandı |
 | v1.26.0 | 2026-11-21 | iFlight Chimera7 Pro V2 resmî görsellerine göre baştan çizildi |
 | v1.25.0 | 2026-11-21 | iFlight Nazgul Evoque F5X V2 resmî görsellerine göre baştan çizildi |
@@ -58,6 +59,7 @@ Proje iki parçadan oluşur:
 - **Üç test düzeneği:** Sol menünün en üstünden seçilir.
   - 🔧 **Test standı:** Tek motor, yük hücresiyle itki ölçümü (gerçek Arduino düzeneğinin dijital ikizi). Stant gerçek bir itki standı gibi çizilir: lastik ayaklı alüminyum taban, köşebentli sigma profil direk, çubuk tip yük hücresi (ortasında gözlük deliği), HX711 kartı ve optik devir sensörü. İtki arttıkça yük hücresinin ucu hafifçe yukarı esner. Motorun üç faz kablosu ESC'ye, ESC de bataryaya ve kontrol kartına bağlı görünür (fırçasız motorda üç, fırçalı motorda iki kablo olur). Sahnenin sağ üstündeki **🎥 Bakış** düğmesi serbest bakış ile yandan (motor hizasından) bakış arasında geçiş yapar.
   - 🛸 **FPV drone:** Seçilen drone pede iplerle bağlıdır (tether). Gaz açılıp itki ağırlığı geçince kalkar ve ipler gerilir. Dört pervanenin ikisi saat yönünde, ikisi ters döner. Gösterge, 4 pervanenin toplam itkisini, itki/ağırlık oranını ve toplam akımı gösterir. Bir pervane kırılınca hangi motorun pervanesinin koptuğu yazılır; drone o köşeye yatar, savrulur ve pede düşer. Raporlara drone bilgileri de eklenir.
+  - ⚖️ **Tartı ve ağırlıklar (FPV drone düzeneğinde):** Drone ekranlı bir platform tartının üstünde durur. Tartının darası alınmıştır; ekranda dört pervanenin toplam **kaldırma kuvveti** gram olarak canlı görünür. **🏋️ Ağırlık ekle** düğmesiyle drone'a 50 g, 100 g, 200 g, 500 g, 1 kg, 2 kg ve 5 kg'lık ağırlıklar asılabilir (en fazla 6 adet; üzerlerinde kütleleri yazar). Ağırlık seçilince drone şeffaf bir sehpanın üstüne çıkar, ağırlıklar altında tablada bekler. İtki drone'un ağırlığını geçince drone kalkıp ipi gerer; itki "drone + yük"ü geçince yük de tabladan kalkar. Göstergedeki **taşıma payı**, drone'un kendi ağırlığından sonra kaldırabildiği ek yüktür. Yük bilgisi Excel raporuna da yazılır.
   - 🎮 **Uçuş:** Seçilen drone'u açık alanda klavyeyle uçurursun. `W` ileri, `S` geri, `A` sola, `D` sağa, `E` yüksel, `Q` alçal, `Z` sola dön, `X` sağa dön. Tuşu bırakınca drone havada asılı kalır. Altı turuncu halkanın içinden geçince süren yazılır. Gereken itki, drone'un ağırlığından ve yaptığın manevradan hesaplanır: seçtiğin pervane bu itkiyi veremiyorsa drone kalkamaz, dayanamıyorsa havada kırılır ve drone düşer. **🎥 Bakış** düğmesi takip kamerası ile serbest bakış arasında geçiş yapar.
 - **Drone modelleri (gerçek parçalarla):** Motorların çanında gerçekteki gibi model ve KV yazar; motor boyutu stator çapına göre ölçeklenir.
 

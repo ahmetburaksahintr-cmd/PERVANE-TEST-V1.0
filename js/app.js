@@ -12,7 +12,7 @@ const S = {
   tempC: 25, exag: 3, heat: true,
   throttle: 0, rpm: 0, plastic: 0, broken: false, bentLogged: false, warnLogged: false, yieldLogged: false,
   ramp: null, seq: null, history: [], measured: [], lastEval: null, t0: performance.now(),
-  sound: false, results: {},
+  sound: false, results: {}, payload: [],
   colorKey: "mat", customHex: "#ff6b00", simT: 0, lastRecT: -1, muteReport: false, seqRecords: [], breakShot: null, logLines: []
 };
 
@@ -43,10 +43,22 @@ function init() {
   $("#droneSel").innerHTML = brands.map((b) => `<optgroup label="${b}">${Object.entries(DRONES).filter(([, d]) => (d.brand || "Diğer") === b)
     .map(([k, d]) => `<option value="${k}">${d.name}</option>`).join("")}</optgroup>`).join("");
   $("#droneSel").value = S.droneKey;
+  // Asılı yük: ağırlık düğmeleri (her tıklama bir ağırlık ekler; listedekine tıklayınca çıkarır)
+  $("#payloadBtn").onclick = () => { const p = $("#payloadPanel"); p.hidden = !p.hidden; $("#payloadBtn").setAttribute("aria-expanded", String(!p.hidden)); };
+  $("#payloadChips").innerHTML = PAYLOAD_WEIGHTS.map((g) => `<button class="wchip" data-g="${g}" title="${massText(g)} ekle">+ ${massText(g)}</button>`).join("");
+  $("#payloadChips").onclick = (e) => {
+    const b = e.target.closest(".wchip");
+    if (!b) return;
+    if (S.payload.length >= 6) { toast("En fazla 6 ağırlık asılabilir.", "warn"); return; }
+    S.payload.push(Number(b.dataset.g));
+    payloadChanged();
+  };
+  $("#payloadList").onclick = (e) => { const b = e.target.closest(".wchip"); if (b) { S.payload.splice(Number(b.dataset.i), 1); payloadChanged(); } };
+  $("#payloadClear").onclick = () => { S.payload = []; payloadChanged(); };
   $("#droneSel").onchange = (e) => {
     S.droneKey = e.target.value;
     applyDrone();
-    Scene3D.setRig(S.rig, drone());
+    rebuildRig();
     newProp(isFly() ? `🎮 ${drone().name} uçuşa hazır` : `🛸 ${drone().name} test düzeneğine alındı`);
   };
 
@@ -148,7 +160,7 @@ function newProp(logMsg) {
   // Elle yapılan değişiklikte süren test durur (sıralı testte rampa ayrıca başlatılır)
   if (!S.seq) { S.ramp = null; S.throttle = 0; }
   S.broken = false; S.plastic = 0; S.rpm = Math.min(S.rpm, 0); S.history = [];
-  S.warnLogged = S.yieldLogged = S.bentLogged = false;
+  S.warnLogged = S.yieldLogged = S.bentLogged = S.payloadLifted = false;
   Scene3D.setMotorLook(motor());
   Scene3D.buildProp(S.prop, mat(), colorSpec());
   S.simT = 0; S.lastRecT = -1; S.breakShot = null; S.breakInfo = null;
@@ -185,12 +197,30 @@ function setRig(mode) {
   $("#motorSel").disabled = $("#dia").disabled = $("#blades").disabled = mode !== "stand";
   $("#thr").disabled = $("#rampBtn").disabled = $("#seqBtn").disabled = fly;      // uçuşta gazı tuşlar belirler
   $("#motorSel").value = S.motorKey;
+  $("#payloadBox").hidden = mode !== "drone";
   Fly.keys.clear();
   Scene3D.viewName = "free";
-  Scene3D.setRig(mode, drone());
+  rebuildRig();
   updateViewBtn();
   newProp(fly ? `🎮 Uçuş bölümü: ${drone().name}. E ile kalk, W A S D ile uç, Z / X ile dön, Q ile alçal.`
     : mode === "drone" ? `🛸 FPV drone düzeneği: ${drone().name} (4 × ${motor().name})` : "🔧 Test standına geçildi (tek motor + yük hücresi)");
+}
+
+/** 3D düzeneği yeniden kurar; asılı yük yalnızca bağlı drone testinde kullanılır */
+function rebuildRig() {
+  Scene3D.payload = S.rig === "drone" ? S.payload.slice() : [];
+  Scene3D.setRig(S.rig, drone());
+}
+const payloadSum = () => (S.rig === "drone" ? S.payload.reduce((a, b) => a + b, 0) : 0);
+/** Ağırlık listesi değişti: özet yazılır, düzenek ve pervane yenilenir */
+function payloadChanged() {
+  const sum = S.payload.reduce((a, b) => a + b, 0);
+  $("#payloadList").innerHTML = S.payload.slice().sort((a, b) => b - a).map((g) => `<button class="wchip on" data-i="${S.payload.indexOf(g)}" title="Çıkar">${massText(g)} ✕</button>`).join("");
+  $("#payloadSum").textContent = sum ? `Toplam yük: ${massText(sum)}` : "Yük yok";
+  $("#payloadClear").hidden = !sum;
+  $("#payloadBtn").textContent = sum ? `🏋️ Ağırlık: ${massText(sum)}` : "🏋️ Ağırlık ekle";
+  rebuildRig();
+  newProp(sum ? `🏋️ Drone'a ${massText(sum)} yük asıldı` : "🏋️ Yük kaldırıldı");
 }
 
 /** Drone modelinin motorunu ve pervane ölçüsünü uygular */
@@ -214,8 +244,13 @@ function updateDroneInfo() {
 function droneEval(ev) {
   const d = drone();
   const total = S.broken ? ev.thrustG * 13 : ev.thrustG * 4;
-  const auw = d.massG + 4 * ev.mass;
-  return { total, auw, tw: total / auw, amps: ev.current * 4, power: ev.power * 4 };
+  const auw = d.massG + 4 * ev.mass, load = payloadSum();
+  // Tartı ekranının durum satırı
+  const air = total >= auw, lifts = load > 0 && total >= auw + load;
+  const scaleText = S.broken ? "PERVANE KIRILDI" : load
+    ? `Yük ${massText(load)} + drone ${fmt(auw)} g · ${lifts ? "YÜK KALKTI" : air ? "drone kalktı, yük yerde" : "yerde"}`
+    : `Drone ${fmt(auw)} g · ${air ? "KALKTI (ipler gergin)" : "yerde"}`;
+  return { total, auw, tw: total / auw, amps: ev.current * 4, power: ev.power * 4, load, twLoad: total / (auw + load), lifts, scaleText };
 }
 
 /* ---------------- Otomatik rampa testi ---------------- */
@@ -303,7 +338,12 @@ function loop(now) {
   Scene3D.deform(S.broken ? 0 : visDefl, stressRatio, S.plastic * S.exag, S.heat);
   S.droneEval = isDrone() ? droneEval(ev) : null;
   Scene3D.throttle = S.throttle;                  // kontrol kartındaki potansiyometre ve ekran için
-  Scene3D.frame(dt, S.rpm, ev.thrustG / 1500, S.droneEval ? { tw: S.droneEval.tw } : null);
+  Scene3D.frame(dt, S.rpm, ev.thrustG / 1500, S.droneEval ? { tw: S.droneEval.tw, twLoad: S.droneEval.twLoad, total: S.droneEval.total, scaleText: S.droneEval.scaleText } : null);
+  // Asılı yük ilk kez kalktığında günlüğe yazılır
+  if (S.droneEval && S.droneEval.lifts && !S.payloadLifted) {
+    S.payloadLifted = true;
+    log(`🏋️ ${massText(S.droneEval.load)} yük kalktı: toplam itki ${fmt(S.droneEval.total)} g ≥ drone ${fmt(S.droneEval.auw)} g + yük ${fmt(S.droneEval.load)} g (${fmt(S.rpm)} devir)`, "ok");
+  }
 
   // Ölçüm kaydı: simülasyon zamanıyla saniyede 10 satır (grafikler + Excel)
   S.simT += dt;
@@ -398,6 +438,11 @@ function updateHud(ev, realDefl) {
     $("#hDTw").style.color = S.rpm < 100 ? "" : de.tw < 1 ? "var(--warn)" : "var(--good)";
     $("#hDTw").title = de.tw < 1 ? "İtki ağırlıktan az: drone kalkamaz" : "Drone kalkar (ipler gergin)";
     $("#hDAmp").textContent = `${fmt(de.amps)} A`;
+    // Taşıma payı: drone'un kendi ağırlığından sonra kaldırabildiği ek yük
+    const spare = de.total - de.auw;
+    $("#hDLoad").textContent = isFly() ? "" : de.load
+      ? `Asılı yük ${massText(de.load)} · ${de.lifts ? "kaldırıyor ✔" : "henüz kaldıramıyor"} · taşıma payı ${fmt(Math.max(0, spare))} g`
+      : S.rpm < 100 ? "" : `Taşıma payı: ${fmt(Math.max(0, spare))} g (itki − drone ağırlığı)`;
   }
   // Kırılma sınırına yakınlık çubuğu
   const lim = S.broken ? 100 : Math.min(100, pctS);
@@ -815,6 +860,7 @@ function rigInfo(peak, ev) {
   return {
     mode: "drone", name: `FPV drone – ${d.name}`, short: d.short, battery: d.battery, wheelbaseMm: d.wheelbaseMm, auw,
     maxTotalThrust: peak.thrust * 4, maxTw: (peak.thrust * 4) / auw, where: S.breakInfo && S.breakInfo.where,
+    payload: payloadSum(), payloadLifted: payloadSum() > 0 && peak.thrust * 4 >= auw + payloadSum(), spare: Math.max(0, peak.thrust * 4 - auw),
     propName: d.propName, brand: d.brand
   };
 }

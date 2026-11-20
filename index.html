@@ -57,6 +57,16 @@
           <select id="droneSel"></select>
           <div id="droneInfo" class="kv small"></div>
           <p id="droneNote" class="note"></p>
+          <!-- Asılı yük: bağlı drone testinde isteğe bağlı ağırlıklar -->
+          <div id="payloadBox" class="payload" hidden>
+            <button class="btn small" id="payloadBtn" aria-expanded="false" aria-controls="payloadPanel">🏋️ Ağırlık ekle</button>
+            <div id="payloadPanel" hidden>
+              <div class="wchips" id="payloadChips"></div>
+              <div class="wchips" id="payloadList"></div>
+              <div class="payload-sum"><span id="payloadSum">Yük yok</span><button class="link" id="payloadClear" hidden>Hepsini kaldır</button></div>
+              <p class="note">Ağırlıklar drone'a iple asılır. Tartı ekranı dört pervanenin toplam kaldırma kuvvetini gösterir; itki "drone + yük"ü geçince yük tabladan kalkar.</p>
+            </div>
+          </div>
         </div>
       </section>
       <section>
@@ -124,6 +134,7 @@
           <div><small>Toplam itki (4 pervane)</small><b id="hDThrust">–</b></div>
           <div><small>İtki / ağırlık</small><b id="hDTw">–</b></div>
           <div><small>Toplam akım</small><b id="hDAmp">–</b></div>
+          <p id="hDLoad"></p>
         </div>
         <div class="limit"><div class="limit-head"><small>Kırılma sınırına yakınlık</small><b id="hLimitTxt">%0</b></div><div class="limit-bar"><i id="hLimit"></i></div><p class="reach" id="hReach"></p></div>
         <div id="hState" class="state ok">HAZIR</div>

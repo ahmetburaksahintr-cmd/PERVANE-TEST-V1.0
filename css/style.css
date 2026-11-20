@@ -589,3 +589,18 @@ body[data-page="lab"] .foot { padding-top: 0; padding-bottom: 14px; }
   .stage { min-height: max(620px, calc(100vh - 178px)); }
 }
 @media (max-width: 760px) { .tab { font-size: .72rem; padding: 6px 10px 8px; } }
+
+/* Asılı yük: ağırlık seçimi ve göstergedeki yük satırı */
+.payload { margin-top: 10px; display: grid; gap: 8px; }
+.btn.small { height: auto; padding: 7px 12px; font-size: .78rem; justify-self: start; }
+#payloadPanel { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: var(--r-md); background: rgba(13, 17, 33, .5); }
+.wchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.wchips:empty { display: none; }
+.wchip { font: inherit; font-size: .74rem; font-weight: 700; color: var(--text); background: rgba(255, 255, 255, .06); border: 1px solid var(--line); border-radius: 99px; padding: 5px 10px; cursor: pointer; transition: border-color .15s, background .15s; }
+.wchip:hover { border-color: #6d7cff; }
+.wchip:focus-visible { outline: 2px solid #8b9bff; outline-offset: 1px; }
+.wchip.on { background: rgba(249, 115, 22, .16); border-color: rgba(249, 115, 22, .5); color: #fdba74; }
+.payload-sum { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: .8rem; font-weight: 700; }
+.hud-drone p { grid-column: 1 / -1; margin: 2px 0 0; font-size: .74rem; color: #fdba74; }
+.hud-drone p:empty { display: none; }
+.hud-fly p { color: #7dd3fc; }

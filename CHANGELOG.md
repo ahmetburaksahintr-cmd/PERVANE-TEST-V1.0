@@ -1,5 +1,17 @@
 # Sürüm geçmişi
 
+## 1.29.0 — 2026-11-21
+Bağlı drone testine ekranlı tartı ve asılabilir ağırlıklar
+- FPV drone düzeneğinde drone artık paslanmaz tablalı bir platform tartının üstünde duruyor
+- Tartının ekranında dört pervanenin toplam kaldırma kuvveti gram olarak canlı görünüyor; altında durum satırı (yerde / kalktı)
+- Yeni "Ağırlık ekle" düğmesi: 50 g, 100 g, 200 g, 500 g, 1 kg, 2 kg ve 5 kg; en fazla 6 adet, listeden tek tek çıkarılabilir
+- Ağırlıkların üzerinde kütleleri yazıyor (pirinç, krom ve dökme demir görünümlü)
+- Ağırlık seçilince drone şeffaf bir sehpaya çıkıyor; ağırlıklar altında tablada duruyor ve iple drone'a asılı
+- İtki drone ağırlığını geçince drone kalkıp ipi geriyor; "drone + yük"ü geçince yük de tabladan kalkıyor; pervane kırılırsa ikisi de düşüyor
+- Göstergede yük durumu ve taşıma payı (itki - drone ağırlığı); yük kalkınca günlüğe yazılıyor
+- Excel raporuna asılı yük, yükün kalkıp kalkmadığı ve en yüksek taşıma payı eklendi
+- Kullanılmayan eski kanallı whoop çizimi koddan kaldırıldı
+
 ## 1.28.0 — 2026-11-21
 Gerçekçi motor sesi: yayımlanmış ölçümlere göre, gerçek devire bağlı
 - Ses artık gerçek frekanslarda: kanat geçiş frekansı (kanat sayısı x devir / 60) ve katları; 20.000 devirde iki kanatlı pervanenin temel tonu 667 Hz

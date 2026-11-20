@@ -25,6 +25,8 @@ const Report = {
         ["Batarya", rec.rig.battery],
         ["En yüksek toplam itki – 4 pervane (g)", Math.round(rec.rig.maxTotalThrust)],
         ["En yüksek itki / ağırlık oranı", r1(rec.rig.maxTw)],
+        ["En yüksek taşıma payı (g)", Math.round(rec.rig.spare || 0)],
+        ...(rec.rig.payload ? [["Asılı yük (g)", rec.rig.payload], ["Yük kalktı mı", rec.rig.payloadLifted ? "Evet" : "Hayır"]] : []),
         ["Kırılan pervane", rec.broken ? rec.rig.where || "–" : "–"]
       ] : []),
       ["Malzeme", `${rec.material.name} (${rec.material.full})`],

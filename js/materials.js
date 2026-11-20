@@ -193,3 +193,9 @@ const PROP_COLORS = [
   { k: "rainbow", name: "Gökkuşağı", gradient: ["#ef4444", "#f59e0b", "#facc15", "#22c55e", "#3b82f6", "#a855f7"] },
   { k: "duo", name: "Çift renk", duo: ["#f97316", "#2563eb"] }
 ];
+
+/* Bağlı drone testinde drone'a asılabilen ağırlıklar (gram) ve kütle yazısı ("500 g", "1,5 kg") */
+const PAYLOAD_WEIGHTS = [50, 100, 200, 500, 1000, 2000, 5000];
+function massText(g) {
+  return g >= 1000 ? (g / 1000).toLocaleString("tr-TR", { maximumFractionDigits: 2 }) + " kg" : g + " g";
+}
