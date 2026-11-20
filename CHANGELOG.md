@@ -1,5 +1,14 @@
 # Sürüm geçmişi
 
+## 1.24.0 — 2026-11-21
+Happymodel Mobula7 1S gerçek fotoğraflarına göre baştan çizildi
+- Tek parça yarı saydam füme şase: ince açık halkalar, halka başına 4 kol, halkaların altında küçük ayaklar
+- Delikli siyah yumurta kanopi; içinden uçuş kartı görünür, önde küçük kamera
+- Kanopinin arkasında neredeyse dik duran siyah kılıflı VTX anteni
+- Motorlar füme gri, çanda "RS0802 KV20000" yazısı
+- Batarya şasenin altındaki yuvada; yanından kırmızı-siyah güç kablosu çıkar
+- Kaynak: Happymodel'in ürün sayfasındaki fotoğraflar
+
 ## 1.23.0 — 2026-11-21
 GEPRC CineLog35 V2 gerçek görsellerine göre baştan çizildi (itici düzen)
 - Düzen düzeltildi: motorlar karbon plakanın altına asılı, pervaneler koruma kasnaklarının arasında

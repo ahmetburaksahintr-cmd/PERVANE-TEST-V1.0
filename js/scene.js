@@ -1091,6 +1091,25 @@ const Scene3D = {
       body.add(capsule([-16, 22, 0], [-34, 17, 0], 0.7, black));   // kılıflı ince anten teli, arkaya doğru
       topY = 30;
     }
+    if (kind === "mobula") {
+      // Delikli siyah yumurta kanopi (içinden kart ve kamera görünür), önde dikdörtgen açıklıkta küçük kamera
+      const lattice = new THREE.MeshStandardMaterial({ map: latticeTexture(), color: C(0x2a2c31), alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.55 });
+      const egg = add(new THREE.Mesh(new THREE.SphereGeometry(1, 32, 20, 0, Math.PI * 2, 0, Math.PI * 0.6), lattice), 1, 7, 0);
+      egg.scale.set(12.5, 15, 11);
+      box(7, 8, 9, black, 8, 12, 0);
+      const lens = add(new THREE.Mesh(new THREE.CylinderGeometry(3, 3.3, 4, 20), black), 12, 13.5, 0);
+      lens.rotation.z = -Math.PI / 2 + 0.4;
+      const glass = add(new THREE.Mesh(new THREE.SphereGeometry(2.1, 14, 10), M(0x1e3a8a, { metalness: 0.8, roughness: 0.1 })), 13.4, 14.2, 0);
+      glass.scale.x = 0.5;
+      for (const zs of [-1, 1]) add(new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 2.6, 10), M(0xb9bec6, { metalness: 0.5 })), 2, 7.6, zs * 11.6);
+      // VTX anteni: kanopinin arkasında neredeyse dik, siyah kılıflı; ucu açık tel
+      body.add(capsule([-9, 9, 0], [-12, 30, 0], 1.3, black));
+      body.add(capsule([-12, 30, 0], [-12.8, 37, 0], 0.45, M(0xe5e7eb)));
+      // Kırmızı-siyah güç kablosu kanopinin yanından çıkar
+      body.add(capsule([-6, 6.5, 6], [-20, 5, 9], 0.6, M(0xdc2626)));
+      body.add(capsule([-6, 6.5, 7.4], [-20, 5, 10.4], 0.6, black));
+      topY = 40;
+    }
     return {
       baseY: 2 + batH + 1.6, motorY, topY, attachY: 1,
       after: () => {
@@ -2002,6 +2021,22 @@ function capsule(a, b, r, mat) {
   m.position.copy(A).add(B).multiplyScalar(0.5);
   m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
   return m;
+}
+
+/** Delikli kanopi dokusu: saydam oval deliklerle kafes (alphaTest ile kullanılır) */
+function latticeTexture() {
+  const c = document.createElement("canvas");
+  c.width = 256; c.height = 128;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, 256, 128);
+  ctx.globalCompositeOperation = "destination-out";
+  for (let row = 0; row < 4; row++) for (let col = 0; col < 10; col++) {
+    const x = col * 25.6 + (row % 2 ? 12.8 : 0) + 12.8, y = 18 + row * 27;
+    ctx.beginPath(); ctx.ellipse(x, y, 8.6, 9.5 - row * 0.8, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.encoding = THREE.sRGBEncoding;
+  return tex;
 }
 
 /** Karbon fiber dokusu (çapraz örgü), tekrar eden küçük desen */

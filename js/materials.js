@@ -72,7 +72,7 @@ const MOTORS = {
   // GEPRC SPEEDX2 2105.5: 12N14P, 21,0 g, en yüksek sürekli güç 559 W, en yüksek akım 34,9 A (üretici değerleri)
   gep2105: { name: "GEPRC SPEEDX2 2105.5 · 2650KV · 6S", kv: 2650, cells: 6, pmax: 559, imax: 35, mass: 21, propIn: 3.5, stator: 21, label: "GEPRC  SPEEDX2  2105.5", bell: 0x121317 },
   // Happymodel RS0802: 9N12P, stator 8 × 2 mm, 2,0 g, yalnız 1S (üretici değerleri)
-  hm0802: { name: "Happymodel RS0802 · 20000KV · 1S", kv: 20000, cells: 1, pmax: 11, imax: 4, mass: 2, propIn: 1.57, stator: 8, label: "RS0802  KV20000", bell: 0x334155,
+  hm0802: { name: "Happymodel RS0802 · 20000KV · 1S", kv: 20000, cells: 1, pmax: 11, imax: 4, mass: 2, propIn: 1.57, stator: 8, label: "RS0802  KV20000", bell: 0x4b4f57,
     estimated: "Happymodel, RS0802 motorunun en yüksek güç ve akım değerini yayımlamamıştır; 11 W ve 4 A, 1S 0802 sınıfı için tahmindir. Boyut ve KV üreticinin değerleridir." }
 };
 
@@ -141,12 +141,13 @@ const DRONES = {
     note: "3,5\" sinema dronu. Üreticinin verdiği ağırlık 285,8 g (TBS Nano RX sürümü, bataryasız); önerdiği 6S 1300 mAh batarya (207 g) ile ~493 g. Motor 2023'te 2150KV'den 2650KV'ye yükseltildi."
   },
   mobula7: {
-    brand: "Happymodel", name: "Happymodel Mobula7 1S · 75 mm tiny whoop", short: "Mobula7 1S", style: "whoop",
+    brand: "Happymodel", name: "Happymodel Mobula7 1S · 75 mm tiny whoop", short: "Mobula7 1S", style: "tiny",
+    tiny: { kind: "mobula", frame: 0x9aa0a8, opacity: 0.55, spokes: 4, batt: 0x2a2d33, battLabel: "#e5e7eb", battText: "1S 450mAh LiHV", plug: 0x1f2937 },
     motorKey: "hm0802",
     prop: { diameterIn: 1.57, pitchIn: 1, chordMm: 6.5, thickMm: 0.6, blades: 2 }, propName: "Gemfan 1610-2 · 40 mm · 2 kanat",
-    wheelbaseMm: 75, massG: 36, battery: "1S 450 mAh LiHV (PH2.0)", accent: 0x0ea5e9, frame: 0x18181b,
+    wheelbaseMm: 75, massG: 36, battery: "1S 450 mAh LiHV (PH2.0)",
     parts: "75 mm whoop şase (Mobula7 V4) · 4 × RS0802 KV20000 · X12 AIO kart (12A ESC, ELRS 2,4 GHz alıcı, OpenVTX) · Caddx Ant analog kamera · Gemfan 1610-2 iki kanatlı pervane",
-    note: "İki kanatlı pervane kullanan 1S tiny whoop. Resmî ağırlık 24 g (bataryasız), ölçüler 99 × 99 × 40 mm; 1S 450 mAh batarya ile ~37 g. Şase ve kanopi rengi üreticinin yayımladığı bir değer değildir."
+    note: "İki kanatlı pervane kullanan 1S tiny whoop. Resmî ağırlık 24 g (bataryasız), ölçüler 99 × 99 × 40 mm; 1S 450 mAh batarya ile ~37 g. Çizim üreticinin ürün fotoğrafındaki yarı saydam füme şase ve delikli siyah kanopiye göredir (şase saydam beyaz olarak da satılır)."
   },
   evoqueF5: {
     brand: "iFlight", name: "iFlight Nazgul Evoque F5X V2 · 6S HD (DJI O3)", short: "Nazgul Evoque F5", style: "freestyle",
