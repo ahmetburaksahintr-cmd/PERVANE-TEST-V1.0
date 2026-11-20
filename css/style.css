@@ -160,6 +160,8 @@ canvas.bars { width: 100%; height: 220px; display: block; margin-top: 14px; }
 .hud-title { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: .85rem; margin-bottom: 8px; color: var(--muted); }
 .hud-title i { width: 14px; height: 14px; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 2px rgba(255,255,255,.15); }
 .limit { margin-top: 12px; }
+.reach { margin: 6px 0 0; font-size: .72rem; line-height: 1.4; color: var(--muted); }
+.reach b { color: var(--text); }
 .limit-head { display: flex; justify-content: space-between; align-items: baseline; }
 .limit-head small { color: var(--muted); font-size: .72rem; }
 .limit-bar { height: 9px; margin-top: 5px; border-radius: 99px; background: #0f1426; overflow: hidden; border: 1px solid var(--border); }

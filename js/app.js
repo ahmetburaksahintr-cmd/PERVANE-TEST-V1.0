@@ -8,7 +8,7 @@ const fmt = (n, d = 0) => Number(n).toLocaleString("tr-TR", { maximumFractionDig
 const S = {
   rig: "stand", droneKey: "fpv5", standCfg: null,
   matKey: "PLA", motorKey: "m2207",
-  prop: { diameterIn: 5, pitchIn: 4.3, chordMm: 12, thickMm: 2.4, ctScale: 1 },
+  prop: { diameterIn: 5, pitchIn: 4.3, chordMm: 12, thickMm: 2.4, blades: 2, ctScale: 1 },
   tempC: 25, exag: 3, heat: true,
   throttle: 0, rpm: 0, plastic: 0, broken: false, bentLogged: false, warnLogged: false, yieldLogged: false,
   ramp: null, seq: null, history: [], measured: [], lastEval: null, t0: performance.now(),
@@ -38,7 +38,9 @@ function init() {
 
   // Test düzeneği: test standı veya FPV drone
   $("#rigSeg").onclick = (e) => { const b = e.target.closest("button"); if (b) setRig(b.dataset.rig); };
-  $("#droneSel").innerHTML = Object.entries(DRONES).map(([k, d]) => `<option value="${k}">${d.name}</option>`).join("");
+  const brands = [...new Set(Object.values(DRONES).map((d) => d.brand || "Diğer"))];
+  $("#droneSel").innerHTML = brands.map((b) => `<optgroup label="${b}">${Object.entries(DRONES).filter(([, d]) => (d.brand || "Diğer") === b)
+    .map(([k, d]) => `<option value="${k}">${d.name}</option>`).join("")}</optgroup>`).join("");
   $("#droneSel").value = S.droneKey;
   $("#droneSel").onchange = (e) => {
     S.droneKey = e.target.value;
@@ -49,6 +51,7 @@ function init() {
 
   const bindRange = (id, apply) => { $(id).oninput = (e) => { apply(Number(e.target.value)); syncInputs(); }; };
   bindRange("#dia", (v) => { S.prop.diameterIn = v; newProp(); });
+  bindRange("#blades", (v) => { S.prop.blades = v; newProp(); });
   bindRange("#pitch", (v) => { S.prop.pitchIn = v; newProp(); });
   bindRange("#chord", (v) => { S.prop.chordMm = v; newProp(); });
   bindRange("#thick", (v) => { S.prop.thickMm = v; newProp(); });
@@ -98,7 +101,8 @@ function init() {
 
 function syncInputs() {
   const p = S.prop;
-  $("#dia").value = p.diameterIn; $("#vDia").textContent = `${p.diameterIn}" (${fmt(p.diameterIn * 25.4)} mm)`;
+  $("#dia").value = p.diameterIn; $("#vDia").textContent = `${fmt(p.diameterIn, p.diameterIn % 1 ? 2 : 0)}" (${fmt(p.diameterIn * 25.4)} mm)`;
+  $("#blades").value = p.blades || 2; $("#vBlades").textContent = `${p.blades || 2} kanat`;
   $("#pitch").value = p.pitchIn; $("#vPitch").textContent = `${fmt(p.pitchIn, 1)}"`;
   $("#chord").value = p.chordMm; $("#vChord").textContent = `${fmt(p.chordMm, 1)} mm`;
   $("#thick").value = p.thickMm; $("#vThick").textContent = `${fmt(p.thickMm, 1)} mm`;
@@ -109,6 +113,8 @@ function syncInputs() {
   const m = motor();
   $("#motorInfo").innerHTML = `<span>KV</span><b>${m.kv}</b><span>Gerilim</span><b>${m.cells}S · ${fmt(m.cells * 3.7, 1)} V</b>
     <span>Maks. güç</span><b>${m.pmax} W</b><span>Bu pervaneyle maks. devir</span><b>${fmt(maxRpm())}</b>`;
+  $("#motorEst").hidden = !m.estimated;
+  $("#motorEst").textContent = m.estimated ? "* " + m.estimated : "";
 }
 
 function selectMaterial(k, silent) {
@@ -124,6 +130,7 @@ function newProp(logMsg) {
   if (!S.seq) { S.ramp = null; S.throttle = 0; }
   S.broken = false; S.plastic = 0; S.rpm = Math.min(S.rpm, 0); S.history = [];
   S.warnLogged = S.yieldLogged = S.bentLogged = false;
+  Scene3D.setMotorLook(motor());
   Scene3D.buildProp(S.prop, mat(), colorSpec());
   S.simT = 0; S.lastRecT = -1; S.breakShot = null; S.breakInfo = null;
   updateLegend();
@@ -137,16 +144,16 @@ function setRig(mode) {
   if (S.rig === mode) return;
   S.seq = null;
   if (mode === "drone") {
-    S.standCfg = { motorKey: S.motorKey, diameterIn: S.prop.diameterIn };
+    S.standCfg = { motorKey: S.motorKey, prop: { ...S.prop } };
     S.rig = mode;
     applyDrone();
   } else {
     S.rig = mode;
-    if (S.standCfg) { S.motorKey = S.standCfg.motorKey; S.prop.diameterIn = S.standCfg.diameterIn; }
+    if (S.standCfg) { S.motorKey = S.standCfg.motorKey; S.prop = { ...S.standCfg.prop, ctScale: S.prop.ctScale }; }
   }
   document.querySelectorAll("#rigSeg button").forEach((b) => b.classList.toggle("active", b.dataset.rig === mode));
   $("#dronePick").hidden = $("#hDrone").hidden = $("#motorLock").hidden = mode !== "drone";
-  $("#motorSel").disabled = $("#dia").disabled = mode === "drone";
+  $("#motorSel").disabled = $("#dia").disabled = $("#blades").disabled = mode === "drone";
   $("#motorSel").value = S.motorKey;
   Scene3D.setRig(mode, drone());
   newProp(mode === "drone" ? `🛸 FPV drone düzeneği: ${drone().name} (4 × ${motor().name})` : "🔧 Test standına geçildi (tek motor + yük hücresi)");
@@ -156,7 +163,7 @@ function setRig(mode) {
 function applyDrone() {
   const d = drone();
   S.motorKey = d.motorKey;
-  Object.assign(S.prop, d.prop);
+  Object.assign(S.prop, { blades: 2 }, d.prop);
   $("#motorSel").value = S.motorKey;
   $("#droneNote").innerHTML = `<b>Donanım:</b> ${d.parts}<br>${d.note}`;
   updateDroneInfo();
@@ -165,7 +172,7 @@ function updateDroneInfo() {
   const d = drone(), m = MOTORS[d.motorKey];
   const propMass = Physics.evaluate({ mat: mat(), motor: m, prop: S.prop, rpm: 0, tempC: S.tempC }).mass;
   $("#droneInfo").innerHTML = `<span>Şase</span><b>${d.wheelbaseMm} mm X</b><span>Motorlar</span><b>4 × ${m.name}</b>
-    <span>Pervane</span><b>4 × ${d.prop.diameterIn}" (2 CW + 2 CCW)</b><span>Batarya</span><b>${d.battery}</b>
+    <span>Pervane</span><b>4 × ${d.propName || d.prop.diameterIn + '"'}</b><span>Dönüş</span><b>2 CW + 2 CCW</b><span>Batarya</span><b>${d.battery}</b>
     <span>Kalkış ağırlığı</span><b>${fmt(d.massG + 4 * propMass)} g</b>`;
 }
 
@@ -344,6 +351,12 @@ function updateHud(ev, realDefl) {
   $("#hLimit").style.width = lim + "%";
   $("#hLimitTxt").textContent = S.broken ? "KIRILDI" : "%" + fmt(lim);
   $("#hLimitTxt").style.color = lim >= 100 ? "var(--bad)" : lim > 75 ? "var(--warn)" : "var(--text)";
+  if (S.reach) {
+    const r = S.reach;
+    $("#hReach").innerHTML = S.broken ? ""
+      : r.breakRpm ? `Öngörü: bu ayarda yaklaşık <b>${fmt(r.breakRpm)} devirde</b> kırılır.`
+      : `Öngörü: en yüksek devirde gerilme / dayanım = <b>%${fmt(r.pct)}</b> → <b class="good">kırılmaz</b>. Kırılma sınırını bulmak için kök kalınlığını azalt veya sıcaklığı artır.`;
+  }
 }
 
 /* ---------------- Grafikler ---------------- */
@@ -391,6 +404,9 @@ function drawCharts(ev) {
 
 /* ---------------- Karşılaştırma tablosu ---------------- */
 function refreshCompare() {
+  const atMax = Physics.evaluate({ mat: mat(), motor: motor(), prop: S.prop, rpm: maxRpm(), tempC: S.tempC });
+  const own = Physics.sweep({ mat: mat(), motor: motor(), prop: S.prop, tempC: S.tempC });
+  S.reach = { pct: (atMax.sigma / atMax.strength) * 100, breakRpm: own.breakRpm };
   const rows = Object.entries(MATERIALS).map(([k, m]) => ({ k, m, s: Physics.sweep({ mat: m, motor: motor(), prop: S.prop, tempC: S.tempC }) }));
   const r = (v) => (v ? fmt(v) : "<span class='good'>dayanır</span>");
   $("#cmpTable").innerHTML = `<thead><tr><th>Malzeme</th><th>Kütle</th><th>⚠️ Sınıra yaklaşma</th><th>↪️ Aşırı esneme</th><th>🟠 Kalıcı bükülme</th><th>💥 Kırılma</th><th>Güvenli maks. itki</th></tr></thead>
@@ -603,7 +619,8 @@ function rigInfo(peak, ev) {
   const d = drone(), auw = d.massG + 4 * (ev ? ev.mass : 0);
   return {
     mode: "drone", name: `FPV drone – ${d.name}`, short: d.short, battery: d.battery, wheelbaseMm: d.wheelbaseMm, auw,
-    maxTotalThrust: peak.thrust * 4, maxTw: (peak.thrust * 4) / auw, where: S.breakInfo && S.breakInfo.where
+    maxTotalThrust: peak.thrust * 4, maxTw: (peak.thrust * 4) / auw, where: S.breakInfo && S.breakInfo.where,
+    propName: d.propName, brand: d.brand
   };
 }
 

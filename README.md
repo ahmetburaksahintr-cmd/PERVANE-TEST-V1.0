@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.3.1
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.4.0
 
-> **Güncel sürüm: v1.3.1** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.4.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.3.1** | 2026-11-20 | Sürüm geçmişi düzeltmesi: CHANGELOG'a 1.3.0 girdisi eklendi |
+| **v1.4.0** | 2026-11-20 | Gerçek drone modelleri: DJI FPV ve BETAFPV Pavo35, Pavo20 Pro, Meteor75 Pro |
+| v1.3.1 | 2026-11-20 | Sürüm geçmişi düzeltmesi: CHANGELOG'a 1.3.0 girdisi eklendi |
 | v1.3.0 | 2026-11-20 | FPV drone test düzeneği: 5" freestyle drone üzerinde 4 pervaneyle kırılma testi |
 | v1.2.0 | 2026-11-20 | Excel, Word ve rapor çıktıları: kırılınca indirme penceresi, Excel veri dosyası, grafikli Word raporu |
 | v1.1.0 | 2026-11-20 | Pervane renkleri: 17 renk, kırılma noktasının renk ve halkayla işaretlenmesi, sürüm takibi |
@@ -28,7 +29,21 @@ Proje iki parçadan oluşur:
 - **6 malzeme:** PLA, PETG, ABS, ASA, Karbon fiber naylon (PA-CF) ve TPU 95A.
 - **İki test düzeneği:** Sol menünün en üstünden seçilir.
   - 🔧 **Test standı:** Tek motor, yük hücresiyle itki ölçümü (gerçek Arduino düzeneğinin dijital ikizi).
-  - 🛸 **FPV drone:** 5" freestyle FPV drone (225 mm karbon X şase, 4 × 2207 1950KV, 6S 1100 mAh, yaklaşık 645 g). Dört pervanenin ikisi saat yönünde, ikisi ters döner. Drone pede iplerle bağlıdır: gaz açılıp itki ağırlığı geçince kalkar ve ipler gerilir. Gösterge, 4 pervanenin toplam itkisini, itki/ağırlık oranını ve toplam akımı gösterir. Bir pervane kırılınca hangi motorun pervanesinin koptuğu yazılır; drone o köşeye yatar, savrulur ve pede düşer. Raporlara drone bilgileri de eklenir. Yeni drone modelleri sonraki sürümlerde eklenecek.
+  - 🛸 **FPV drone:** Seçilen drone pede iplerle bağlıdır (tether). Gaz açılıp itki ağırlığı geçince kalkar ve ipler gerilir. Dört pervanenin ikisi saat yönünde, ikisi ters döner. Gösterge, 4 pervanenin toplam itkisini, itki/ağırlık oranını ve toplam akımı gösterir. Bir pervane kırılınca hangi motorun pervanesinin koptuğu yazılır; drone o köşeye yatar, savrulur ve pede düşer. Raporlara drone bilgileri de eklenir.
+- **Drone modelleri (gerçek parçalarla):** Motorların çanında gerçekteki gibi model ve KV yazar; motor boyutu stator çapına göre ölçeklenir.
+
+  | Model | Tip | Motor | Pervane | Batarya | Ağırlık |
+  |---|---|---|---|---|---|
+  | 5" Freestyle (genel yapım) | Açık karbon X şase | 4 × 2207 1950KV | 5043, 2 kanat | 6S 1100 mAh | ~645 g |
+  | DJI FPV (2021) | Kapalı gövde, gimbal kamera | 4 × DJI FPV motoru, 2306 sınıfı, ~1900KV* | DJI 5328S, 3 kanat | 6S 2000 mAh, 295 g | ~795 g |
+  | BETAFPV Pavo35 | 3,5" cinewhoop (kanallı) | 4 × 2006 2400KV | Gemfan D90S, 3 kanat | 6S 1100 mAh | ~450 g |
+  | BETAFPV Pavo20 Pro | 2,2" cinewhoop (kanallı) | 4 × LAVA 1104 7200KV | 2,2", 3 kanat | 3S 450 mAh | ~108 g |
+  | BETAFPV Meteor75 Pro | 1S tiny whoop | 4 × 1102 22000KV | Gemfan 45 mm, 3 kanat | 1S 550 mAh | ~48 g |
+
+  \* DJI, DJI FPV motorunun stator ölçüsünü ve KV değerini açıklamamıştır; bu değerler tahminidir. Ağırlık, köşegen, batarya ve pervane bilgileri üreticilerin ve satıcıların yayımladığı değerlerdendir. Hatve ve kanat kesiti ise pervanenin 3D baskı karşılığı için yaklaşık değerlerdir.
+
+  Küçük whoop pervaneleri çok yüksek devirde dönse de kanatları kısa olduğundan gerilme düşüktür; sert filamentlerde en yüksek devirde bile kırılmayabilirler. Göstergedeki **öngörü** satırı bunu önceden söyler. Kırılma sınırını bulmak için kök kalınlığını azalt veya sıcaklığı artır.
+- **Kanat sayısı:** Test standında pervane 2–5 kanatlı seçilebilir. Kanat arttıkça aynı devirde itki ve çekilen güç artar, ama her kanadın taşıdığı yük azalır.
 - **4 fırçasız motor:** 1404 3800KV, 2207 1950KV, 2806.5 1300KV ve 3115 900KV.
 - **Pervane geometrisi:** Çap, hatve, kök veter genişliği ve kök kalınlığı değiştirilebilir. Göbek sıcaklığı da ayarlanabilir; PLA'nın ısıyla yumuşamasını görebilirsin.
 - **Otomatik rampa testi:** Gaz 11 saniyede %0'dan %100'e çıkar. Pervane sırayla şu aşamalardan geçer:

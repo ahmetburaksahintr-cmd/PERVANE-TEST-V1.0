@@ -1,5 +1,16 @@
 # Sürüm geçmişi
 
+## 1.4.0 — 2026-11-20
+Gerçek drone modelleri: DJI FPV ve BETAFPV Pavo35, Pavo20 Pro, Meteor75 Pro
+- `README.md` güncellendi
+- `css/style.css` güncellendi
+- `index.html` güncellendi
+- `js/app.js` güncellendi
+- `js/materials.js` güncellendi
+- `js/physics.js` güncellendi
+- `js/report.js` güncellendi
+- `js/scene.js` güncellendi
+
 ## 1.3.1 — 2026-11-20
 Sürüm geçmişi düzeltmesi: CHANGELOG'a 1.3.0 girdisi eklendi
 - `CHANGELOG.md` güncellendi

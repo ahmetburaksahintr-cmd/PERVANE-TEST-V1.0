@@ -24,18 +24,20 @@ const Physics = {
   geometry(p) {
     const D = p.diameterIn * 0.0254;           // m
     const R = D / 2;
-    const r0 = 0.006;                           // göbek yarıçapı (m)
+    const r0 = Math.min(0.006, R * 0.2);        // göbek yarıçapı (m) – küçük pervanede daha küçük
+    const B = p.blades || 2;                    // kanat sayısı
     const L = R - r0;                           // kanat boyu
     const b = p.chordMm / 1000;                 // kök veter genişliği
     const h = p.thickMm / 1000;                 // kök kalınlığı
     const I = (b * h ** 3) / 12;                // atalet momenti
     const pitchRatio = p.pitchIn / p.diameterIn;
     // itki katsayısı (tipik 0.09–0.13); ctScale gerçek ölçümle kalibrasyondan gelir
-    const Ct = (0.06 + 0.11 * pitchRatio) * (p.ctScale || 1);
-    const Cp = 0.025 + 0.07 * pitchRatio * pitchRatio + 0.02 * pitchRatio;
-    // Kütle: iki kanat (sivrilen veter ve kalınlık → ~%55 dolu) + göbek
-    const vol = 2 * L * b * h * 0.55 + Math.PI * r0 * r0 * 0.008;
-    return { D, R, r0, L, b, h, I, Ct, Cp, vol };
+    // Kanat sayısı arttıkça aynı devirde itki ve çekilen güç artar (3 kanat ≈ %20 itki, %27 güç)
+    const Ct = (0.06 + 0.11 * pitchRatio) * Math.pow(B / 2, 0.45) * (p.ctScale || 1);
+    const Cp = (0.025 + 0.07 * pitchRatio * pitchRatio + 0.02 * pitchRatio) * Math.pow(B / 2, 0.6);
+    // Kütle: B kanat (sivrilen veter ve kalınlık → ~%55 dolu) + göbek
+    const vol = B * L * b * h * 0.55 + Math.PI * r0 * r0 * Math.min(0.008, R * 0.3);
+    return { D, R, r0, L, b, h, I, Ct, Cp, vol, B };
   },
 
   /** Sıcaklığa göre malzeme zayıflama katsayısı */
@@ -69,11 +71,11 @@ const Physics = {
     const yieldS = strength * mat.yieldR;
 
     // Aerodinamik
-    let T = g.Ct * AIR_RHO * n * n * g.D ** 4;            // N (iki kanat toplam)
+    let T = g.Ct * AIR_RHO * n * n * g.D ** 4;            // N (tüm kanatlar toplam)
     const P = g.Cp * AIR_RHO * n ** 3 * g.D ** 5;          // W
 
     // Kanat başına yük, 0.7R noktasında tekil kuvvet varsayımı
-    const F = T / 2;
+    const F = T / g.B;
     const a = Math.max(0.001, 0.7 * g.R - g.r0);
     const delta = (F * a * a * (3 * g.L - a)) / (6 * E * g.I); // m
     const ratio = delta / g.R;                              // uç sehimi / yarıçap
