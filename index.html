@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pervane Test Laboratuvarı – 3D Baskı Malzeme Karşılaştırması</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌀</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">🌀 <b>Pervane Test Laboratuvarı</b><span>3D baskı malzemelerinin itki · gerilme · bükülme testi</span></div>
+    <div class="top-actions">
+      <span class="badge">TÜBİTAK 4006 · Araştırma projesi</span>
+      <button class="icon" id="soundBtn" title="Motor sesi">🔇</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- SOL: Ayarlar -->
+    <aside class="panel side">
+      <section>
+        <h3>1 · Filament (malzeme)</h3>
+        <div id="matList" class="mat-list"></div>
+        <p id="matNote" class="note"></p>
+      </section>
+      <section>
+        <h3>2 · Fırçasız motor</h3>
+        <select id="motorSel"></select>
+        <div id="motorInfo" class="kv small"></div>
+      </section>
+      <section>
+        <h3>3 · Pervane geometrisi</h3>
+        <label>Çap <b id="vDia"></b><input type="range" id="dia" min="3" max="10" step="0.5"></label>
+        <label>Hatve (pitch) <b id="vPitch"></b><input type="range" id="pitch" min="2" max="7" step="0.1"></label>
+        <label>Kök veter genişliği <b id="vChord"></b><input type="range" id="chord" min="6" max="22" step="0.5"></label>
+        <label>Kök kalınlığı <b id="vThick"></b><input type="range" id="thick" min="1.2" max="5" step="0.1"></label>
+      </section>
+      <section>
+        <h3>4 · Ortam</h3>
+        <label>Pervane sıcaklığı <b id="vTemp"></b><input type="range" id="temp" min="15" max="90" step="1"></label>
+        <p class="note">Motor ısındıkça pervane göbeği de ısınır; PLA ~55 °C'de yumuşamaya başlar.</p>
+      </section>
+      <section>
+        <h3>5 · Görünüm</h3>
+        <label>Bükülme abartma <b id="vExag"></b><input type="range" id="exag" min="1" max="10" step="1"></label>
+        <label class="check"><input type="checkbox" id="heat" checked> Gerilme renk haritası</label>
+      </section>
+    </aside>
+
+    <!-- ORTA: 3D sahne -->
+    <section class="stage panel">
+      <div id="view3d"></div>
+      <div class="hud">
+        <div class="hud-main">
+          <div><span class="big" id="hRpm">0</span><small>devir/dk</small></div>
+          <div><span class="big" id="hThrust">0</span><small>gram itki</small></div>
+        </div>
+        <div class="hud-grid">
+          <div><small>Kök gerilmesi</small><b id="hStress">–</b></div>
+          <div><small>Güvenlik katsayısı</small><b id="hSf">–</b></div>
+          <div><small>Uç bükülmesi</small><b id="hDefl">–</b></div>
+          <div><small>Güç / akım</small><b id="hPower">–</b></div>
+          <div><small>Verim</small><b id="hEff">–</b></div>
+          <div><small>Pervane kütlesi</small><b id="hMass">–</b></div>
+        </div>
+        <div id="hState" class="state ok">HAZIR</div>
+      </div>
+      <div class="legend-heat"><span>Gerilme</span><i></i><small>güvenli → sınır</small></div>
+      <div class="hint">🖱️ Sürükle: döndür · Tekerlek: yakınlaştır · Dönüş hızı ekranda yavaşlatılmıştır</div>
+      <div class="controls">
+        <label class="throttle">Gaz <b id="vThr">0%</b><input type="range" id="thr" min="0" max="100" step="1" value="0"></label>
+        <button class="btn primary" id="rampBtn">▶ Otomatik rampa testi</button>
+        <button class="btn" id="stopBtn">⏹ Durdur</button>
+        <button class="btn" id="resetBtn">🔄 Yeni pervane tak</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- ALT: Grafikler, karşılaştırma, gerçek veri -->
+  <section class="bottom">
+    <div class="charts">
+      <div class="panel chart-card"><h3>📈 İtki – Devir</h3><canvas id="cThrust"></canvas></div>
+      <div class="panel chart-card"><h3>🧱 Kök gerilmesi – Devir</h3><canvas id="cStress"></canvas></div>
+      <div class="panel chart-card"><h3>↪️ Uç bükülmesi – Devir</h3><canvas id="cDefl"></canvas></div>
+    </div>
+
+    <div class="row2">
+      <div class="panel">
+        <div class="card-h"><h3>🏁 Tüm malzemelerin karşılaştırması</h3>
+          <div class="btns"><button class="btn primary" id="seqBtn">▶ Hepsini sırayla canlı test et</button><button class="btn" id="csvOut">⬇️ Sonuçları CSV indir</button></div></div>
+        <div class="table-wrap"><table id="cmpTable"></table></div>
+        <canvas id="cBars" class="bars"></canvas>
+        <p id="verdict" class="verdict"></p>
+      </div>
+      <div class="panel">
+        <h3>🔌 Fiziksel test verisi (gerçek düzenek)</h3>
+        <p class="note">Arduino + yük hücresi (HX711) + devir sensörüyle ölçtüğün değerleri yükle veya USB'den canlı oku. Ölçümler itki grafiğinde <b>beyaz noktalar</b> olarak görünür ve modelle karşılaştırılır.</p>
+        <div class="btns">
+          <label class="btn">📄 CSV yükle<input type="file" id="csvIn" accept=".csv,.txt" hidden></label>
+          <button class="btn" id="serialBtn">🔌 USB'den canlı oku</button>
+          <button class="btn" id="calBtn">🎯 Modeli ölçüme göre kalibre et</button>
+          <button class="btn ghost" id="clearMeas">Temizle</button>
+        </div>
+        <p class="small mono">CSV biçimi: <code>devir,itki_gram[,akim_amper]</code> — ör. <code>12000,310,4.2</code></p>
+        <div id="measInfo" class="meas-info">Henüz ölçüm yok.</div>
+        <h3 class="mt">📝 Test günlüğü</h3>
+        <ol id="log" class="log"></ol>
+      </div>
+    </div>
+
+    <div class="panel method">
+      <h3>🔬 Yöntem (modelin dayandığı formüller)</h3>
+      <div class="formulas">
+        <div><b>İtki</b><code>T = Cₜ · ρ · n² · D⁴</code></div>
+        <div><b>Güç</b><code>P = Cₚ · ρ · n³ · D⁵</code></div>
+        <div><b>Merkezkaç gerilmesi</b><code>σc = ρₘ · ω² · (R² − r₀²) / 2</code></div>
+        <div><b>Eğilme gerilmesi</b><code>σb = 6·M / (b·h²)</code></div>
+        <div><b>Uç sehimi</b><code>δ = F·a²·(3L − a) / (6·E·I)</code></div>
+        <div><b>Güvenlik katsayısı</b><code>GK = σdayanım / (σc + σb)</code></div>
+      </div>
+      <p class="note">Kanat, kökten sabitlenmiş dikdörtgen kesitli kiriş olarak modellenir; itki 0,7R noktasına etkir. Baskı katmanlarının zayıflığı ve sıcaklıkla yumuşama hesaba katılır. Titreşim, yorulma ve burkulma modele dahil değildir — bu yüzden gerçek testle karşılaştırma önemlidir.</p>
+    </div>
+  </section>
+
+  <script src="vendor/three.min.js"></script>
+  <script src="js/materials.js"></script>
+  <script src="js/physics.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/scene.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
