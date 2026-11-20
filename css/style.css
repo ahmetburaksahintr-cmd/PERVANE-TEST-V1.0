@@ -287,3 +287,17 @@ select:disabled, input[type=range]:disabled { opacity: .45; cursor: not-allowed;
 @media (max-width: 1100px) { .acc-grid { grid-template-columns: 1fr; } }
 @media (max-width: 560px) { .acc-head { grid-template-columns: auto 1fr auto; } .acc-head .chip { display: none; } }
 @media (prefers-reduced-motion: reduce) { .ready .acc-body, .ready .acc-content, .chev, .acc-ico { transition: none; } }
+
+/* ---------------- v1.7: Açılır-kapanır kartlar (Sonuçlar, Yöntem) ---------------- */
+.acc-stack { display: grid; gap: 16px; }
+.chip.warn { background: rgba(251, 191, 36, .16); color: var(--warn); }
+.chip.bad { background: rgba(251, 113, 133, .18); color: var(--bad); }
+.acc .charts { gap: 12px; }
+.acc .chart-card { background: rgba(15, 20, 38, .6); border: 1px solid var(--border); border-radius: 14px; padding: 12px 12px 8px; transition: border-color .2s; }
+.acc .chart-card:hover { border-color: #38427a; }
+.acc .chart-card h3 { font-size: .82rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+.acc-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
+.acc-toolbar .note { margin: 0; flex: 1 1 320px; max-width: 62ch; }
+.acc-toolbar .btns { margin: 0; }
+.acc .verdict { margin-bottom: 0; }
+.acc .formulas + .note { margin-top: 12px; }

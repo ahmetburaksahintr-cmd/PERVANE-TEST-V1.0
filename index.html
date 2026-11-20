@@ -109,19 +109,51 @@
 
   <!-- ALT: Grafikler, karşılaştırma, gerçek veri -->
   <section class="bottom">
-    <div class="charts">
-      <div class="panel chart-card"><h3>📈 İtki – Devir</h3><canvas id="cThrust"></canvas></div>
-      <div class="panel chart-card"><h3>🧱 Kök gerilmesi – Devir</h3><canvas id="cStress"></canvas></div>
-      <div class="panel chart-card"><h3>↪️ Uç bükülmesi – Devir</h3><canvas id="cDefl"></canvas></div>
-    </div>
-
-    <div class="panel" id="cmpPanel">
-        <div class="card-h"><h3>🏁 Tüm malzemelerin karşılaştırması</h3>
-          <div class="btns"><button class="btn primary" id="seqBtn">▶ Hepsini sırayla canlı test et</button><button class="btn" id="csvOut">⬇️ Sonuçları CSV indir</button></div></div>
-        <div class="table-wrap"><table id="cmpTable"></table></div>
-        <canvas id="cBars" class="bars"></canvas>
-        <p id="verdict" class="verdict"></p>
+    <!-- SONUÇLAR: tıklanınca açılan kartlar -->
+    <div class="group" id="grpResults">
+      <div class="group-head">
+        <div class="group-title"><span class="eyebrow">Sonuçlar</span><h2>Grafikler ve karşılaştırma</h2></div>
+        <div class="group-actions">
+          <button class="link" data-acc-all="open">Tümünü aç</button>
+          <button class="link" data-acc-all="close">Tümünü kapat</button>
+        </div>
       </div>
+      <div class="acc-stack">
+        <article class="panel acc" data-acc="charts" data-open>
+          <button class="acc-head" id="accChartsHead" aria-expanded="true" aria-controls="accChartsBody">
+            <span class="acc-ico" aria-hidden="true">📈</span>
+            <span class="acc-titles"><b>Canlı grafikler</b><small>İtki, kök gerilmesi ve uç bükülmesinin devire göre değişimi</small></span>
+            <span class="chip" id="chartsChip">Hazır</span>
+            <span class="chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc-body" id="accChartsBody" role="region" aria-labelledby="accChartsHead"><div class="acc-clip"><div class="acc-content">
+            <div class="charts">
+              <div class="chart-card"><h3>📈 İtki – Devir</h3><canvas id="cThrust"></canvas></div>
+              <div class="chart-card"><h3>🧱 Kök gerilmesi – Devir</h3><canvas id="cStress"></canvas></div>
+              <div class="chart-card"><h3>↪️ Uç bükülmesi – Devir</h3><canvas id="cDefl"></canvas></div>
+            </div>
+          </div></div></div>
+        </article>
+
+        <article class="panel acc" data-acc="compare" data-open>
+          <button class="acc-head" id="accCmpHead" aria-expanded="true" aria-controls="accCmpBody">
+            <span class="acc-ico" aria-hidden="true">🏁</span>
+            <span class="acc-titles"><b>Malzeme karşılaştırması</b><small id="cmpSub">Aynı pervane ve motorla tüm filamentler</small></span>
+            <span class="chip" id="cmpChip">–</span>
+            <span class="chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc-body" id="accCmpBody" role="region" aria-labelledby="accCmpHead"><div class="acc-clip"><div class="acc-content">
+            <div class="acc-toolbar">
+              <p class="note">Her satır, seçili pervane ve motorla o filamentin hangi devirde sınıra yaklaştığını, büküldüğünü ve kırıldığını gösterir.</p>
+              <div class="btns"><button class="btn primary" id="seqBtn">▶ Hepsini sırayla canlı test et</button><button class="btn" id="csvOut">⬇️ Sonuçları CSV indir</button></div>
+            </div>
+            <div class="table-wrap"><table id="cmpTable"></table></div>
+            <canvas id="cBars" class="bars"></canvas>
+            <p id="verdict" class="verdict"></p>
+          </div></div></div>
+        </article>
+      </div>
+    </div>
 
     <!-- VERİLER: tıklanınca açılan kartlar -->
     <div class="group" id="grpData">
@@ -176,17 +208,30 @@
       </div>
     </div>
 
-    <div class="panel method">
-      <h3>🔬 Yöntem (modelin dayandığı formüller)</h3>
-      <div class="formulas">
-        <div><b>İtki</b><code>T = Cₜ · ρ · n² · D⁴</code></div>
-        <div><b>Güç</b><code>P = Cₚ · ρ · n³ · D⁵</code></div>
-        <div><b>Merkezkaç gerilmesi</b><code>σc = ρₘ · ω² · (R² − r₀²) / 2</code></div>
-        <div><b>Eğilme gerilmesi</b><code>σb = 6·M / (b·h²)</code></div>
-        <div><b>Uç sehimi</b><code>δ = F·a²·(3L − a) / (6·E·I)</code></div>
-        <div><b>Güvenlik katsayısı</b><code>GK = σdayanım / (σc + σb)</code></div>
+    <!-- MODEL: yöntem -->
+    <div class="group" id="grpModel">
+      <div class="group-head">
+        <div class="group-title"><span class="eyebrow">Model</span><h2>Nasıl hesaplanıyor?</h2></div>
       </div>
-      <p class="note">Kanat, kökten sabitlenmiş dikdörtgen kesitli kiriş olarak modellenir; itki 0,7R noktasına etkir. Baskı katmanlarının zayıflığı ve sıcaklıkla yumuşama hesaba katılır. Titreşim, yorulma ve burkulma modele dahil değildir — bu yüzden gerçek testle karşılaştırma önemlidir.</p>
+      <article class="panel acc" data-acc="method">
+        <button class="acc-head" id="accMethodHead" aria-expanded="false" aria-controls="accMethodBody">
+          <span class="acc-ico" aria-hidden="true">🔬</span>
+          <span class="acc-titles"><b>Yöntem</b><small>Modelin dayandığı formüller ve sınırları</small></span>
+          <span class="chip on">6 formül</span>
+          <span class="chev" aria-hidden="true"></span>
+        </button>
+        <div class="acc-body" id="accMethodBody" role="region" aria-labelledby="accMethodHead"><div class="acc-clip"><div class="acc-content">
+          <div class="formulas">
+            <div><b>İtki</b><code>T = Cₜ · ρ · n² · D⁴</code></div>
+            <div><b>Güç</b><code>P = Cₚ · ρ · n³ · D⁵</code></div>
+            <div><b>Merkezkaç gerilmesi</b><code>σc = ρₘ · ω² · (R² − r₀²) / 2</code></div>
+            <div><b>Eğilme gerilmesi</b><code>σb = 6·M / (b·h²)</code></div>
+            <div><b>Uç sehimi</b><code>δ = F·a²·(3L − a) / (6·E·I)</code></div>
+            <div><b>Güvenlik katsayısı</b><code>GK = σdayanım / (σc + σb)</code></div>
+          </div>
+          <p class="note">Kanat, kökten sabitlenmiş dikdörtgen kesitli kiriş olarak modellenir; itki 0,7R noktasına etkir. Baskı katmanlarının zayıflığı ve sıcaklıkla yumuşama hesaba katılır. Titreşim, yorulma ve burkulma modele dahil değildir — bu yüzden gerçek testle karşılaştırma önemlidir.</p>
+        </div></div></div>
+      </article>
     </div>
   </section>
 

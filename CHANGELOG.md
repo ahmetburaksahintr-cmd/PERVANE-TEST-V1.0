@@ -1,5 +1,13 @@
 # Sürüm geçmişi
 
+## 1.7.0 — 2026-11-20
+Sonuçlar bölümü açılır-kapanır kartlara dönüştü
+- "Canlı grafikler", "Malzeme karşılaştırması" ve "Yöntem" artık tıklanınca açılan kartlar
+- Grafik kartının başlığında anlık devir ve itki; karşılaştırma kartında en iyi malzeme ve seçili pervane/motor özeti
+- Alt bölüm üç başlık altında toplandı: Sonuçlar, Veriler, Model; her grupta "Tümünü aç / Tümünü kapat"
+- Grafikler kart kapalıyken de çizilmeye devam eder, böylece Excel/Word raporlarındaki görseller etkilenmez
+- Grafik kartları sadeleştirildi; karşılaştırma düğmeleri kartın araç çubuğuna taşındı
+
 ## 1.6.0 — 2026-11-20
 Veriler bölümü açılır-kapanır kartlara dönüştü
 - "Fiziksel test verisi" ve "Test günlüğü" artık tıklanınca açılan ayrı kartlar; yumuşak açılma-kapanma animasyonu

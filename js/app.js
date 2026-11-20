@@ -344,6 +344,10 @@ function updateHud(ev, realDefl) {
   else if (ev.state === "warn") { cls = "warn"; txt = "⚠️ SINIRDA"; }
   st.className = "state " + cls;
   st.textContent = txt;
+  // Grafik kartının rozeti (kart kapalıyken de anlık değeri gösterir)
+  const cc = $("#chartsChip");
+  const ccTxt = S.broken ? "💥 Kırıldı" : S.rpm < 100 ? "Hazır" : `${fmt(Math.round(S.rpm / 100) * 100)} dev/dk · ${fmt(ev.thrustG)} g`;
+  if (cc.textContent !== ccTxt) { cc.textContent = ccTxt; cc.className = "chip" + (S.broken ? " bad" : S.rpm < 100 ? "" : pctS > 75 ? " warn" : " on"); }
   // Başlık: (drone) + malzeme + renk
   $("#hTitle").innerHTML = `<i style="background:${legendStart()}"></i>${isDrone() ? "🛸 " + drone().short + " · " : ""}${mat().name} · ${colorName()}`;
   if (S.droneEval) {
@@ -428,6 +432,9 @@ function refreshCompare() {
   const best = rows.slice().sort((a, b) => b.s.bestThrust - a.s.bestThrust);
   Chart.bars($("#cBars"), best.map(({ m, s }) => ({ label: m.name, value: s.bestThrust, color: `#${m.color.toString(16).padStart(6, "0")}`, note: `${fmt(s.mass, 1)} g pervane` })), { unit: "g" });
   const top = best[0], worst = best[best.length - 1];
+  $("#cmpChip").textContent = `🏆 ${top.m.name}`;
+  $("#cmpChip").className = "chip good";
+  $("#cmpSub").textContent = `${fmt(S.prop.diameterIn, S.prop.diameterIn % 1 ? 2 : 0)}" pervane · ${motor().name} · ${S.tempC} °C`;
   $("#verdict").innerHTML = `🏆 Bu koşullarda (${S.prop.diameterIn}" pervane, ${motor().name}, ${S.tempC} °C) en yüksek <b>güvenli</b> itkiyi <b>${top.m.name}</b> veriyor (${fmt(top.s.bestThrust)} g).
     En zayıf sonuç <b>${worst.m.name}</b> (${fmt(worst.s.bestThrust)} g). Sıcaklığı veya kanat kalınlığını değiştirip sıralamanın nasıl değiştiğini gözlemle.`;
   S.compareRows = rows;
