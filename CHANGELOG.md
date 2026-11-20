@@ -1,5 +1,19 @@
 # Sürüm geçmişi
 
+## 1.3.1 — 2026-11-20
+Sürüm geçmişi düzeltmesi: CHANGELOG'a 1.3.0 girdisi eklendi
+- `CHANGELOG.md` güncellendi
+- `tools/surum-yayinla.ps1` güncellendi
+
+## 1.3.0 — 2026-11-20
+FPV drone test düzeneği: 5" freestyle drone üzerinde 4 pervaneyle kırılma testi
+- Sol menüye "Test düzeneği" seçimi: Test standı veya FPV drone
+- 5" Freestyle FPV modeli: 225 mm karbon X şase, 4 × 2207 1950KV, 6S batarya, FPV kamera, anten, LED'ler
+- 2 CW + 2 CCW pervane; drone iplerle pede bağlı, itki ağırlığı geçince kalkar
+- Göstergede toplam itki (4 pervane), itki/ağırlık oranı ve toplam akım
+- Kırılmada hangi motorun pervanesinin koptuğu gösterilir; drone o köşeye yatıp pede düşer
+- Excel/Word raporlarına drone bilgileri eklendi
+
 ## 1.2.0 — 2026-11-20
 Excel, Word ve rapor çıktıları
 - Pervane kırılınca "indirmek ister misiniz?" penceresi: Excel (.xlsx), Word (.docx) veya ikisi

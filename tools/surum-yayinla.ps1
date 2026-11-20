@@ -114,7 +114,9 @@ try {
   $head = "## $new — $(Get-Date -Format 'yyyy-MM-dd')`n"
   if ($Message) { $head += "$($Message.Split("`n")[0])`n" } else { $head += "Otomatik sürüm.`n" }
   $head += ($changes -join "`n") + "`n`n"
-  $c = $c -replace "(?s)^(# Sürüm geçmişi\s*\n\n)", "`$1$head"
+  # Dosya Windows (CRLF) satır sonu kullanıyorsa yeni girdi de aynı biçimde yazılır
+  $nl = if ($c.Contains("`r`n")) { "`r`n" } else { "`n" }
+  $c = ([regex]"^(\uFEFF?# Sürüm geçmişi[ \t]*\r?\n\r?\n)").Replace($c, { param($m) $m.Value + $head.Replace("`n", $nl) }, 1)
   [System.IO.File]::WriteAllText($chg, $c, $Utf8)
 
   # 6) Commit + etiket + gönder
