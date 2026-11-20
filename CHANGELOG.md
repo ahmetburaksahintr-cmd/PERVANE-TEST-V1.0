@@ -1,5 +1,12 @@
 # Sürüm geçmişi
 
+## 1.8.2 — 2026-11-20
+Arduino itki ölçümü düzeltmesi: sahte 0 g satırları gönderilmiyor
+- Yük hücresinde o an yeni örnek yoksa artık 0 g değil, son geçerli itki değeri gönderilir (sahte 0'lar grafiği ve kalibrasyonu bozuyordu)
+- Yük hücresi yarım saniyeden uzun yanıt vermezse ölçüm satırı gönderilmez ve günlüğe uyarı yazılır; geri gelince ölçüm kendiliğinden sürer
+- Yük hücresi takılı değilken kart açılışta takılıp kalmıyor: 2 saniye bekler, uyarı yazar ve devam eder
+- README'ye "Ölçüm satırları" bölümü eklendi
+
 ## 1.8.1 — 2026-11-20
 Arduino güvenlik kilidi: gaz açıkken motor devreye girmez
 - Motor yalnızca şu sırayla çalışır: güvenlik anahtarı kapalı, gaz sıfırda, sonra anahtar açık

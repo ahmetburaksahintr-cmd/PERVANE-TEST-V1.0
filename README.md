@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.8.1
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.8.2
 
-> **Güncel sürüm: v1.8.1** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.8.2** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.8.1** | 2026-11-20 | Arduino güvenlik kilidi: gaz açıkken motor devreye girmez |
+| **v1.8.2** | 2026-11-20 | Arduino itki ölçümü düzeltmesi: sahte 0 g satırları gönderilmiyor |
+| v1.8.1 | 2026-11-20 | Arduino güvenlik kilidi: gaz açıkken motor devreye girmez |
 | v1.8.0 | 2026-11-20 | Ekran tasarımı baştan elden geçirildi |
 | v1.7.0 | 2026-11-20 | Sonuçlar bölümü açılır-kapanır kartlara dönüştü |
 | v1.6.0 | 2026-11-20 | Veriler bölümü açılır-kapanır kartlara dönüştü |
@@ -103,6 +104,12 @@ Motor yalnızca şu sırayla devreye girer:
 - Kart anahtar açıkken yeniden başlarsa da motor dönmez. USB kablosunu takınca veya sayfadan bağlanınca Arduino yeniden başlar; anahtarı kapatıp yeniden aç.
 - Anahtarı kapatmak motoru anında durdurur.
 - Arduino'nun uyarıları sayfadaki **Test günlüğü** kartında "🔧 Arduino:" ile görünür.
+
+### Ölçüm satırları
+- Arduino saniyede 10 satır gönderir: `devir,itki_gram,akim_amper`.
+- Yük hücresinde o an yeni örnek yoksa son geçerli itki değeri gönderilir (sahte 0 g gönderilmez).
+- Yük hücresi yarım saniyeden uzun yanıt vermezse ölçüm gönderilmez ve günlüğe uyarı düşer. Bağlantıyı kontrol et: DT → D3, SCK → D4.
+- Yük hücresi kart açılırken takılı değilse bağlantıyı düzeltip kartı yeniden başlat; sıfırlama (dara) açılışta yapılır.
 
 ## Önerilen deney planı (bilim fuarı)
 1. **Değişkenler:**

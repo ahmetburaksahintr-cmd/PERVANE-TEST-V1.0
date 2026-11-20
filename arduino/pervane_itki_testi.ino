@@ -5,6 +5,8 @@
    Gönderir: USB seri port, 115200 baud, satır başına:
              devir,itki_gram,akim_amper      ör. 18250,412.6,9.84
    Web sayfasında "USB'den canlı oku" ile doğrudan grafiğe düşer.
+   "#" ile başlayan satırlar durum mesajıdır (ölçüm değildir).
+   Yük hücresi yanıt vermezse ölçüm satırı gönderilmez, uyarı yazılır.
 
    BAĞLANTILAR
    - HX711 yük hücresi modülü : DT → D3, SCK → D4  (kütüphane: "HX711" by Bogdan Necula)
@@ -39,11 +41,16 @@ float CAL_FACTOR = 420.0;            // HX711 kalibrasyon katsayısı (aşağıd
 const float ACS_MV_PER_A = 40.0;     // ACS758-50B: 40 mV/A, 0 A = 2.5 V
 const int THROTTLE_SAFE = 40;        // gaz bu değerin altındayken (≈ %4) motor devreye alınabilir (0–1023)
 const unsigned long ARM_STABLE_MS = 50;  // anahtar bu süre kesintisiz açık kalmalı (temas sıçramasına karşı)
+const unsigned long THRUST_MAX_AGE_MS = 500;  // son itki örneği bundan eskiyse yük hücresi "yanıt vermiyor" sayılır
 
 Servo esc;
 HX711 scale;
 volatile unsigned long pulses = 0;
 unsigned long lastReport = 0, lastPulses = 0;
+float thrust = 0;                    // son geçerli itki ölçümü (gram)
+unsigned long lastThrustAt = 0;      // son itki örneğinin alındığı an
+bool scaleTared = false;             // yük hücresi açılışta bulundu ve sıfırlandı mı
+bool scaleLost = false;              // "yanıt vermiyor" uyarısı yazıldı mı
 bool motorOn = false;                // güvenlik kilidi açıldı mı (motor gaza cevap veriyor mu)
 bool switchSeenOff = false;          // açılıştan beri anahtar en az bir kez kapalı görüldü mü
 uint8_t lastNote = 0;                // aynı uyarı art arda yazılmasın
@@ -97,8 +104,15 @@ void setup() {
 
   scale.begin(PIN_HX_DT, PIN_HX_SCK);
   scale.set_scale(CAL_FACTOR);
-  scale.tare();                      // pervane dururken sıfırla
-  Serial.println("# hazir: devir,itki_gram,akim_amper");
+  if (scale.wait_ready_timeout(2000)) {
+    scale.tare();                    // pervane dururken sıfırla
+    scaleTared = true;
+  } else {                           // yük hücresi takılı değilse burada sonsuza kadar beklemesin
+    scaleLost = true;
+    Serial.println(F("# UYARI: yük hücresi (HX711) yanıt vermiyor, itki ölçülemiyor. Bağlantıyı düzelt (DT → D3, SCK → D4) ve kartı yeniden başlat."));
+  }
+  lastThrustAt = millis();
+  Serial.println(F("# hazir: devir,itki_gram,akim_amper"));
 }
 
 void loop() {
@@ -112,7 +126,18 @@ void loop() {
     float rpm = ((p - lastPulses) / (float)BLADES) / dt * 60.0;
     lastPulses = p; lastReport = now;
 
-    float thrust = scale.is_ready() ? scale.get_units(1) : 0;   // gram
+    // İtki (gram): yük hücresinde yeni örnek varsa okunur, yoksa son geçerli değer kullanılır.
+    // Örnek hazır değil diye 0 g gönderilmez; sahte 0'lar grafiği ve kalibrasyonu bozar.
+    if (scaleTared && scale.is_ready()) { thrust = scale.get_units(1); lastThrustAt = now; }
+    if (!scaleTared || now - lastThrustAt > THRUST_MAX_AGE_MS) {
+      if (!scaleLost) {
+        scaleLost = true;
+        Serial.println(F("# UYARI: yük hücresi (HX711) yanıt vermiyor; itki ölçülemediği için ölçüm gönderilmiyor."));
+      }
+      return;                                    // itkisiz satır gönderme
+    }
+    if (scaleLost) { scaleLost = false; Serial.println(F("# yük hücresi yeniden yanıt veriyor")); }
+
     float volts = analogRead(PIN_CURRENT) * 5.0 / 1023.0;
     float amps = max(0.0, (volts - 2.5) * 1000.0 / ACS_MV_PER_A);
 
