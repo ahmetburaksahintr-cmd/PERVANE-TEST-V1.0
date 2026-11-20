@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.11.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.12.0
 
-> **Güncel sürüm: v1.11.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.12.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.11.0** | 2026-11-20 | Yeni drone modelleri: DJI Avata 2, iFlight Nazgul Evoque F5X V2 ve Chimera7 Pro V2 |
+| **v1.12.0** | 2026-11-20 | Çalışma alanı: yeşil kesim matı ve daha canlı sahne |
+| v1.11.0 | 2026-11-20 | Yeni drone modelleri: DJI Avata 2, iFlight Nazgul Evoque F5X V2 ve Chimera7 Pro V2 |
 | v1.10.0 | 2026-11-20 | Yeni drone modelleri: GEPRC CineLog35 V2 ve Happymodel Mobula7 1S |
 | v1.9.0 | 2026-11-20 | Kanat sayısı sayfadan Arduino'ya gönderiliyor |
 | v1.8.2 | 2026-11-20 | Arduino itki ölçümü düzeltmesi: sahte 0 g satırları gönderilmiyor |

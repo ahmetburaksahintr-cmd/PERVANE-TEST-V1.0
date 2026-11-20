@@ -20,7 +20,7 @@ const Scene3D = {
     this.updateCamera();
 
     // Işıklar
-    this.scene.add(new THREE.HemisphereLight(0xdbe4ff, 0x20232e, 0.75));
+    this.scene.add(new THREE.HemisphereLight(0xeaf2ff, 0x2f4a3a, 0.95));
     const key = new THREE.DirectionalLight(0xffffff, 1.0);
     key.position.set(160, 260, 140);
     key.castShadow = true;
@@ -69,15 +69,26 @@ const Scene3D = {
     this.updateCamera();
   },
 
-  /* ---------- Zemin ---------- */
+  /* ---------- Zemin: çalışma masası üzerinde yeşil kesim matı ---------- */
   buildGround() {
-    const floor = new THREE.Mesh(new THREE.CircleGeometry(420, 64), new THREE.MeshStandardMaterial({ color: 0x151927, roughness: 0.95 }));
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    this.scene.add(floor);
-    const grid = new THREE.PolarGridHelper(400, 16, 8, 64, 0x2c3350, 0x232a40);
-    grid.position.y = 0.2;
-    this.scene.add(grid);
+    // Masa (matın altında, koyu ahşap)
+    const desk = new THREE.Mesh(new THREE.PlaneGeometry(2400, 2400), new THREE.MeshStandardMaterial({ color: new THREE.Color(0x4a3524).convertSRGBToLinear(), roughness: 0.85 }));
+    desk.rotation.x = -Math.PI / 2;
+    desk.position.y = -1.2;
+    desk.receiveShadow = true;
+    this.scene.add(desk);
+    // Kesim matı: 1 cm kareli, 5 cm'de bir kalın çizgi ve ölçü rakamları (1 birim = 1 mm)
+    const W = 900, D = 640;
+    const tex = cuttingMatTexture(W, D);
+    tex.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+    const mat = new THREE.Mesh(new THREE.BoxGeometry(W, 1.2, D), [
+      new THREE.MeshStandardMaterial({ color: 0x0f3d28 }), new THREE.MeshStandardMaterial({ color: 0x0f3d28 }),
+      new THREE.MeshStandardMaterial({ map: tex, roughness: 0.78, metalness: 0 }), new THREE.MeshStandardMaterial({ color: 0x0f3d28 }),
+      new THREE.MeshStandardMaterial({ color: 0x0f3d28 }), new THREE.MeshStandardMaterial({ color: 0x0f3d28 })
+    ]);
+    mat.position.y = -0.6;
+    mat.receiveShadow = true;
+    this.scene.add(mat);
   },
 
   /* ---------- Kamera (sürükle-döndür, tekerlek-yakınlaştır) ---------- */
@@ -1139,6 +1150,49 @@ function prism(pts, depth, bevel, mat) {
   g.translate(0, 0, -depth / 2);
   g.computeVertexNormals();
   return new THREE.Mesh(g, mat);
+}
+
+/** Yeşil kesim matı dokusu: cm kareleri, 5 cm çizgileri, kenar cetveli, açı çizgileri */
+function cuttingMatTexture(wMm, dMm) {
+  const k = 2048 / wMm;                                  // piksel / mm
+  const c = document.createElement("canvas");
+  c.width = 2048; c.height = Math.round(dMm * k);
+  const ctx = c.getContext("2d"), w = c.width, h = c.height;
+  const g = ctx.createRadialGradient(w / 2, h / 2, h * 0.1, w / 2, h / 2, w * 0.62);
+  g.addColorStop(0, "#27a567"); g.addColorStop(1, "#16784a");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  const m = 30 * k;                                      // kenar boşluğu (30 mm)
+  const line = (x0, y0, x1, y1) => { ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); };
+  // Izgara: merkezden dışa, 10 mm'de bir ince, 50 mm'de bir kalın
+  const cx = w / 2, cy = h / 2, nx = Math.floor((wMm / 2 - 30) / 10), ny = Math.floor((dMm / 2 - 30) / 10);
+  for (let i = -nx; i <= nx; i++) {
+    const big = i % 5 === 0;
+    ctx.strokeStyle = big ? "rgba(235,255,240,.62)" : "rgba(235,255,240,.2)"; ctx.lineWidth = big ? 2.2 : 1;
+    line(cx + i * 10 * k, cy - ny * 10 * k, cx + i * 10 * k, cy + ny * 10 * k);
+  }
+  for (let j = -ny; j <= ny; j++) {
+    const big = j % 5 === 0;
+    ctx.strokeStyle = big ? "rgba(235,255,240,.62)" : "rgba(235,255,240,.2)"; ctx.lineWidth = big ? 2.2 : 1;
+    line(cx - nx * 10 * k, cy + j * 10 * k, cx + nx * 10 * k, cy + j * 10 * k);
+  }
+  // Açı çizgileri (30°, 45°, 60°) ve merkez daireleri
+  ctx.strokeStyle = "rgba(255,236,150,.55)"; ctx.lineWidth = 1.6;
+  const x0 = cx - nx * 10 * k, y1 = cy + ny * 10 * k, len = ny * 20 * k;
+  for (const deg of [30, 45, 60]) { const a = (deg * Math.PI) / 180; line(x0, y1, x0 + Math.cos(a) * len * 1.2, y1 - Math.sin(a) * len * 1.2); }
+  for (const r of [50, 100, 150, 200]) { ctx.beginPath(); ctx.arc(cx, cy, r * k, 0, Math.PI * 2); ctx.stroke(); }
+  // Çerçeve ve cetvel rakamları (cm)
+  ctx.strokeStyle = "rgba(245,255,248,.85)"; ctx.lineWidth = 3;
+  ctx.strokeRect(cx - nx * 10 * k, cy - ny * 10 * k, nx * 20 * k, ny * 20 * k);
+  ctx.fillStyle = "rgba(245,255,248,.9)"; ctx.font = `600 ${Math.round(9 * k)}px Segoe UI, system-ui, sans-serif`;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (let i = -nx; i <= nx; i += 5) { ctx.fillText(String((i + nx) ), cx + i * 10 * k, cy + ny * 10 * k + m * 0.45); ctx.fillText(String(i + nx), cx + i * 10 * k, cy - ny * 10 * k - m * 0.45); }
+  for (let j = -ny; j <= ny; j += 5) { ctx.fillText(String(ny - j), cx - nx * 10 * k - m * 0.5, cy + j * 10 * k); ctx.fillText(String(ny - j), cx + nx * 10 * k + m * 0.5, cy + j * 10 * k); }
+  ctx.font = `700 ${Math.round(8 * k)}px Segoe UI, system-ui, sans-serif`; ctx.textAlign = "left";
+  ctx.fillStyle = "rgba(245,255,248,.7)";
+  ctx.fillText("PERVANE TEST LABORATUVARI  ·  KESİM MATI  ·  1 kare = 1 cm", cx - nx * 10 * k, h - m * 0.28 + 4);
+  const tex = new THREE.CanvasTexture(c);
+  tex.encoding = THREE.sRGBEncoding;
+  return tex;
 }
 
 /** Kamera merceği (+x yönüne bakan) */

@@ -1,5 +1,11 @@
 # Sürüm geçmişi
 
+## 1.12.0 — 2026-11-20
+Çalışma alanı: yeşil kesim matı ve daha canlı sahne
+- Düz koyu zemin yerine ahşap masa üstünde yeşil kesim matı
+- Mat 1 cm kareli; 5 cm'de bir kalın çizgi, kenarlarda cm cetveli, açı çizgileri ve merkez daireleri var (sahne ölçüsüyle birebir)
+- Ortam ışığı güçlendirildi; sahne daha canlı görünüyor
+
 ## 1.11.0 — 2026-11-20
 Yeni drone modelleri: DJI Avata 2, iFlight Nazgul Evoque F5X V2 ve Chimera7 Pro V2
 - DJI Avata 2 (2024): pervane korumalarıyla tek parça gövde, arkadan takılan batarya, gimbal kamera; 3032S üç kanatlı pervane, 2150 mAh 14,76 V batarya, ~377 g
