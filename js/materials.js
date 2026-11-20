@@ -70,7 +70,7 @@ const MOTORS = {
   bf1104: { name: "BETAFPV LAVA 1104 · 7200KV · 3S", kv: 7200, cells: 3, pmax: 50, imax: 9, mass: 7, propIn: 2.2, stator: 11, label: "LAVA  1104  7200KV", bell: 0x15161a, ring: 0xef4444 },
   bf1102: { name: "BETAFPV 1102 · 22000KV · 1S", kv: 22000, cells: 1, pmax: 14, imax: 5, mass: 3.3, propIn: 1.77, stator: 11, label: "1102  22000KV", bell: 0xd5d9df },
   // GEPRC SPEEDX2 2105.5: 12N14P, 21,0 g, en yüksek sürekli güç 559 W, en yüksek akım 34,9 A (üretici değerleri)
-  gep2105: { name: "GEPRC SPEEDX2 2105.5 · 2650KV · 6S", kv: 2650, cells: 6, pmax: 559, imax: 35, mass: 21, propIn: 3.5, stator: 21, label: "SPEEDX2  2105.5  2650KV", bell: 0x111827 },
+  gep2105: { name: "GEPRC SPEEDX2 2105.5 · 2650KV · 6S", kv: 2650, cells: 6, pmax: 559, imax: 35, mass: 21, propIn: 3.5, stator: 21, label: "GEPRC  SPEEDX2  2105.5", bell: 0x121317 },
   // Happymodel RS0802: 9N12P, stator 8 × 2 mm, 2,0 g, yalnız 1S (üretici değerleri)
   hm0802: { name: "Happymodel RS0802 · 20000KV · 1S", kv: 20000, cells: 1, pmax: 11, imax: 4, mass: 2, propIn: 1.57, stator: 8, label: "RS0802  KV20000", bell: 0x334155,
     estimated: "Happymodel, RS0802 motorunun en yüksek güç ve akım değerini yayımlamamıştır; 11 W ve 4 A, 1S 0802 sınıfı için tahmindir. Boyut ve KV üreticinin değerleridir." }
@@ -133,11 +133,11 @@ const DRONES = {
     note: "İç mekân için küçük, hafif whoop. Resmî değerler: 30,5 g (bataryasız), motorlar arası 80,8 mm. Şase ve kanopi başka renklerde de satılır; çizim üreticinin tanıtım görselindeki mavi-beyaz sürümdür. Küçük pervaneler çok yüksek devirde döner ama kanatları kısa olduğundan gerilme düşüktür."
   },
   cinelog35v2: {
-    brand: "GEPRC", name: "GEPRC CineLog35 V2 HD O3 · 3,5\" cinewhoop", short: "CineLog35 V2", style: "whoop",
+    brand: "GEPRC", name: "GEPRC CineLog35 V2 HD O3 · 3,5\" cinewhoop", short: "CineLog35 V2", style: "cine", cine: { kind: "cinelog", ring: "double", propY: 20, plateMm: 3.5, topMm: 36, labelAsIs: true },
     motorKey: "gep2105",
-    prop: { diameterIn: 3.5, pitchIn: 3, chordMm: 11, thickMm: 2.0, blades: 3 }, propName: "HQProp DT90MMX3 · 3 kanat (kanallı)",
-    wheelbaseMm: 142, massG: 485, battery: "6S 1300 mAh LiPo (XT60) · GEPRC Storm, 207 g", accent: 0xf59e0b, frame: 0x111827,
-    parts: "142 mm kanal korumalı şase (karbon plakalar, 7075 alüminyum kolonlar) · 4 × SPEEDX2 2105.5 2650KV · GEP-F722-45A AIO V2 · DJI O3 hava ünitesi · HQProp DT90MMX3 üç kanatlı pervane (90 mm)",
+    prop: { diameterIn: 3.5, pitchIn: 3, chordMm: 11, thickMm: 2.0, blades: 3 }, propName: "HQProp DT90MMX3 · 3 kanat",
+    wheelbaseMm: 142, massG: 485, battery: "6S 1300 mAh LiPo (XT60) · GEPRC Storm, 207 g",
+    parts: "142 mm itici (pusher) düzen: çift kasnaklı siyah koruma, 3,5 mm karbon üst plaka (karbon plakalar, 7075 alüminyum kolonlar) · 4 × SPEEDX2 2105.5 2650KV · GEP-F722-45A AIO V2 · DJI O3 hava ünitesi · HQProp DT90MMX3 üç kanatlı pervane (90 mm)",
     note: "3,5\" sinema dronu. Üreticinin verdiği ağırlık 285,8 g (TBS Nano RX sürümü, bataryasız); önerdiği 6S 1300 mAh batarya (207 g) ile ~493 g. Motor 2023'te 2150KV'den 2650KV'ye yükseltildi."
   },
   mobula7: {

@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.22.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.23.0
 
-> **Güncel sürüm: v1.22.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.23.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.22.0** | 2026-11-21 | BETAFPV Meteor75 Pro gerçek görsellerine göre baştan çizildi |
+| **v1.23.0** | 2026-11-21 | GEPRC CineLog35 V2 gerçek görsellerine göre baştan çizildi (itici düzen) |
+| v1.22.0 | 2026-11-21 | BETAFPV Meteor75 Pro gerçek görsellerine göre baştan çizildi |
 | v1.21.0 | 2026-11-21 | BETAFPV Pavo20 Pro gerçek görsellerine göre baştan çizildi (itici düzen) |
 | v1.20.0 | 2026-11-21 | BETAFPV Pavo35 gerçek görsellerine göre baştan çizildi (itici düzen) |
 | v1.19.0 | 2026-11-21 | DJI Avata 2 gerçek fotoğraflarına göre baştan çizildi |
@@ -63,7 +64,7 @@ Proje iki parçadan oluşur:
   | BETAFPV Pavo35 | 3,5" itici (pusher) cinewhoop | 4 × LAVA 2006 2400KV | Gemfan D90S, 3 kanat | 6S 1100 mAh | ~450 g |
   | BETAFPV Pavo20 Pro | 2,2" itici (pusher) cinewhoop | 4 × LAVA 1104 7200KV | Gemfan 2218, 3 kanat | 3S 450 mAh | ~108 g |
   | BETAFPV Meteor75 Pro | 1S tiny whoop | 4 × 1102 22000KV | Gemfan 45 mm, 3 kanat | 1S 550 mAh | ~48 g |
-  | GEPRC CineLog35 V2 HD O3 | 3,5" cinewhoop (kanallı) | 4 × SPEEDX2 2105.5 2650KV | HQProp DT90MMX3, 3 kanat | 6S 1300 mAh, 207 g | ~496 g |
+  | GEPRC CineLog35 V2 HD O3 | 3,5" itici (pusher) cinewhoop | 4 × SPEEDX2 2105.5 2650KV | HQProp DT90MMX3, 3 kanat | 6S 1300 mAh, 207 g | ~496 g |
   | Happymodel Mobula7 1S | 1S tiny whoop | 4 × RS0802 20000KV | Gemfan 1610-2, 40 mm, 2 kanat | 1S 450 mAh | ~38 g |
   | iFlight Nazgul Evoque F5X V2 (O3) | 5" freestyle, ışıklı yan paneller | 4 × XING2 2207 1750KV | Nazgul F5, 5,1", 3 kanat | 6S 1550 mAh, 253 g | ~690 g |
   | iFlight Chimera7 Pro V2 (O3) | 7,5" uzun menzil, GPS | 4 × XING2 2809 1250KV | HQProp 7.5X3.7X3, 3 kanat | 6S 3300 mAh, 442 g | ~1165 g |

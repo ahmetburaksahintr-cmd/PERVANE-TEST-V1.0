@@ -1,5 +1,15 @@
 # Sürüm geçmişi
 
+## 1.23.0 — 2026-11-21
+GEPRC CineLog35 V2 gerçek görsellerine göre baştan çizildi (itici düzen)
+- Düzen düzeltildi: motorlar karbon plakanın altına asılı, pervaneler koruma kasnaklarının arasında
+- Çift kasnaklı siyah koruma: yarıklı alt bant, üstte ince kasnak, aralarında dikmeler; üst kasnaktan motor yatağına üçer kol
+- Belde kırmızı lastik parça, dış köşelerde sivri ayaklar
+- Uzun dikdörtgen 3,5 mm karbon plaka ve dört kısa kol; arka kollarda beyaz "GEPRC" ve "CineLog35 V2" (V2 turuncu) yazıları
+- Burunda dört gümüş ara parçalı küçük kamera plakası ve altında O3 kamera
+- Üstte gümüş çizgili iki ray arasında batarya; arkada XT60, eğik silindir anten ve yatay T anten
+- Motor çanında gerçekteki yazılar: "GEPRC", "SPEEDX2", "2105.5" (asılı motorda fotoğraftaki gibi baş aşağı)
+
 ## 1.22.0 — 2026-11-21
 BETAFPV Meteor75 Pro gerçek görsellerine göre baştan çizildi
 - Tek parça gök mavisi şase: ince açık halkalar, halka başına 5 kol, halkaların altında küçük ayaklar

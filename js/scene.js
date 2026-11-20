@@ -421,7 +421,7 @@ const Scene3D = {
     u.bellMat.color.set(m.bell != null ? m.bell : 0x6366f1);
     const text = m.label || (m.name || "").split(" · ").slice(0, 2).join("  ");
     let tex = motorLabelTexture(text, m.bell != null && isLight(m.bell) ? "#111827" : "#f8fafc");
-    if (u.flip) {                                         // ters asılı motorda yazı 180° çevrilir
+    if (u.flip && !u.keepLabel) {                         // ters asılı motorda yazı 180° çevrilir
       tex = tex.clone();
       tex.center.set(0.5, 0.5);
       tex.rotation = Math.PI;
@@ -493,6 +493,7 @@ const Scene3D = {
       body.add(unit.group);
       if (info.flip) {                                    // itici düzen: motor plakanın altına asılı, pervane altta
         unit.flip = true;
+        unit.keepLabel = !!info.labelAsIs;                // bazı modellerde asılı motorun yazısı baş aşağı durur
         unit.group.rotation.x = Math.PI;
         this.styleMotor(unit, motor);                     // çandaki yazı ters durmasın
       }
@@ -1110,6 +1111,10 @@ const Scene3D = {
    *  · "pavo20": BETAFPV Pavo20 Pro – tamamı siyah; yan raylı karbon plaka, üstte O3 hava ünitesini tutan kafes
    *    ("dji" logosu, yanında "PAVO"), arkada "BETAFPV" yazılı anten yuvası ve uzun saplı anten, alta kayışla
    *    bağlanan batarya, kırmızı-siyah XT30 kablosu
+   *  · "cinelog": GEPRC CineLog35 V2 HD O3 – tamamı siyah; çift kasnaklı (üst kasnak + yarıklı alt bant) koruma,
+   *    belde kırmızı lastik parça, köşelerde sivri ayaklar; uzun dikdörtgen karbon plaka ve dört kısa kol,
+   *    arka kollarda beyaz "GEPRC" ve "CineLog35 V2" (V2 turuncu) yazıları; burunda dört gümüş ara parçalı
+   *    kamera plakası; üstte iki ray arasında batarya; arkada XT60, eğik silindir anten ve yatay T anten
    */
   styleCine(body, { d, R, s, pos, motor }) {
     const C = (h) => new THREE.Color(h).convertSRGBToLinear();
@@ -1138,7 +1143,7 @@ const Scene3D = {
       return m;
     };
     const k = R / 45;                                           // boyut ölçeği (3,5" = 1)
-    const propY = 7.5 * Math.max(0.7, k), plateT = cfg.plateMm || 3;
+    const propY = cfg.propY || 7.5 * Math.max(0.7, k), plateT = cfg.plateMm || 3;
     const plateY = propY + 26 * s, top = plateY + plateT;        // plakanın altı ve üstü
     const fx = Math.abs(pos[0][0]), fz = Math.abs(pos[0][1]);
 
@@ -1148,10 +1153,33 @@ const Scene3D = {
     const ringMat = new THREE.MeshStandardMaterial({ color: C(smoke ? 0x4b5058 : 0x15161a), roughness: smoke ? 0.25 : 0.7, metalness: 0.1,
       transparent: smoke, opacity: smoke ? 0.62 : 1, side: THREE.DoubleSide, depthWrite: !smoke });
     for (const [x, z] of pos) {
-      add(new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBot, bandH, 72, 1, true), ringMat), x, bandH / 2, z);
-      for (const [r, y] of [[rTop, bandH], [rBot, 0.6]]) {
-        const lip = add(new THREE.Mesh(new THREE.TorusGeometry(r, 1.5 * Math.max(0.7, k), 8, 72), ringMat), x, y, z);
-        lip.rotation.x = Math.PI / 2;
+      if (cfg.ring === "double") {
+        // Çift kasnak: yarıklı alt bant + üstte ince kasnak, aralarında kısa dikmeler; üst kasnaktan motor yatağına üç kol
+        const rr = R + 5.4, out = Math.atan2(z, x);
+        add(new THREE.Mesh(new THREE.CylinderGeometry(rr, rr + 1.2, 13, 72, 1, true), ringMat), x, 9.5, z);
+        for (const [r, y, t] of [[rr, 16, 1.7], [rr + 1.2, 3, 1.7], [rr, 27, 2.1]]) {
+          const hoop = add(new THREE.Mesh(new THREE.TorusGeometry(r, t, 8, 72), ringMat), x, y, z);
+          hoop.rotation.x = Math.PI / 2;
+        }
+        for (let i = 0; i < 12; i++) {
+          const a = out + ((i + 0.5) * Math.PI * 2) / 12, inner = Math.cos(a - out) < -0.35;   // gövdeye bakan tarafta dikme/yarık yok
+          if (inner) continue;
+          add(new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 11, 8), ringMat), x + Math.cos(a) * rr, 21.5, z + Math.sin(a) * rr);
+          const slot = box(13, 3.2, 0.6, M(0x2c2f35), x + Math.cos(a + 0.26) * (rr + 0.9), 9.5, z + Math.sin(a + 0.26) * (rr + 0.9));
+          slot.rotation.y = -(a + 0.26) + Math.PI / 2;
+        }
+        for (const da of [-0.95, 0, 0.95]) {
+          const a = out + da;
+          body.add(capsule([x + Math.cos(a) * rr, 27, z + Math.sin(a) * rr], [x + Math.cos(a) * 14 * s, plateY - 1, z + Math.sin(a) * 14 * s], 1.9, black));
+        }
+        const foot = add(new THREE.Mesh(new THREE.ConeGeometry(4, 6, 12), black), x + Math.cos(out) * (rr + 1), 1.4, z + Math.sin(out) * (rr + 1));
+        foot.rotation.x = Math.PI;
+      } else {
+        add(new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBot, bandH, 72, 1, true), ringMat), x, bandH / 2, z);
+        for (const [r, y] of [[rTop, bandH], [rBot, 0.6]]) {
+          const lip = add(new THREE.Mesh(new THREE.TorusGeometry(r, 1.5 * Math.max(0.7, k), 8, 72), ringMat), x, y, z);
+          lip.rotation.x = Math.PI / 2;
+        }
       }
       if (cfg.led != null) {                                    // halkanın dış alt kenarında ışık şeridi (COB LED)
         const strip = add(new THREE.Mesh(new THREE.TorusGeometry(rBot + 1.6 * k, 0.9 * Math.max(0.8, k), 6, 72), new THREE.MeshBasicMaterial({ color: cfg.led, transparent: true })), x, 2.4 * k, z);
@@ -1291,8 +1319,67 @@ const Scene3D = {
       body.add(capsule([-25, 7, -1.4], [-47, 7.5, -1.4], 0.9, black));
       box(9, 5.5, 7.5, M(0x1a1b1f), -52, 7.6, 0);
     }
+    if (kind === "cinelog") {
+      const y = plateY + plateT / 2;
+      // Uzun dikdörtgen karbon plaka, dört kısa kol ve üstündeki oyuklar
+      box(2 * fx + 34, plateT, 38, carbon(2 * fx + 34, 38), 2, y, 0);
+      for (const [x, z] of pos) strut([Math.sign(x) * (fx - 22), Math.sign(z) * 16], [x, z], 14, y, plateT);
+      for (const [x, w] of [[-34, 16], [-10, 12], [12, 14], [34, 10]]) for (const zs of [-1, 1]) box(w, 0.5, 3, M(0x08090b), x, top + 0.1, zs * 9);
+      box(18, 0.5, 9, M(0x08090b), 0, top + 0.1, 0);
+      // Arka kollardaki yazılar: sağ arkada "GEPRC", sol arkada "CineLog35 V2" (V2 turuncu)
+      const lay = (mesh, x, z, ang) => { mesh.rotation.order = "YXZ"; mesh.rotation.set(-Math.PI / 2, ang, 0); add(mesh, x, top + 0.25, z); };
+      const aR = Math.atan2(fz - 16, -(22)), aL = Math.atan2(-(fz - 16), -22);
+      lay(label3d(["GEPRC"], 13, 3.6, null, "#f1f5f9"), -fx + 9, fz - 13, -aR + Math.PI);
+      lay(label3d([[["CineLog35 ", "#f1f5f9"], ["V2", "#f97316"]]], 22, 3.6, null, "#f1f5f9"), -fx + 10, -(fz - 14), -aL + Math.PI);
+      // Plakanın altında gövde: AIO kart ve O3 hava ünitesi
+      box(40, 12, 34, black, -4, plateY - 7, 0);
+      box(30, 1.2, 30, M(0x14181f), 14, plateY - 15, 0);
+      // Belde kırmızı lastik parça (iki yanda)
+      for (const zs of [-1, 1]) {
+        box(16, 5, 4.5, M(0xdc2626, { roughness: 0.75 }), 0, 9.5, zs * (fz + 3.4));
+        box(12, 26, 5, ringMat, 0, 15, zs * (fz + 0.4));
+      }
+      box(5, 26, 12, ringMat, fx + 0.4, 15, 0);
+      box(5, 26, 12, ringMat, -fx - 0.4, 15, 0);
+      // Burun: dört gümüş tırtıllı ara parçanın (siyah takozlu) taşıdığı küçük kamera plakası ve altında O3 kamera
+      const px = fx + 18, py = top + 11;
+      box(30, 2, 32, carbon(30, 32), px, py, 0);
+      for (const [dx, dz] of [[-11, -12], [-11, 12], [11, -12], [11, 12]]) {
+        cyl(2.4, py - top - 1, silver, px + dx, (py + top) / 2, dz);
+        cyl(3, 3, black, px + dx, top + 1.5, dz);
+        cyl(3.2, 1.4, silver, px + dx, py + 1.6, dz);
+      }
+      box(22, plateT, 30, carbon(22, 30), px - 4, y, 0);
+      const cam = new THREE.Group();
+      cam.position.set(px + 9, py - 12, 0);
+      cam.rotation.z = 0.3;
+      cam.add(new THREE.Mesh(new THREE.BoxGeometry(18, 20, 21), black));
+      addLens(cam, 7.2, 10, black);
+      body.add(cam);
+      for (const zs of [-1, 1]) box(12, 16, 2.4, black, px + 6, py - 9, zs * 12.4);
+      // Üstte iki siyah ray (gümüş çizgili) arasında batarya ve kayış
+      for (const zs of [-1, 1]) {
+        box(46, 7, 3, black, -4, top + 3.5, zs * 17.5);
+        box(46, 1, 3.2, silver, -4, top + 5.6, zs * 17.5);
+      }
+      box(74, 31, 32, M(0x1f2328), -6, top + 16, 0);
+      const bl = flatLabel(["LiPo 6S", "1300 mAh", "22,2 V"], 24, 24, "#f8fafc", "#111827");
+      bl.position.set(-30, top + 31.6, 0);
+      body.add(bl);
+      box(15, 32, 33, M(0x111214), -6, top + 16.4, 0);
+      // Arka: XT60 fiş, TPU yuvada yukarı-geriye eğik silindir anten ve yatay T anten
+      box(15, 6, 8, M(0xeab308), -fx + 2, top + 3, 0);
+      box(14, 10, 22, black, -fx - 16, top - 1, 0);
+      body.add(capsule([-fx - 18, top + 3, 0], [-fx - 30, top + 18, 0], 1.8, black));
+      const ant = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 17, 24), black);
+      ant.position.set(-fx - 34.5, top + 24, 0);
+      ant.rotation.z = 0.62;
+      body.add(ant);
+      cyl(1.4, 64, black, -fx - 22, top - 6, 0, "z");
+      box(6, 5, 8, black, -fx - 22, top - 6, 0);
+    }
     return {
-      baseY: 2.2, motorY: plateY, topY: top + (cfg.topMm || 34), attachY: bandH * 0.5, flip: true,
+      baseY: 2.2, motorY: plateY, topY: top + (cfg.topMm || 34), attachY: bandH * 0.5, flip: true, labelAsIs: !!cfg.labelAsIs,
       after: () => {
         for (const u of this.units) {
           u.stripe.visible = false;
