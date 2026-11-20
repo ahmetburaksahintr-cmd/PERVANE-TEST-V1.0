@@ -65,7 +65,7 @@ const MOTORS = {
   // iFlight XING2 2207 1750KV: 12N14P, 30,5 g (kablolu), tepe 36,03 A, 898 W (üretici değerleri)
   xing2207: { name: "iFlight XING2 2207 · 1750KV · 6S", kv: 1750, cells: 6, pmax: 898, imax: 36, mass: 30.5, propIn: 5.1, stator: 22, label: "XING2  2207  1750KV", bell: 0x2b2e34 },
   // iFlight XING2 2809 1250KV: 12N14P, 60,7 g (kablolu), tepe 50 A, 1145 W (üretici değerleri)
-  xing2809: { name: "iFlight XING2 2809 · 1250KV · 6S", kv: 1250, cells: 6, pmax: 1145, imax: 50, mass: 60.7, propIn: 7.5, stator: 28, label: "XING2  2809  1250KV", bell: 0x111827 },
+  xing2809: { name: "iFlight XING2 2809 · 1250KV · 6S", kv: 1250, cells: 6, pmax: 1145, imax: 50, mass: 60.7, propIn: 7.5, stator: 28, label: "XING2  2809  1250KV", bell: 0x2b2e34 },
   bf2006: { name: "BETAFPV LAVA 2006 · 2400KV · 6S", kv: 2400, cells: 6, pmax: 330, imax: 26, mass: 22, propIn: 3.5, stator: 20, label: "LAVA  2006  2400KV", bell: 0x6b7078, ring: 0xf97316 },
   bf1104: { name: "BETAFPV LAVA 1104 · 7200KV · 3S", kv: 7200, cells: 3, pmax: 50, imax: 9, mass: 7, propIn: 2.2, stator: 11, label: "LAVA  1104  7200KV", bell: 0x15161a, ring: 0xef4444 },
   bf1102: { name: "BETAFPV 1102 · 22000KV · 1S", kv: 22000, cells: 1, pmax: 14, imax: 5, mass: 3.3, propIn: 1.77, stator: 11, label: "1102  22000KV", bell: 0xd5d9df },
@@ -159,12 +159,14 @@ const DRONES = {
     note: "5\" freestyle dronu. Ağırlık 433 g (bataryasız), ölçüler 172 × 145 × 36 mm, en yüksek hız 190 km/sa. iFlight O3 sürümünün sayfasını kaldırdığı için ağırlık satıcı listelerinden alındı; motor, pervane, şase ve batarya değerleri iFlight'ın kendi sayfalarındandır. Motor yerleşimi üreticinin üstten görünüş çiziminden ölçülmüştür; batarya ve kayışların görünüşü ise geneldir."
   },
   chimera7: {
-    brand: "iFlight", name: "iFlight Chimera7 Pro V2 · 7,5\" uzun menzil (DJI O3)", short: "Chimera7 Pro V2", style: "freestyle",
-    motorKey: "xing2809", layout: { x: 100, z: 135, xr: 118, zr: 105 }, armMm: 6, bodyScale: 1.3, gps: true,
+    brand: "iFlight", name: "iFlight Chimera7 Pro V2 · 7,5\" uzun menzil (DJI O3)", short: "Chimera7 Pro V2", style: "iflight",
+    iflight: { accent: 0xef2b2b, front: 150, rear: -120, w: 38, panelH: 22, ant: "long", dipole: "front", dipoleSpan: 147, top: "slots", whip: true, gps: true,
+      roots: [[80, 17], [15, 17], [15, -17], [80, -17]], batt: [141, 37, 44], battX: 5, battText: ["FULLSEND", "6S 3300mAh", "95C"] },
+    motorKey: "xing2809", layout: { x: 98, z: 136, xr: 98, zr: 124 },
     prop: { diameterIn: 7.5, pitchIn: 3.7, chordMm: 16, thickMm: 3, blades: 3 }, propName: "HQProp 7.5X3.7X3 · 3 kanat",
-    wheelbaseMm: 327, massG: 1125, battery: "6S 3300 mAh LiPo (XT60) · iFlight Fullsend, 442 g", accent: 0xfacc15,
-    parts: "327 mm \"deadcat\" karbon şase, 6 mm kollar · 4 × XING2 2809 1250KV · BLITZ F722 + BLITZ E55 4'ü 1 arada ESC · DJI O3 hava ünitesi · GPS · HQProp 7.5X3.7X3 üç kanatlı pervane",
-    note: "7,5\" uzun menzil dronu. Ağırlık 725 g (bataryasız), 6S 3300 mAh ile ~1165 g; ölçüler 270 × 199 × 34 mm, en yüksek hız 140 km/sa. iFlight O3 sürümünün sayfasını kaldırdığı için bu değerler satıcı listeleri ve iFlight'ın aynı gövdeli O4 sayfasıyla karşılaştırılarak alındı. Motorların şase üzerindeki tam konumu yayımlanmadığından çizimdeki yerleşim yaklaşıktır."
+    wheelbaseMm: 327, massG: 1125, battery: "6S 3300 mAh LiPo (XT60) · iFlight Fullsend, 442 g",
+    parts: "327 mm \"deadcat\" karbon şase, 6 mm kollar, kırmızı ışıklı yan paneller, motorların altında kırmızı TPU koruyucular · 4 × XING2 2809 1250KV · BLITZ F722 + BLITZ E55 4'ü 1 arada ESC · DJI O3 hava ünitesi · GPS · HQProp 7.5X3.7X3 üç kanatlı pervane",
+    note: "7,5\" uzun menzil dronu. Ağırlık 725 g (bataryasız), 6S 3300 mAh ile ~1165 g; ölçüler 270 × 199 × 34 mm, en yüksek hız 140 km/sa. iFlight O3 sürümünün sayfasını kaldırdığı için bu değerler satıcı listeleri ve iFlight'ın aynı gövdeli O4 sayfasıyla karşılaştırılarak alındı. Çizim, aynı gövdenin O4 sürümüne ait resmî görsellere göredir; motor yerleşimi üstten görünüşten ölçülmüştür, batarya ve kayışların görünüşü ise geneldir."
   }
 };
 

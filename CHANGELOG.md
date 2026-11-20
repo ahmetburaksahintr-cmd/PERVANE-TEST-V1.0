@@ -1,5 +1,15 @@
 # Sürüm geçmişi
 
+## 1.26.0 — 2026-11-21
+iFlight Chimera7 Pro V2 resmî görsellerine göre baştan çizildi
+- "Deadcat" kollar: ön kollar neredeyse yana, arka kollar geriye açılıyor; yerleşim üreticinin üstten görünüşünden ölçüldü
+- Uzun, dar, kapalı gövde: kırmızı ışıklı köşeli oyuklu siyah yan paneller, sıra sıra yarıklı karbon üst plaka
+- Her motorun altında kırmızı TPU koruyucu (aynı zamanda ayak)
+- Burunda köşeli kamera kafesi, GoPro tipi bağlantı ve yatay T anten
+- Arkada altıgen başlı iki uzun anten (V biçiminde), kırmızı braketli dik kamçı anten, XT60 ve kuyrukta GPS modülü
+- Üstte kaymaz ped üzerinde, iki "iFlight" kayışıyla bağlı Fullsend 6S 3300 mAh batarya
+- Böylece listedeki dokuz gerçek modelin hepsi üretici görsellerine göre yeniden çizilmiş oldu
+
 ## 1.25.0 — 2026-11-21
 iFlight Nazgul Evoque F5X V2 resmî görsellerine göre baştan çizildi
 - Uzun, dar, kapalı gövde: alt plaka, yeşil ışıklı köşeli oyuklu siyah yan paneller ve oyuklu karbon üst plaka
