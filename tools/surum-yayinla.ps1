@@ -113,7 +113,11 @@ try {
   $c = [System.IO.File]::ReadAllText($chg, $Utf8)
   $head = "## $new — $(Get-Date -Format 'yyyy-MM-dd')`n"
   if ($Message) { $head += "$($Message.Split("`n")[0])`n" } else { $head += "Otomatik sürüm.`n" }
-  $head += ($changes -join "`n") + "`n`n"
+  # Mesajda "- " ile başlayan maddeler varsa onlar yazılır, yoksa değişen dosyaların listesi
+  $bullets = @()
+  if ($Message) { $bullets = @($Message -split "`r?`n" | Where-Object { $_ -match "^- " }) }
+  if ($bullets.Count -eq 0) { $bullets = $changes }
+  $head += ($bullets -join "`n") + "`n`n"
   # Dosya Windows (CRLF) satır sonu kullanıyorsa yeni girdi de aynı biçimde yazılır
   $nl = if ($c.Contains("`r`n")) { "`r`n" } else { "`n" }
   $c = ([regex]"^(\uFEFF?# Sürüm geçmişi[ \t]*\r?\n\r?\n)").Replace($c, { param($m) $m.Value + $head.Replace("`n", $nl) }, 1)

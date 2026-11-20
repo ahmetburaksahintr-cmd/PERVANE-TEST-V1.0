@@ -1,15 +1,19 @@
 # Sürüm geçmişi
 
+## 1.4.1 — 2026-11-20
+Sürüm geçmişine madde madde açıklama
+- Sürüm betiği artık mesajdaki maddeleri CHANGELOG.md'ye yazıyor (önceden sadece dosya listesi yazıyordu)
+- 1.4.0 girdisi özellik maddeleriyle tamamlandı
+
 ## 1.4.0 — 2026-11-20
 Gerçek drone modelleri: DJI FPV ve BETAFPV Pavo35, Pavo20 Pro, Meteor75 Pro
-- `README.md` güncellendi
-- `css/style.css` güncellendi
-- `index.html` güncellendi
-- `js/app.js` güncellendi
-- `js/materials.js` güncellendi
-- `js/physics.js` güncellendi
-- `js/report.js` güncellendi
-- `js/scene.js` güncellendi
+- DJI FPV (2021): kapalı gövde, arkadan takılan 6S 2000 mAh batarya, gimbal kamera, iniş ayakları, 5328S üç kanatlı pervane, ~795 g
+- BETAFPV Pavo35 (2006 2400KV, 6S), Pavo20 Pro (LAVA 1104 7200KV, 3S), Meteor75 Pro (1102 22000KV, 1S): kanal korumalı whoop gövdeleri
+- Motor çanlarında gerçekteki gibi model ve KV yazısı; motor boyutu stator çapına göre ölçeklenir
+- Kanat sayısı (2–5) fizik modeline ve 3D pervaneye eklendi; test standında seçilebilir
+- Drone listesi markaya göre gruplu; kamera, ped ve ipler drone boyutuna göre ayarlanır
+- Göstergede kırılma öngörüsü: bu ayarda kaç devirde kırılacağı veya neden kırılmayacağı
+- DJI motor KV değeri üretici açıklamadığı için tahmini olarak işaretlendi
 
 ## 1.3.1 — 2026-11-20
 Sürüm geçmişi düzeltmesi: CHANGELOG'a 1.3.0 girdisi eklendi
