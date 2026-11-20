@@ -9,10 +9,22 @@
 </head>
 <body>
   <header class="top">
-    <div class="brand">🌀 <b>Pervane Test Laboratuvarı</b><span>3D baskı malzemelerinin itki · gerilme · bükülme testi</span></div>
+    <div class="brand">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="#fff">
+          <g transform="translate(16 16)">
+            <path d="M0-2.6C3-9 4.6-12.6 1.4-14.4-2.4-15.6-3.6-9.6 0-2.6z"/>
+            <path d="M0-2.6C3-9 4.6-12.6 1.4-14.4-2.4-15.6-3.6-9.6 0-2.6z" transform="rotate(120)"/>
+            <path d="M0-2.6C3-9 4.6-12.6 1.4-14.4-2.4-15.6-3.6-9.6 0-2.6z" transform="rotate(240)"/>
+            <circle r="3.1"/><circle r="1.2" fill="#7b6cff"/>
+          </g>
+        </svg>
+      </span>
+      <div class="brand-text"><b>Pervane Test Laboratuvarı</b><span>3D baskı malzemelerinin itki · gerilme · bükülme testi</span></div>
+    </div>
     <div class="top-actions">
-      <span class="badge ver" id="appVersion"></span>
       <span class="badge">TÜBİTAK 4006 · Araştırma projesi</span>
+      <span class="badge ver" id="appVersion"></span>
       <button class="icon" id="soundBtn" title="Motor sesi">🔇</button>
     </div>
   </header>
@@ -21,7 +33,7 @@
     <!-- SOL: Ayarlar -->
     <aside class="panel side">
       <section>
-        <h3>1 · Test düzeneği</h3>
+        <h3 class="step-h"><span class="step">1</span>Test düzeneği</h3>
         <div class="seg" id="rigSeg">
           <button data-rig="stand" class="active">🔧 Test standı</button>
           <button data-rig="drone">🛸 FPV drone</button>
@@ -33,25 +45,25 @@
         </div>
       </section>
       <section>
-        <h3>2 · Filament (malzeme)</h3>
+        <h3 class="step-h"><span class="step">2</span>Filament (malzeme)</h3>
         <div id="matList" class="mat-list"></div>
         <p id="matNote" class="note"></p>
       </section>
       <section>
-        <h3>3 · Pervane rengi</h3>
+        <h3 class="step-h"><span class="step">3</span>Pervane rengi</h3>
         <div id="colorList" class="color-list"></div>
         <label class="custom-color">Özel renk <input type="color" id="customColor" value="#ff6b00"></label>
         <p class="note">Pervane sıfırken seçtiğin renkte görünür; zorlandıkça kırılacağı bölge <b class="warn">sarı</b> → <b class="bad">kırmızı</b> olur ve kökte uyarı halkası yanıp söner.</p>
       </section>
       <section>
-        <h3>4 · Fırçasız motor</h3>
+        <h3 class="step-h"><span class="step">4</span>Fırçasız motor</h3>
         <select id="motorSel"></select>
         <div id="motorInfo" class="kv small"></div>
         <p id="motorEst" class="note" hidden></p>
         <p id="motorLock" class="note" hidden>🔒 Drone modunda motor, pervane çapı ve kanat sayısı drone modeline göre sabittir.</p>
       </section>
       <section>
-        <h3>5 · Pervane geometrisi</h3>
+        <h3 class="step-h"><span class="step">5</span>Pervane geometrisi</h3>
         <label>Çap <b id="vDia"></b><input type="range" id="dia" min="1.5" max="10" step="0.1"></label>
         <label>Kanat sayısı <b id="vBlades"></b><input type="range" id="blades" min="2" max="5" step="1"></label>
         <label>Hatve (pitch) <b id="vPitch"></b><input type="range" id="pitch" min="2" max="7" step="0.1"></label>
@@ -59,12 +71,12 @@
         <label>Kök kalınlığı <b id="vThick"></b><input type="range" id="thick" min="0.4" max="5" step="0.1"></label>
       </section>
       <section>
-        <h3>6 · Ortam</h3>
+        <h3 class="step-h"><span class="step">6</span>Ortam</h3>
         <label>Pervane sıcaklığı <b id="vTemp"></b><input type="range" id="temp" min="15" max="90" step="1"></label>
         <p class="note">Motor ısındıkça pervane göbeği de ısınır; PLA ~55 °C'de yumuşamaya başlar.</p>
       </section>
       <section>
-        <h3>7 · Görünüm</h3>
+        <h3 class="step-h"><span class="step">7</span>Görünüm</h3>
         <label>Bükülme abartma <b id="vExag"></b><input type="range" id="exag" min="1" max="10" step="1"></label>
         <label class="check"><input type="checkbox" id="heat" checked> Gerilme renk haritası</label>
       </section>
@@ -255,6 +267,11 @@
       <footer><button class="btn ghost" id="rmNo">Hayır, teşekkürler</button></footer>
     </div>
   </div>
+  <footer class="foot">
+    <span>Pervane Test Laboratuvarı <b id="footVer"></b> · Eğitim amaçlı basitleştirilmiş model; sonuçları gerçek testle doğrula.</span>
+    <span>Kaynak kod: <a href="https://github.com/ahmetburaksahintr-cmd/PERVANE-TEST-V1.0" target="_blank" rel="noopener">GitHub</a></span>
+  </footer>
+
   <div id="toasts"></div>
 
   <script src="vendor/three.min.js"></script>

@@ -1,5 +1,16 @@
 # Sürüm geçmişi
 
+## 1.8.0 — 2026-11-20
+Ekran tasarımı baştan elden geçirildi
+- Tek bir tasarım sistemi: ortak renk, köşe yarıçapı, gölge ve hareket değerleri
+- Üst çubuk: pervane logosu, iki satırlı başlık, sade rozetler
+- Yan panel: numaralı adım başlıkları, dolu kısmı vurgulu yeni kaydırıcılar, özel açılır liste
+- Düğmeler: tutarlı yükseklik, belirgin birincil düğme, üzerine gelme ve klavye odak halkası
+- Gösterge: cam efekti, büyük sayılar, küçük harfli etiketler; sahnede kenar gölgesi
+- Karşılaştırma tablosu: çerçeveli, satır vurgusu ve seçili malzeme işareti
+- Telefon ve tablet yerleşimi: gösterge sahnenin altına iner, yan panel sütunlara ayrılır, düğmeler tam genişliğe yayılır
+- Alt bilgi, ince kaydırma çubukları ve "hareketi azalt" ayarına saygı
+
 ## 1.7.0 — 2026-11-20
 Sonuçlar bölümü açılır-kapanır kartlara dönüştü
 - "Canlı grafikler", "Malzeme karşılaştırması" ve "Yöntem" artık tıklanınca açılan kartlar

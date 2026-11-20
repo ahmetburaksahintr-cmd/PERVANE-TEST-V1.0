@@ -100,7 +100,9 @@ function init() {
     $("#log").dataset.filter = b.dataset.f;
   };
   $("#logClear").onclick = () => { $("#log").innerHTML = ""; S.logCount = 0; updateLogHead(); };
-  $("#appVersion").textContent = "v" + APP_VERSION;
+  $("#appVersion").textContent = $("#footVer").textContent = "v" + APP_VERSION;
+  // Kaydırıcıların dolu kısmını boya (elle değişimde)
+  document.addEventListener("input", (e) => { if (e.target.type === "range") paintRange(e.target); });
   Scene3D.init($("#view3d"));
   selectMaterial("PLA", true);
   syncInputs();
@@ -121,6 +123,7 @@ function syncInputs() {
   const m = motor();
   $("#motorInfo").innerHTML = `<span>KV</span><b>${m.kv}</b><span>Gerilim</span><b>${m.cells}S · ${fmt(m.cells * 3.7, 1)} V</b>
     <span>Maks. güç</span><b>${m.pmax} W</b><span>Bu pervaneyle maks. devir</span><b>${fmt(maxRpm())}</b>`;
+  document.querySelectorAll("input[type=range]").forEach(paintRange);
   $("#motorEst").hidden = !m.estimated;
   $("#motorEst").textContent = m.estimated ? "* " + m.estimated : "";
 }
@@ -330,7 +333,7 @@ function updateHud(ev, realDefl) {
   $("#hSf").textContent = S.rpm < 500 ? "–" : fmt(Math.min(ev.sf, 99), 2);
   // Gaz göstergesi (rampa testinde otomatik değişir)
   const thrPct = Math.round(S.throttle * 100);
-  if (Number($("#thr").value) !== thrPct && document.activeElement !== $("#thr")) { $("#thr").value = thrPct; $("#vThr").textContent = `${thrPct}%`; }
+  if (Number($("#thr").value) !== thrPct && document.activeElement !== $("#thr")) { $("#thr").value = thrPct; $("#vThr").textContent = `${thrPct}%`; paintRange($("#thr")); }
   $("#hDefl").textContent = realDefl > 500 ? "çok büyük (yere sarkıyor)" : `${fmt(realDefl, realDefl < 10 ? 2 : 1)} mm${S.plastic > 0.05 ? ` + ${fmt(S.plastic, 1)} kalıcı` : ""}`;
   $("#hPower").textContent = `${fmt(ev.power)} W · ${fmt(ev.current, 1)} A`;
   $("#hEff").textContent = ev.power > 2 ? `${fmt(ev.efficiency, 2)} g/W` : "–";
@@ -547,6 +550,12 @@ function updateLogHead(msg, type) {
   last.textContent = msg.replace(/<[^>]+>/g, "");
   last.className = "log-last " + type;
   if (type === "bad" || type === "warn") { chip.classList.remove("ping"); void chip.offsetWidth; chip.classList.add("ping"); }
+}
+
+/** Kaydırıcının dolu kısmını (--p) değerine göre ayarlar */
+function paintRange(el) {
+  const min = Number(el.min) || 0, max = Number(el.max) || 100;
+  el.style.setProperty("--p", `${((Number(el.value) - min) / (max - min || 1)) * 100}%`);
 }
 
 /* ---------------- Açılır-kapanır kartlar ---------------- */

@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.7.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.8.0
 
-> **Güncel sürüm: v1.7.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.8.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.7.0** | 2026-11-20 | Sonuçlar bölümü açılır-kapanır kartlara dönüştü |
+| **v1.8.0** | 2026-11-20 | Ekran tasarımı baştan elden geçirildi |
+| v1.7.0 | 2026-11-20 | Sonuçlar bölümü açılır-kapanır kartlara dönüştü |
 | v1.6.0 | 2026-11-20 | Veriler bölümü açılır-kapanır kartlara dönüştü |
 | v1.5.0 | 2026-11-20 | DJI FPV tasarımı DJI'ın resmî bilgilerine göre yenilendi |
 | v1.4.1 | 2026-11-20 | Sürüm geçmişine madde madde açıklama |
