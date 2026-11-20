@@ -488,11 +488,22 @@ async function connectSerial() {
       buf += value;
       let i;
       while ((i = buf.indexOf("\n")) >= 0) {
-        const pt = parseLine(buf.slice(0, i)); buf = buf.slice(i + 1);
+        const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+        if (line.startsWith("#")) { arduinoNote(line.slice(1).trim()); continue; }
+        const pt = parseLine(line);
         if (pt) { S.measured.push(pt); if (S.measured.length > 2000) S.measured.shift(); updateMeasInfo(); }
       }
     }
   } catch (err) { log("USB bağlantısı kurulamadı: " + err.message, "bad"); }
+}
+/** Arduino'nun "#" ile başlayan durum mesajları (güvenlik kilidi uyarıları vb.) günlüğe yazılır */
+function arduinoNote(text) {
+  if (!text) return;
+  // Günlük HTML olarak yazıldığı için karttan gelen metindeki < > işaretleri etkisizleştirilir
+  const safe = text.slice(0, 160).replace(/</g, "‹").replace(/>/g, "›");
+  const type = /GÜVENLİK|UYARI|HATA/i.test(safe) ? "warn" : "info";
+  log("🔧 Arduino: " + safe, type);
+  if (type === "warn") toast("Arduino: " + safe, "warn");
 }
 function updateMeasInfo() {
   const n = S.measured.length;

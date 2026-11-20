@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.8.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.8.1
 
-> **Güncel sürüm: v1.8.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.8.1** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.8.0** | 2026-11-20 | Ekran tasarımı baştan elden geçirildi |
+| **v1.8.1** | 2026-11-20 | Arduino güvenlik kilidi: gaz açıkken motor devreye girmez |
+| v1.8.0 | 2026-11-20 | Ekran tasarımı baştan elden geçirildi |
 | v1.7.0 | 2026-11-20 | Sonuçlar bölümü açılır-kapanır kartlara dönüştü |
 | v1.6.0 | 2026-11-20 | Veriler bölümü açılır-kapanır kartlara dönüştü |
 | v1.5.0 | 2026-11-20 | DJI FPV tasarımı DJI'ın resmî bilgilerine göre yenilendi |
@@ -91,6 +92,17 @@ Proje iki parçadan oluşur:
 | 3D baskı test standı + **koruma kafesi** | Pervane kırılabilir! |
 
 Kod ve bağlantı şeması: `arduino/pervane_itki_testi.ino`.
+
+### Motoru çalıştırma sırası (güvenlik kilidi)
+Motor yalnızca şu sırayla devreye girer:
+1. Güvenlik anahtarı **kapalı** olsun.
+2. Gaz potansiyometresini **sıfıra** indir.
+3. Anahtarı **aç**, sonra gazı yavaşça artır.
+
+- Gaz açıkken anahtarı çevirirsen motor dönmez; önce gazı sıfıra indirmen gerekir.
+- Kart anahtar açıkken yeniden başlarsa da motor dönmez. USB kablosunu takınca veya sayfadan bağlanınca Arduino yeniden başlar; anahtarı kapatıp yeniden aç.
+- Anahtarı kapatmak motoru anında durdurur.
+- Arduino'nun uyarıları sayfadaki **Test günlüğü** kartında "🔧 Arduino:" ile görünür.
 
 ## Önerilen deney planı (bilim fuarı)
 1. **Değişkenler:**

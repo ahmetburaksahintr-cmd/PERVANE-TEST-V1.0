@@ -1,5 +1,14 @@
 # Sürüm geçmişi
 
+## 1.8.1 — 2026-11-20
+Arduino güvenlik kilidi: gaz açıkken motor devreye girmez
+- Motor yalnızca şu sırayla çalışır: güvenlik anahtarı kapalı, gaz sıfırda, sonra anahtar açık
+- Gaz açıkken anahtar çevrilirse motor kilitli kalır; gaz sıfıra indirilince devreye girer
+- Kart anahtar açıkken yeniden başlarsa (USB takılınca) motor dönmez; anahtarın bir kez kapatılması gerekir
+- Anahtar kapanınca motor anında durur; açık sayılması için 50 ms kararlı kalması gerekir (temas sıçramasına karşı)
+- Arduino'nun durum ve güvenlik mesajları sayfadaki test günlüğünde "Arduino:" başlığıyla görünür, uyarılar bildirim olarak da çıkar
+- README'ye "Motoru çalıştırma sırası" bölümü eklendi
+
 ## 1.8.0 — 2026-11-20
 Ekran tasarımı baştan elden geçirildi
 - Tek bir tasarım sistemi: ortak renk, köşe yarıçapı, gölge ve hareket değerleri
