@@ -478,7 +478,7 @@ const Scene3D = {
     this.rig.add(body);
     this.droneLeds = [];
     const ctx = { d, R, s, pos, rM, motor };
-    const style = { dji: this.styleDji, avata: this.styleAvata, whoop: this.styleWhoop, cine: this.styleCine }[d.style] || this.styleFreestyle;
+    const style = { dji: this.styleDji, avata: this.styleAvata, whoop: this.styleWhoop, cine: this.styleCine, tiny: this.styleTiny }[d.style] || this.styleFreestyle;
     const info = style.call(this, body, ctx);
     this.droneBaseY = info.baseY;
     this.droneTargetY = info.baseY + info.topY * 0.6;
@@ -999,6 +999,103 @@ const Scene3D = {
             u.bell.add(screw);
           }
           if (u.dir === 1) { u.markA = true; u.markColor = 0xff7a1a; }
+        }
+      }
+    };
+  },
+
+  /**
+   * Tiny whoop (1S, 65–85 mm): tek parça plastik şase, ince açık halkalar ve motor yatağına giden kollar,
+   * motorlar dik (pervane üstte), kanopi altında AIO kart ve kamera, batarya şasenin altındaki yuvada.
+   * Modele özgü ayrıntılar d.tiny.kind ile seçilir (üretici fotoğraflarına göre):
+   *  · "meteor": BETAFPV Meteor75 Pro – gök mavisi şase (halka başına 5 kol), beyaz kubbe kanopi (önde yuvarlak
+   *    kamera, üstte yarıklar, arkada yükselen kuyruk), gümüş çanlı mavi tabanlı motorlar, yeşil-sarı LAVA batarya
+   *  · "mobula": Happymodel Mobula7 1S – yarı saydam füme şase (halka başına 4 kol), delikli siyah yumurta kanopi,
+   *    arkada dik duran kılıflı anten, füme motorlar
+   */
+  styleTiny(body, { d, R, s, pos }) {
+    const C = (h) => new THREE.Color(h).convertSRGBToLinear();
+    const M = (color, o) => new THREE.MeshStandardMaterial(Object.assign({ color: C(color), metalness: 0.08, roughness: 0.6 }, o || {}));
+    const cfg = d.tiny || {}, kind = cfg.kind;
+    const clear = cfg.opacity != null && cfg.opacity < 1;
+    const frame = M(cfg.frame != null ? cfg.frame : 0x7cb7f0, { side: THREE.DoubleSide, transparent: clear, opacity: clear ? cfg.opacity : 1, depthWrite: !clear, roughness: clear ? 0.3 : 0.6 });
+    const black = M(0x0d0e11, { roughness: 0.5 }), pcb = M(0x14181f);
+    const add = (mesh, x, y, z, parent) => { mesh.position.set(x, y, z); (parent || body).add(mesh); return mesh; };
+    const box = (w, h, dp, mat, x, y, z, parent) => add(new THREE.Mesh(new THREE.BoxGeometry(w, h, dp), mat), x, y, z, parent);
+    const fx = Math.abs(pos[0][0]), fz = Math.abs(pos[0][1]);
+    const rIn = R + 1.6, bandH = 10, spokes = cfg.spokes || 4, motorY = 2.4, wall = 0.9;
+
+    for (const [x, z] of pos) {
+      // İnce halka (üst kenarı hafif kalın) ve motor yatağı
+      add(new THREE.Mesh(new THREE.CylinderGeometry(rIn + wall, rIn + wall, bandH, 64, 1, true), frame), x, 1 + bandH / 2, z);
+      const lip = add(new THREE.Mesh(new THREE.TorusGeometry(rIn + wall, 0.8, 6, 64), frame), x, 1 + bandH, z);
+      lip.rotation.x = Math.PI / 2;
+      add(new THREE.Mesh(new THREE.CylinderGeometry(15 * s, 15 * s, 2, 24), frame), x, 1.2, z);
+      // Halkadan motor yatağına kollar; biri gövde merkezine bakar
+      const toCenter = Math.atan2(-z, -x);
+      for (let i = 0; i < spokes; i++) {
+        const a = toCenter + (i * Math.PI * 2) / spokes, r0 = 14 * s, r1 = rIn + wall;
+        const sp = box(r1 - r0, 2, 1.7, frame, x + Math.cos(a) * (r0 + r1) / 2, 1.4, z + Math.sin(a) * (r0 + r1) / 2);
+        sp.rotation.y = -a;
+      }
+      // Halkanın altındaki küçük ayak ve motor kabloları (kol boyunca merkeze)
+      const out = Math.atan2(z, x);
+      box(3, 4, 1.6, frame, x + Math.cos(out) * (rIn + wall), -1, z + Math.sin(out) * (rIn + wall)).rotation.y = -out;
+      body.add(capsule([x - Math.cos(out) * 14 * s, 2.6, z - Math.sin(out) * 14 * s], [Math.sign(x) * 9, 3.2, Math.sign(z) * 9], 0.5, black));
+    }
+    // Halkaları birleştiren köprüler ve orta çatı
+    for (const [x, z] of [[fx, 0], [-fx, 0], [0, fz], [0, -fz]]) box(x ? 3 : 2 * (fx - rIn) + 3, bandH * 0.7, x ? 2 * (fz - rIn) + 3 : 3, frame, x, 1 + bandH * 0.4, z);
+    for (const sgn of [-1, 1]) {
+      const bar = box(2 * Math.hypot(fx, fz) - 2 * rIn, 2, 3, frame, 0, 1.4, 0);
+      bar.rotation.y = sgn * Math.atan2(fz, fx);
+    }
+    // AIO uçuş kartı (lastik takozlu dört direk üstünde)
+    box(27, 1.2, 27, pcb, 0, 5.4, 0);
+    for (const [x, z] of [[12.5, 12.5], [12.5, -12.5], [-12.5, 12.5], [-12.5, -12.5]]) add(new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 4.4, 10), black), x, 3.6, z);
+    for (const [x, z, c] of [[-6, -5, 0xd4a72c], [5, 6, 0x111827], [6, -7, 0xd4a72c], [-7, 7, 0x334155]]) box(5, 1.2, 4, M(c, { metalness: 0.5 }), x, 6.4, z);
+
+    // Batarya: şasenin altındaki yuvada, boyuna (iki enine bant tutar)
+    const batH = 6.5, batY = -batH / 2 - 0.6;
+    box(60, batH, 11.5, M(cfg.batt != null ? cfg.batt : 0x2f9e44), -2, batY, 0);
+    const bl = label3d([cfg.battText || "1S"], 30, 4.6, cfg.battLabel || "#facc15", "#111827");
+    add(bl, -4, batY, 5.85);
+    const bl2 = label3d([cfg.battText || "1S"], 30, 4.6, cfg.battLabel || "#facc15", "#111827");
+    bl2.rotation.y = Math.PI;
+    add(bl2, -4, batY, -5.85);
+    for (const x of [-14, 12]) box(4, batH + 2.2, 13.5, frame, x, batY + 0.3, 0);
+    body.add(capsule([-32, batY, 1.2], [-42, batY + 1, 1.2], 0.6, M(0xdc2626)));
+    body.add(capsule([-32, batY, -1.2], [-42, batY + 1, -1.2], 0.6, black));
+    box(6, 4, 5, M(cfg.plug != null ? cfg.plug : 0xf8fafc), -45, batY + 1, 0);
+
+    let topY = 26;
+    if (kind === "meteor") {
+      // Beyaz kanopi: kubbe burun, önde yuvarlak kamera, üstte yarıklar, arkada yükselen kuyruk
+      const white = M(0xf4f6f8, { roughness: 0.5 });
+      const dome = add(new THREE.Mesh(new THREE.SphereGeometry(1, 32, 20, 0, Math.PI * 2, 0, Math.PI * 0.55), white), 2, 8, 0);
+      dome.scale.set(14, 15, 11.5);
+      const lens = add(new THREE.Mesh(new THREE.CylinderGeometry(4.6, 5, 5, 24), black), 14, 13.5, 0);
+      lens.rotation.z = -Math.PI / 2 + 0.45;                    // 30° yukarı bakar
+      const glass = add(new THREE.Mesh(new THREE.SphereGeometry(3.3, 16, 12), M(0x1e3a8a, { metalness: 0.8, roughness: 0.1 })), 15.6, 14.4, 0);
+      glass.scale.x = 0.5;
+      for (let i = 0; i < 4; i++) {
+        const slit = box(1.4, 1, 9, M(0x9aa0a8), 6 - i * 3, 22.3 - i * 0.25 - Math.abs(i - 1.2) * 0.5, 0);
+        slit.rotation.z = 0.15 + i * 0.08;
+      }
+      body.add(prism([[-6, 8], [-6, 18], [-16, 24], [-19, 21], [-13, 8]], 9, 1, white));
+      for (const zs of [-1, 1]) {
+        box(2, 7, 1.6, white, -17, 25.5, zs * 3.4).rotation.z = 0.35;      // anten tutucu çatalı
+        add(new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 2, 14), white), 3, 7.4, zs * 12.4);   // yan vida kulakları
+        add(new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 2.4, 10), M(0xb9bec6, { metalness: 0.5 })), 3, 7.6, zs * 12.4);
+      }
+      body.add(capsule([-16, 22, 0], [-34, 17, 0], 0.7, black));   // kılıflı ince anten teli, arkaya doğru
+      topY = 30;
+    }
+    return {
+      baseY: 2 + batH + 1.6, motorY, topY, attachY: 1,
+      after: () => {
+        for (const u of this.units) {
+          u.stripe.visible = false;
+          if (cfg.motorBase != null) u.baseRing.material = M(cfg.motorBase, { metalness: 0.5, roughness: 0.35 });
         }
       }
     };

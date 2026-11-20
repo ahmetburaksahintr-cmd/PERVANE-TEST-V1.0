@@ -205,7 +205,7 @@ function applyDrone() {
 function updateDroneInfo() {
   const d = drone(), m = MOTORS[d.motorKey];
   const propMass = Physics.evaluate({ mat: mat(), motor: m, prop: S.prop, rpm: 0, tempC: S.tempC }).mass;
-  $("#droneInfo").innerHTML = `<span>Şase</span><b>${d.wheelbaseMm} mm X</b><span>Motorlar</span><b>4 × ${m.name}</b>
+  $("#droneInfo").innerHTML = `<span>Şase</span><b>${fmt(d.wheelbaseMm, d.wheelbaseMm % 1 ? 1 : 0)} mm X</b><span>Motorlar</span><b>4 × ${m.name}</b>
     <span>Pervane</span><b>4 × ${d.propName || d.prop.diameterIn + '"'}</b><span>Dönüş</span><b>2 CW + 2 CCW</b><span>Batarya</span><b>${d.battery}</b>
     <span>Kalkış ağırlığı</span><b>${fmt(d.massG + 4 * propMass)} g</b>`;
 }

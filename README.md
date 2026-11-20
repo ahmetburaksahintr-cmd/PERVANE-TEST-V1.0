@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.21.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.22.0
 
-> **Güncel sürüm: v1.21.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.22.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.21.0** | 2026-11-21 | BETAFPV Pavo20 Pro gerçek görsellerine göre baştan çizildi (itici düzen) |
+| **v1.22.0** | 2026-11-21 | BETAFPV Meteor75 Pro gerçek görsellerine göre baştan çizildi |
+| v1.21.0 | 2026-11-21 | BETAFPV Pavo20 Pro gerçek görsellerine göre baştan çizildi (itici düzen) |
 | v1.20.0 | 2026-11-21 | BETAFPV Pavo35 gerçek görsellerine göre baştan çizildi (itici düzen) |
 | v1.19.0 | 2026-11-21 | DJI Avata 2 gerçek fotoğraflarına göre baştan çizildi |
 | v1.18.0 | 2026-11-21 | DJI FPV gerçek fotoğraflarına göre baştan çizildi |

@@ -1,5 +1,14 @@
 # Sürüm geçmişi
 
+## 1.22.0 — 2026-11-21
+BETAFPV Meteor75 Pro gerçek görsellerine göre baştan çizildi
+- Tek parça gök mavisi şase: ince açık halkalar, halka başına 5 kol, halkaların altında küçük ayaklar
+- Beyaz kanopi: kubbe burun, önde yukarı bakan yuvarlak kamera, üstte yarıklar, arkada yükselen kuyruk ve anten çatalı
+- Motorlar gümüş çanlı ve mavi tabanlı; çanda "1102 22000KV" yazısı (önceden düz maviydi)
+- Batarya şasenin altındaki yuvada, iki bantla tutulur; yeşil-sarı LAVA etiketi ve beyaz BT2.0 fiş
+- Kanopinin altında AIO uçuş kartı, kollar boyunca siyah motor kabloları
+- Motorlar arası mesafe üreticinin değerine düzeltildi: 80,8 mm (Pavo20 Pro için de 93,7 mm)
+
 ## 1.21.0 — 2026-11-21
 BETAFPV Pavo20 Pro gerçek görsellerine göre baştan çizildi (itici düzen)
 - Düzen düzeltildi: motorlar karbon plakanın altına asılı, pervaneler en altta mat siyah halkaların içinde

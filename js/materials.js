@@ -68,7 +68,7 @@ const MOTORS = {
   xing2809: { name: "iFlight XING2 2809 · 1250KV · 6S", kv: 1250, cells: 6, pmax: 1145, imax: 50, mass: 60.7, propIn: 7.5, stator: 28, label: "XING2  2809  1250KV", bell: 0x111827 },
   bf2006: { name: "BETAFPV LAVA 2006 · 2400KV · 6S", kv: 2400, cells: 6, pmax: 330, imax: 26, mass: 22, propIn: 3.5, stator: 20, label: "LAVA  2006  2400KV", bell: 0x6b7078, ring: 0xf97316 },
   bf1104: { name: "BETAFPV LAVA 1104 · 7200KV · 3S", kv: 7200, cells: 3, pmax: 50, imax: 9, mass: 7, propIn: 2.2, stator: 11, label: "LAVA  1104  7200KV", bell: 0x15161a, ring: 0xef4444 },
-  bf1102: { name: "BETAFPV 1102 · 22000KV · 1S", kv: 22000, cells: 1, pmax: 14, imax: 5, mass: 3.3, propIn: 1.77, stator: 11, label: "1102  22000KV", bell: 0x2563eb },
+  bf1102: { name: "BETAFPV 1102 · 22000KV · 1S", kv: 22000, cells: 1, pmax: 14, imax: 5, mass: 3.3, propIn: 1.77, stator: 11, label: "1102  22000KV", bell: 0xd5d9df },
   // GEPRC SPEEDX2 2105.5: 12N14P, 21,0 g, en yüksek sürekli güç 559 W, en yüksek akım 34,9 A (üretici değerleri)
   gep2105: { name: "GEPRC SPEEDX2 2105.5 · 2650KV · 6S", kv: 2650, cells: 6, pmax: 559, imax: 35, mass: 21, propIn: 3.5, stator: 21, label: "SPEEDX2  2105.5  2650KV", bell: 0x111827 },
   // Happymodel RS0802: 9N12P, stator 8 × 2 mm, 2,0 g, yalnız 1S (üretici değerleri)
@@ -119,17 +119,18 @@ const DRONES = {
     brand: "BETAFPV", name: "BETAFPV Pavo20 Pro · 2,2\" cinewhoop", short: "Pavo20 Pro", style: "cine", cine: { kind: "pavo20", ring: "black", led: 0x7dd3fc, plateMm: 2.4, topMm: 30 },
     motorKey: "bf1104",
     prop: { diameterIn: 2.2, pitchIn: 1.8, chordMm: 7, thickMm: 0.9, blades: 3 }, propName: "Gemfan 2218 · 2,2\" · 3 kanat",
-    wheelbaseMm: 94, massG: 104, battery: "3S 450 mAh LiPo", accent: 0x7c3aed, frame: 0x18181b,
+    wheelbaseMm: 93.7, massG: 104, battery: "3S 450 mAh LiPo", accent: 0x7c3aed, frame: 0x18181b,
     parts: "93,7 mm itici (pusher) düzen: 2,4 mm yan raylı karbon plaka, altına asılı 4 × LAVA 1104 7200KV, mat siyah PA12 koruma halkaları · F4 2-3S 20A AIO · üst kafeste DJI O3 hava ünitesi · Gemfan 2218 üç kanatlı pervane · alta kayışla bağlanan batarya (XT30)",
     note: "Küçük HD sinema dronu; motorlar plakanın altına asılıdır, pervaneler en altta halkaların içinde döner. Resmî ağırlık O3 PNP sürümü 66,3 g (bataryasız)."
   },
   meteor75pro: {
-    brand: "BETAFPV", name: "BETAFPV Meteor75 Pro · 1S tiny whoop", short: "Meteor75 Pro", style: "whoop",
+    brand: "BETAFPV", name: "BETAFPV Meteor75 Pro · 1S tiny whoop", short: "Meteor75 Pro", style: "tiny",
+    tiny: { kind: "meteor", frame: 0x7cb7f0, spokes: 5, motorBase: 0x2563eb, batt: 0x2f9e44, battLabel: "#facc15", battText: "LAVA 1S 550mAh", plug: 0xf8fafc },
     motorKey: "bf1102",
     prop: { diameterIn: 1.77, pitchIn: 1.3, chordMm: 5.5, thickMm: 0.6, blades: 3 }, propName: "Gemfan 45 mm · 3 kanat",
-    wheelbaseMm: 75, massG: 45, battery: "1S 550 mAh LiPo (BT2.0)", accent: 0xdc2626, frame: 0xe5e7eb,
-    parts: "75 mm whoop şase · 4 × 1102 22000KV · F4 1S AIO · C03 analog kamera · Gemfan 45 mm üç kanatlı pervane",
-    note: "İç mekân için küçük, hafif whoop. Resmî ağırlık ~31 g (bataryasız). Küçük pervaneler çok yüksek devirde döner ama kanatları kısa olduğundan gerilme düşüktür."
+    wheelbaseMm: 80.8, massG: 45, battery: "1S 550 mAh LiPo (BT2.0)",
+    parts: "80,8 mm tek parça mavi whoop şase, beyaz kanopi · 4 × 1102 22000KV · F4 1S AIO · C03 analog kamera · beyaz Gemfan 45 mm üç kanatlı pervane · şasenin altında batarya yuvası",
+    note: "İç mekân için küçük, hafif whoop. Resmî değerler: 30,5 g (bataryasız), motorlar arası 80,8 mm. Şase ve kanopi başka renklerde de satılır; çizim üreticinin tanıtım görselindeki mavi-beyaz sürümdür. Küçük pervaneler çok yüksek devirde döner ama kanatları kısa olduğundan gerilme düşüktür."
   },
   cinelog35v2: {
     brand: "GEPRC", name: "GEPRC CineLog35 V2 HD O3 · 3,5\" cinewhoop", short: "CineLog35 V2", style: "whoop",
