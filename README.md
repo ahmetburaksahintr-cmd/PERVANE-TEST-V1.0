@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.27.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.28.0
 
-> **Güncel sürüm: v1.27.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.28.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.27.0** | 2026-11-21 | Test standı gerçek bir itki standı gibi baştan tasarlandı |
+| **v1.28.0** | 2026-11-21 | Gerçekçi motor sesi: yayımlanmış ölçümlere göre, gerçek devire bağlı |
+| v1.27.0 | 2026-11-21 | Test standı gerçek bir itki standı gibi baştan tasarlandı |
 | v1.26.0 | 2026-11-21 | iFlight Chimera7 Pro V2 resmî görsellerine göre baştan çizildi |
 | v1.25.0 | 2026-11-21 | iFlight Nazgul Evoque F5X V2 resmî görsellerine göre baştan çizildi |
 | v1.24.0 | 2026-11-21 | Happymodel Mobula7 1S gerçek fotoğraflarına göre baştan çizildi |
@@ -109,6 +110,26 @@ Proje iki parçadan oluşur:
   - Arduino'dan gelen ölçümler itki grafiğinde **beyaz noktalar** olarak görünür.
   - "Modeli kalibre et" düğmesi, en küçük kareler yöntemiyle modeli ölçümüne uydurur.
   - Denemek için `ornek_olcum.csv` dosyasını yükleyebilirsin.
+
+## Motor sesi
+Sağ üstteki 🔇 düğmesi motor sesini açar. Ses bir kayıt değildir; yayımlanmış ölçümlerde tarif edilen bileşenlerden üretilir ve hepsi **gerçek devire** bağlıdır (frekanslar ölçeklenmez):
+
+- **Kanat geçiş frekansı ve katları:** kanat sayısı × devir / 60. 20.000 devir/dk'da iki kanatlı pervanenin temel tonu 667 Hz, üç kanatlınınki 1000 Hz'dir. Pervanenin "vızıltısı" budur.
+- **Mil frekansının katları:** kanatlar tam özdeş olmadığı için var olan, daha zayıf ara tonlar.
+- **Motorun elektromanyetik vınlaması:** elektriksel frekans (kutup çifti × mil frekansı) ve katları. Bunlar motor çanının rezonansına denk geldikleri yerde duyulur; devir değiştikçe tonlar rezonansın içinden geçer.
+- **Hava gürültüsü:** 600 Hz'in üstünde geniş bantlı "hırıltı"; kanat ucu hızıyla çok hızlı artar.
+- **Dronlarda dalgalanma:** dört motor birbirinden %1–2 farklı devirde döner; tonlar üst üste binip gerçekteki vuru sesini verir.
+- Pervane kırılınca kısa bir çıtırtı, ardından dengesizlik takırtısı duyulur. Ses açılırken ESC'nin üç "bip"i çalar.
+
+Depoya konabilecek lisansla (CC0 / CC BY) tek motor ve pervanenin tezgâh kaydı bulunamadı; bulunan kayıtlar rüzgârlı açık havada çekilmiş, modeli belirsiz dört pervaneli dron klipleriydi. Bu yüzden ses aşağıdaki ölçümlere göre üretilir. İki sadeleştirme var: gerçekte ses, devir iki katına çıkınca yaklaşık 18 dB artar; burada artış biraz kısıldı ki düşük devir hoparlörde duyulsun. Çan rezonansı yalnızca 22xx/23xx motorlar için ölçülmüştür; diğer boyutlarda motor çapıyla ters orantılı kabul edildi.
+
+Kaynaklar:
+- Yankısız odada quadcopter akustiği ölçümleri (AIAA 2016-2873): kanat geçiş ve mil tonları, harmonik düzeyleri, motorlar arası devir farkı. <https://www.bu.edu/ufmal/files/2016/07/aiaa-2016-2873.pdf>
+- NASA, küçük quadcopterlerde elektrik motoru gürültüsü, Bölüm I ve II: motor tonlarının yeri, çan rezonansı, sürücü akımının harmonikleri. <https://ntrs.nasa.gov/api/citations/20180005231/downloads/20180005231.pdf> · <https://ntrs.nasa.gov/api/citations/20180005580/downloads/20180005580.pdf>
+- NASA, tek pervane ve gövde etkileşimi ölçümleri: gövde yakınında üst harmoniklerin artması, her pervanenin zamanla değişen frekansı. <https://ntrs.nasa.gov/api/citations/20180002208/downloads/20180002208.pdf>
+- NASA, çok pervaneli araç sesinin sentezi: %1'lik devir kayması ve vuru. <https://ntrs.nasa.gov/api/citations/20160010020/downloads/20160010020.pdf>
+- DLR, küçük İHA pervanesi ölçümleri: ton gürültüsünün uç hızının 6. kuvvetiyle artması. <https://elib.dlr.de/136456/1/ELIB-Eintrag-2020-LoessleF-136456-PaperPublished.pdf>
+- Motor boyutuna göre kutup sayıları (22xx–24xx: 14, 08xx–16xx: 12): <https://oscarliang.com/rpm-filter>
 
 ## Fiziksel düzenek (malzeme listesi)
 | Parça | Not |

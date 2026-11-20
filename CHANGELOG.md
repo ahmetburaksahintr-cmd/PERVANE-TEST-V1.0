@@ -1,5 +1,16 @@
 # Sürüm geçmişi
 
+## 1.28.0 — 2026-11-21
+Gerçekçi motor sesi: yayımlanmış ölçümlere göre, gerçek devire bağlı
+- Ses artık gerçek frekanslarda: kanat geçiş frekansı (kanat sayısı x devir / 60) ve katları; 20.000 devirde iki kanatlı pervanenin temel tonu 667 Hz
+- Mil frekansının zayıf ara tonları ve motorun elektromanyetik vınlaması (elektriksel frekansın katları, motor çanının rezonansından geçerken duyulur)
+- Geniş bantlı hava gürültüsü kanat ucu hızıyla artar ve kanat geçişiyle dalgalanır; küçük pervane aynı devirde daha sessizdir
+- Dronlarda dört motor yüzde 1-2 farklı devirde döner ve gerçekteki dalgalanma (vuru) duyulur
+- Pervane kırılınca çıtırtı ve dengesizlik takırtısı; ses açılırken ESC'nin üç bip sesi
+- Kanat sayısı, pervane çapı ve motor boyutu sesi değiştirir (üç kanatta ton yükselir, küçük motorun vınlaması daha tizdir)
+- Depoya konabilecek lisansla tek motor kaydı bulunamadı; ses NASA ve üniversite ölçümlerine göre üretiliyor, kaynaklar README'de
+- Eski ses (gerçek devirle ilgisi olmayan düşük perdeli iki osilatör) kaldırıldı
+
 ## 1.27.0 — 2026-11-21
 Test standı gerçek bir itki standı gibi baştan tasarlandı
 - Taban: köşeleri yuvarlatılmış koyu eloksallı alüminyum plaka, dört lastik ayak, köşe cıvataları, montaj kanalları, isim plakası ve uyarı etiketi

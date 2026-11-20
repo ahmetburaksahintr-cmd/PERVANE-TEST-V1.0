@@ -335,6 +335,7 @@ function checkEvents(ev) {
     S.breakInfo = { rpm: ev.rpm, thrust: ev.thrustG, stress: ev.sigma / 1e6, strength: ev.strength / 1e6 };
     recordPoint(ev, ev.delta * 1000, "KIRILDI");
     Scene3D.breakBlade(ev.rpm);
+    Sound.crack();
     if (isDrone()) {
       S.breakInfo.where = Scene3D.brokenLabel;
       log(isFly() ? `🎮 ${Scene3D.brokenLabel} pervanesi havada koptu → drone takla atarak düştü. "Yeni pervane tak" ile yeniden başla.`
@@ -723,29 +724,16 @@ function initAccordions() {
   requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.add("ready")));
 }
 
-/* ---------------- Motor sesi (Web Audio) ---------------- */
-let audio = null;
+/* ---------------- Motor sesi (js/sound.js) ---------------- */
 function toggleSound() {
-  S.sound = !S.sound;
+  S.sound = Sound.toggle();
   $("#soundBtn").textContent = S.sound ? "🔊" : "🔇";
-  if (S.sound && !audio) {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator(); osc.type = "sawtooth";
-    const osc2 = ctx.createOscillator(); osc2.type = "square";
-    const filter = ctx.createBiquadFilter(); filter.type = "lowpass"; filter.frequency.value = 1800;
-    const gain = ctx.createGain(); gain.gain.value = 0;
-    osc.connect(filter); osc2.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
-    osc.start(); osc2.start();
-    audio = { ctx, osc, osc2, gain };
-  }
-  if (audio) audio.ctx[S.sound ? "resume" : "suspend"]();
+  $("#soundBtn").title = S.sound ? "Motor sesi açık (gerçek devire göre)" : "Motor sesi";
 }
+/** Ses, gerçek devir, kanat sayısı ve pervane yarıçapından üretilir; dronlarda dört motor birlikte duyulur */
 function updateSound() {
-  if (!audio || !S.sound) return;
-  const f = 60 + (S.rpm / 60) * 2.4;            // motor vınlaması (ölçekli)
-  audio.osc.frequency.setTargetAtTime(f, audio.ctx.currentTime, 0.05);
-  audio.osc2.frequency.setTargetAtTime(f * 1.5, audio.ctx.currentTime, 0.05);
-  audio.gain.gain.setTargetAtTime(Math.min(0.08, S.rpm / 400000), audio.ctx.currentTime, 0.1);
+  if (!S.sound) return;
+  Sound.update({ rpm: S.rpm, blades: S.prop.blades || 2, motors: isDrone() ? 4 : 1, radiusM: (S.prop.diameterIn * 0.0254) / 2, statorMm: motor().stator || 22, broken: S.broken });
 }
 
 
