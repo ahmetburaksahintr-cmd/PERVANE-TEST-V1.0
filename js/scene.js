@@ -33,6 +33,7 @@ const Scene3D = {
     rim.position.set(-160, 120, -120);
     this.scene.add(rim);
 
+    this.buildEnv();
     this.buildGround();
     this.buildAirflow();
     this.debris = [];
@@ -61,6 +62,7 @@ const Scene3D = {
     this.lift = 0;
     this.oled = null;
     this.potKnob = null;
+    this.rpmLed = null;
     this.rig = new THREE.Group();
     this.scene.add(this.rig);
     if (mode !== "stand") this.buildDrone(drone, mode === "fly");
@@ -109,6 +111,35 @@ const Scene3D = {
       o.theta = v.theta + Math.atan2(Math.sin(o.theta - v.theta), Math.cos(o.theta - v.theta));
       this.viewAnim = v;
     }
+  },
+
+  /* ---------- Ortam yansıması: metal parçalar (alüminyum, çelik, motor çanı) gerçekçi parlasın ----------
+     Küçük bir "stüdyo" görüntüsü üretilir: üstte aydınlık tavan ve ışık kutuları, altta yeşil mat. */
+  buildEnv() {
+    try {
+      const c = document.createElement("canvas");
+      c.width = 512; c.height = 256;
+      const ctx = c.getContext("2d");
+      const g = ctx.createLinearGradient(0, 0, 0, 256);
+      g.addColorStop(0, "#f6f8ff"); g.addColorStop(0.36, "#bcc8de"); g.addColorStop(0.5, "#8a96ab");
+      g.addColorStop(0.56, "#56675e"); g.addColorStop(1, "#1d2622");     // alt yarı: mat ve masa (yeşili kısık, metal yeşile boyanmasın)
+      ctx.fillStyle = g; ctx.fillRect(0, 0, 512, 256);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(36, 24, 116, 48); ctx.fillRect(296, 38, 156, 36); ctx.fillRect(196, 6, 64, 22);
+      const tex = new THREE.CanvasTexture(c);
+      tex.mapping = THREE.EquirectangularReflectionMapping;
+      tex.encoding = THREE.sRGBEncoding;
+      const pm = new THREE.PMREMGenerator(this.renderer);
+      this.envMap = pm.fromEquirectangular(tex).texture;
+      pm.dispose();
+      tex.dispose();
+    } catch (e) { this.envMap = null; }                   // desteklenmeyen ekran kartında yansımasız devam eder
+  },
+  /** Metal malzeme: ortam yansımasıyla parlak; yansıma üretilemediyse daha mat bir yedek */
+  metal(color, roughness, metalness) {
+    const env = this.envMap;
+    return new THREE.MeshStandardMaterial({ color, roughness: roughness == null ? 0.3 : roughness,
+      metalness: env ? (metalness == null ? 0.92 : metalness) : 0.35, envMap: env, envMapIntensity: 1 });
   },
 
   /* ---------- Zemin: çalışma masası üzerinde yeşil kesim matı ---------- */
@@ -170,43 +201,122 @@ const Scene3D = {
     this.renderer.setSize(w, h);
   },
 
-  /* ---------- Test standı ---------- */
+  /* ---------- Test standı ----------
+     Gerçek bir itki standı gibi kurulur:
+      · lastik ayaklı, köşeleri yuvarlatılmış eloksallı alüminyum taban (montaj kanalları, isim plakası, uyarı etiketi)
+      · üç köşebentle tabana cıvatalanmış 20×20 sigma (T kanallı) alüminyum direk
+      · direğin tepesindeki adaptöre iki cıvatayla bağlı çubuk tip yük hücresi: ortasında "gözlük" deliği,
+        üstünde ve altında beyaz gerinim ölçer dolgusu, yanında kapasite etiketi
+      · yük hücresinin serbest ucunda anahtar deliği biçimli motor plakası
+     İtki arttıkça yük hücresinin serbest ucu (ve motor) gözle görülür biçimde hafifçe yukarı esner. */
   buildStand() {
-    const metal = new THREE.MeshStandardMaterial({ color: 0x8b93a6, metalness: 0.8, roughness: 0.35 });
-    const dark = new THREE.MeshStandardMaterial({ color: 0x1f2433, metalness: 0.3, roughness: 0.6 });
-    const alu = new THREE.MeshStandardMaterial({ color: 0xc0c7d6, metalness: 0.9, roughness: 0.25 });
-    // Bu fonksiyondaki tüm parçalar test düzeneği grubuna eklenir
     const scene = this.rig;
+    const alu = this.metal(0xdfe3e8, 0.32), aluCore = this.metal(0x5d636e, 0.5, 0.85), bolt = this.metal(0x17191e, 0.38, 0.8);
+    const anod = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x3b404c).convertSRGBToLinear(), metalness: 0.65, roughness: 0.45, envMap: this.envMap, envMapIntensity: 0.55 });   // koyu eloksal
+    const rubber = new THREE.MeshStandardMaterial({ color: 0x0c0d10, roughness: 0.95 });
+    const holeMat = new THREE.MeshBasicMaterial({ color: 0x07080b });
+    const UP = new THREE.Vector3(0, 1, 0);
+    const P = (mesh, x, y, z, parent) => { mesh.position.set(x, y, z); mesh.castShadow = mesh.receiveShadow = true; (parent || scene).add(mesh); return mesh; };
+    const cyl = (r, h, mat, x, y, z, axis, parent, seg) => {
+      const m = P(new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg || 24), mat), x, y, z, parent);
+      if (axis === "x") m.rotation.z = Math.PI / 2; else if (axis === "z") m.rotation.x = Math.PI / 2;
+      return m;
+    };
+    // Soket (allen) başlı cıvata: dir yönüne bakan baş, ortasında altıgen yuva
+    const screw = (x, y, z, dir, parent, r) => {
+      const R = r || 3.4, h = R * 1.15, d = dir || UP, q = new THREE.Quaternion().setFromUnitVectors(UP, d);
+      const head = P(new THREE.Mesh(new THREE.CylinderGeometry(R, R, h, 20), bolt), x, y, z, parent);
+      head.quaternion.copy(q);
+      const hex = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.55, R * 0.55, 0.5, 6), holeMat);
+      hex.position.set(x + d.x * (h / 2 + 0.03), y + d.y * (h / 2 + 0.03), z + d.z * (h / 2 + 0.03));
+      hex.quaternion.copy(q);
+      (parent || scene).add(hex);
+    };
 
-    // Taban plakası
-    const base = new THREE.Mesh(new THREE.BoxGeometry(150, 8, 90), dark);
-    base.position.set(0, 4, 0);
-    base.castShadow = base.receiveShadow = true;
-    scene.add(base);
-    // Dikey alüminyum profil
-    const post = new THREE.Mesh(new THREE.BoxGeometry(20, 70, 20), alu);
-    post.position.set(-50, 43, 0);
-    post.castShadow = true;
-    scene.add(post);
-    // Yük hücresi (load cell) – itkiyi ölçen sensör
-    const cell = new THREE.Mesh(new THREE.BoxGeometry(80, 12.7, 12.7), alu);
-    cell.position.set(-10, 84, 0);
-    cell.castShadow = true;
-    scene.add(cell);
-    const label = new THREE.Mesh(new THREE.BoxGeometry(24, 13, 13.2), new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.5 }));
-    label.position.set(-10, 84, 0);
-    scene.add(label);
-    // Motor bağlantı plakası
-    const mount = new THREE.Mesh(new THREE.CylinderGeometry(22, 22, 4, 32), metal);
-    mount.position.set(30, 92, 0);
-    mount.castShadow = true;
-    scene.add(mount);
-    this.loadCell = cell;
-    // Tek fırçasız motor, yük hücresinin ucundaki plakada
+    // --- Taban: 6 mm eloksallı plaka, dört lastik ayak, köşe cıvataları, montaj kanalları ---
+    const baseTop = 8;
+    P(roundedPlate(164, 104, 6, 9, anod), 0, 2, 0);
+    for (const [x, z] of [[-71, -41], [71, -41], [-71, 41], [71, 41]]) { cyl(6.5, 2, rubber, x, 1, z); screw(x, baseTop + 1.4, z, UP, null, 3); }
+    for (const z of [-31, -43]) {
+      P(new THREE.Mesh(new THREE.BoxGeometry(62, 0.5, 4.6), holeMat), 34, baseTop + 0.02, z);
+      for (const x of [3, 65]) cyl(2.3, 0.5, holeMat, x, baseTop + 0.02, z);
+    }
+    const plate = flatLabel(["İTKİ TEST STANDI", "5 kg yük hücresi · HX711"], 42, 15, "#0d0f13", "#e5e7eb");
+    plate.position.set(-25, baseTop + 0.25, 31);
+    scene.add(plate);
+    const warn = flatLabel(["⚠ DİKKAT", "DÖNEN PERVANE"], 34, 13, "#facc15", "#111827");
+    warn.position.set(-20, baseTop + 0.25, -37);
+    scene.add(warn);
+
+    // --- Direk: 20×20 sigma profil (dört köşe + göbek; aralarında T kanalları), tabanda üç köşebent ---
+    const postX = -55, cellY = 83.5, cellTop = cellY + 6.35, cellBot = cellY - 6.35, adapterH = 4;
+    const postTop = cellBot - adapterH, postH = postTop - baseTop, postY = baseTop + postH / 2;
+    for (const [dx, dz] of [[-6.5, -6.5], [6.5, -6.5], [-6.5, 6.5], [6.5, 6.5]]) P(new THREE.Mesh(new THREE.BoxGeometry(7, postH, 7), alu), postX + dx, postY, dz);
+    P(new THREE.Mesh(new THREE.BoxGeometry(8.6, postH, 8.6), aluCore), postX, postY, 0);
+    for (const [dx, dz, w, dp] of [[0, 9.2, 5.6, 0.6], [0, -9.2, 5.6, 0.6], [9.2, 0, 0.6, 5.6], [-9.2, 0, 0.6, 5.6]]) {   // T kanalının dar ağzı (gölgeli)
+      const groove = new THREE.Mesh(new THREE.BoxGeometry(w, postH - 0.4, dp), holeMat);
+      groove.position.set(postX + dx, postY, dz);
+      scene.add(groove);
+    }
+    const bracket = (rotY, x, z) => {
+      const g = new THREE.Group();
+      g.position.set(x, baseTop, z);
+      g.rotation.y = rotY;
+      scene.add(g);
+      P(new THREE.Mesh(new THREE.BoxGeometry(19, 3, 16), alu), 9.5, 1.5, 0, g);          // tabana oturan kanat
+      P(new THREE.Mesh(new THREE.BoxGeometry(3, 19, 16), alu), 1.5, 9.5, 0, g);          // direğe oturan kanat
+      for (const zz of [-6.8, 6.8]) P(prism([[3, 3], [19, 3], [3, 19]], 1.6, 0.4, alu), 0, 0, zz, g);   // yan kaburgalar
+      screw(12.5, 3 + 1.6, 0, UP, g, 2.9);
+      screw(3 + 1.6, 12.5, 0, new THREE.Vector3(1, 0, 0), g, 2.9);
+    };
+    bracket(0, postX + 10, 0);
+    bracket(-Math.PI / 2, postX, 10);
+    bracket(Math.PI / 2, postX, -10);
+
+    // --- Köşe: direğin tepesindeki adaptör plakası; yük hücresi buna iki cıvatayla bağlanır ---
+    P(roundedPlate(31, 23, adapterH, 2.6, alu), postX, postTop, 0);
+
+    // --- Yük hücresi (sabit ucundan dönebilen grupta; itkiyle hafifçe esner) ---
+    const cellG = new THREE.Group();
+    cellG.position.set(postX - 10, cellY, 0);
+    scene.add(cellG);
+    this.loadCell = cellG;
+    const beam = rbox(12.7, 12.7, 80, 0.9, alu);
+    beam.rotation.y = Math.PI / 2;
+    P(beam, 40, 0, 0, cellG);
+    for (const hx of [35.2, 44.8]) cyl(4.7, 12.96, holeMat, hx, 0, 0, "z", cellG);      // "gözlük" deliği: ölçüm bölgesini inceltir
+    P(new THREE.Mesh(new THREE.BoxGeometry(9.6, 5.4, 12.96), holeMat), 40, 0, 0, cellG);
+    const potting = new THREE.MeshStandardMaterial({ color: 0xf1f3f5, roughness: 0.85 });
+    P(roundedPlate(31, 9.6, 1.5, 3.2, potting), 40, 6.35, 0, cellG);                    // gerinim ölçerlerin beyaz dolgusu
+    P(roundedPlate(31, 9.6, 1.5, 3.2, potting), 40, -6.35 - 1.5, 0, cellG);
+    for (const zs of [-1, 1]) {
+      const tag = label3d(["5 kg", "itki ↑"], 20, 9, "#f8fafc", "#111827");
+      if (zs < 0) tag.rotation.y = Math.PI;
+      tag.position.set(62, 0, zs * 6.42);
+      cellG.add(tag);
+    }
+    for (const x of [5, 15]) screw(x, 6.35 + 2.1, 0, UP, cellG, 3.7);                   // sabit uç cıvataları (direğe)
+    for (const x of [64, 74]) screw(x, -6.35 - 2, 0, new THREE.Vector3(0, -1, 0), cellG, 3.4);   // serbest uç cıvataları (alttan plakaya)
+
+    // --- Motor plakası: anahtar deliği biçimli 4 mm alüminyum (kol + yuvarlak motor yatağı) ---
+    const ks = new THREE.Shape();
+    ks.moveTo(-8, -12); ks.lineTo(11.56, -12); ks.absarc(30, 0, 22, -2.5646, 2.5646, false); ks.lineTo(-8, 12); ks.lineTo(-8, -12);
+    const kg = new THREE.ExtrudeGeometry(ks, { depth: 3, bevelEnabled: true, bevelThickness: 0.5, bevelSize: 0.5, bevelSegments: 2, curveSegments: 40 });
+    kg.rotateX(-Math.PI / 2);
+    kg.translate(0, 0.5, 0);
+    P(new THREE.Mesh(kg, alu), 65, 6.5, 0, cellG);                                       // dünya konumu x = 0, alt yüz y = 90
+    for (const x of [64, 74]) cyl(3.3, 2.2, bolt, x, 10.5 + 1.1, 0, null, cellG, 6);     // üstteki altıgen somunlar
+    for (let i = 0; i < 4; i++) {                                                        // motor yatağının çevresindeki hafifletme delikleri
+      const a = Math.PI / 4 + (i * Math.PI) / 2;
+      cyl(1.7, 0.4, holeMat, 95 + Math.cos(a) * 19, 10.55, Math.sin(a) * 19, null, cellG);
+    }
+
+    // Tek fırçasız motor, plakanın yuvarlak ucunda
     const unit = this.createMotorUnit();
     unit.group.position.set(30, 94, 0);
     scene.add(unit.group);
     this.units.push(Object.assign(unit, { dir: 1, home: unit.group.position.clone() }));
+    this.stand = { postX, cellY, postTop };
     this.buildElectronics(scene);
   },
 
@@ -330,6 +440,46 @@ const Scene3D = {
       wire([[0, 11, 39 + o], [-14, 9.5, 46 + o], [-28, 16, 56 + o], [-34 + o, 30, 62], [-38 + o, 37, 63]], 0.65, c);
     });
     wire([[-82, 19, 88], [-100, 6, 96], [-130, 1.5, 108], [-180, 1.5, 150]], 1.6, 0x475569);   // USB kablosu → bilgisayar
+
+    // HX711 yük hücresi yükselteci: direğin ön yüzünde. Yük hücresinden dört ince tel gelir
+    // (kırmızı E+, siyah E−, beyaz A−, yeşil A+); kontrol kartına dört tel gider (VCC, GND, DT → D3, SCK → D4).
+    const { postX, cellY } = this.stand, hz = 13.4;
+    const hx = new THREE.Group();
+    hx.position.set(postX, 46, hz);
+    scene.add(hx);
+    box(22, 17, 1.4, M(0x15803d, { roughness: 0.5 }), 0, 0, 0, hx);
+    box(9.6, 6, 1.7, black, 1, 1, 1.4, hx);                                // HX711 (SOP-16)
+    box(3, 2, 1.2, M(0xcbd5e1, { metalness: 0.6 }), -3, -5, 1.2, hx);     // kristal
+    for (let i = 0; i < 4; i++) {
+      box(1.7, 1.7, 1.3, gold, -9.2, 5 - i * 3.2, 1.3, hx);
+      box(1.7, 1.7, 1.3, gold, 9.2, 5 - i * 3.2, 1.3, hx);
+    }
+    const hxText = label3d(["HX711"], 9, 2.4, null, "#f1f5f9");
+    hxText.position.set(2, -6.4, 0.76);
+    hx.add(hxText);
+    for (const y of [-6.5, 6.5]) { const st = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 3, 10), M(0xe5e7eb)); st.rotation.x = Math.PI / 2; st.position.set(0, y, -2.1); hx.add(st); }
+    [0xdc2626, 0x111827, 0xf8fafc, 0x16a34a].forEach((c, i) => {
+      wire([[postX - 10.4, cellY - 2 - i * 0.9, 1.5 + i * 1.1], [postX - 13.5, 73, 5 + i], [postX - 12.5, 61, 12.2], [postX - 9.2, 51 - i * 3.2, hz + 1.6]], 0.45, c);
+    });
+    [0xdc2626, 0x111827, 0xfacc15, 0x2563eb].forEach((c, i) => {
+      wire([[postX + 9.2, 51 - i * 3.2, hz + 1.6], [postX + 11.5, 40 - i * 2, 15.5], [postX + 10 + i, 17, 17], [postX + 3, 9.6, 30 + i], [postX - 3, 10.5, 50], [postX - 1 + i * 1.6, 30, 62.6], [postX - 3 + i * 1.6, 37.4, 65.6]], 0.5, c);
+    });
+
+    // Optik (kızılötesi) devir sensörü: direğe kelepçeli esnek kolun ucunda, pervanenin hemen altından kanat geçişlerini sayar
+    const sz = 18;                                                                  // sensör ön tarafta (kameraya bakan yüz)
+    box(9, 8, 7, M(0x111827), postX, 73, 13);
+    wire([[postX, 76, 12.5], [postX + 5, 96, 15.5], [-26, 104, sz], [0, 101, sz]], 1.5, 0x111827);
+    box(12, 1.4, 15, M(0x1d4ed8, { roughness: 0.5 }), 5, 101, sz);
+    const dome = (color, z, o) => { const m = new THREE.Mesh(new THREE.SphereGeometry(2, 14, 10), M(color, o)); m.position.set(7.5, 102.4, z); scene.add(m); };
+    dome(0xbfdbfe, sz - 3.5, { transparent: true, opacity: 0.75, roughness: 0.15 });   // verici (kızılötesi LED)
+    dome(0x0b0d12, sz + 3.5, { roughness: 0.3 });                                      // alıcı
+    box(4, 3, 4, M(0x2563eb), 2, 102.8, sz - 3);                                       // hassasiyet ayarı
+    const brass = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.8, 10), gold);
+    brass.position.set(2, 104.5, sz - 3);
+    scene.add(brass);
+    this.rpmLed = box(1.8, 1.1, 1.8, new THREE.MeshBasicMaterial({ color: 0xff3b3b, transparent: true, opacity: 0.15 }), 2, 102.2, sz + 4);
+    this.rpmLed.castShadow = false;
+    wire([[postX - 4, 71, 14], [postX - 11.5, 66, 8], [postX - 11.6, 30, -5], [postX - 12, 9.4, -10], [postX - 24, 9.2, 8], [-88, 2, 30], [-86, 3, 50], [-93, 10, 64], [-81, 30, 68], [-67, 37.4, 66]], 0.9, 0x64748b);
   },
 
   /** Kontrol kartındaki OLED ekranı çizer (değer değişmedikçe yeniden çizmez) */
@@ -352,9 +502,9 @@ const Scene3D = {
   createMotorUnit(motor) {
     const g = new THREE.Group();
     const statorMat = new THREE.MeshStandardMaterial({ color: 0xb45309, metalness: 0.6, roughness: 0.35 }); // bakır sargı
-    const bellMat = new THREE.MeshStandardMaterial({ color: 0x6366f1, metalness: 0.75, roughness: 0.25 });
+    const bellMat = new THREE.MeshStandardMaterial({ color: 0x6366f1, metalness: 0.75, roughness: 0.25, envMap: this.envMap, envMapIntensity: 0.55 });
     const black = new THREE.MeshStandardMaterial({ color: 0x111827, metalness: 0.5, roughness: 0.4 });
-    const steel = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.95, roughness: 0.2 });
+    const steel = this.metal(0xd9dde3, 0.2, 0.95);
 
     const baseRing = new THREE.Mesh(new THREE.CylinderGeometry(15, 16, 6, 40), black);
     baseRing.position.y = 3;
@@ -1862,7 +2012,12 @@ const Scene3D = {
       u.group.position.x = u.home.x + (Math.random() - 0.5) * vib;
       u.group.position.z = u.home.z + (Math.random() - 0.5) * vib;
       // Yük hücresi itkiyle hafifçe esner (görsel)
-      if (this.loadCell) this.loadCell.scale.y = 1 - Math.min(0.12, thrustNorm * 0.08);
+      // Yük hücresi itkiyle esner: serbest uç ve motor birlikte hafifçe yükselir (görünür olsun diye abartılı, mm)
+      const flex = Math.min(1.8, thrustNorm * 1.3);
+      if (this.loadCell) this.loadCell.rotation.z = flex / 85;
+      u.group.position.y = u.home.y + flex;
+      // Devir sensörünün ışığı: pervane dönerken kanat geçişleriyle yanıp söner
+      if (this.rpmLed) this.rpmLed.material.opacity = rpm < 60 ? 0.15 : (Math.sin(performance.now() * Math.min(0.09, 0.004 + rpm / 400000)) > 0 ? 1 : 0.25);
     }
 
     // Hava akışı: her pervanenin altından aşağı doğru (parçacıklar motorlara paylaştırılır)
@@ -2204,6 +2359,31 @@ function carbonTexture() {
   _carbonTex = new THREE.CanvasTexture(c);
   _carbonTex.encoding = THREE.sRGBEncoding;
   return _carbonTex;
+}
+
+/** Köşeleri yuvarlatılmış dikdörtgen kesit (w × h, yarıçap r), merkezde */
+function roundRectShape(w, h, r) {
+  const s = new THREE.Shape(), x = -w / 2, y = -h / 2;
+  s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r);
+  s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r);
+  s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+  return s;
+}
+/** Yatay plaka: w (x) × d (z), kalınlık h, köşe yarıçapı r; kenarları pahlı. Alt yüzü y = 0'dadır. */
+function roundedPlate(w, d, h, r, mat) {
+  const b = Math.min(0.9, h * 0.22);
+  const g = new THREE.ExtrudeGeometry(roundRectShape(w - 2 * b, d - 2 * b, Math.max(0.1, r - b)), { depth: h - 2 * b, bevelEnabled: true, bevelThickness: b, bevelSize: b, bevelSegments: 2, curveSegments: 8 });
+  g.rotateX(-Math.PI / 2);
+  g.translate(0, b, 0);
+  return new THREE.Mesh(g, mat);
+}
+/** Kenarları yuvarlatılmış kutu: kesiti w (x) × h (y), z boyunca d uzunluğunda, merkezde */
+function rbox(w, h, d, r, mat) {
+  const b = Math.min(r, 0.8);
+  const g = new THREE.ExtrudeGeometry(roundRectShape(w - 2 * b, h - 2 * b, Math.max(0.1, r - b)), { depth: d - 2 * b, bevelEnabled: true, bevelThickness: b, bevelSize: b, bevelSegments: 2, curveSegments: 6 });
+  g.translate(0, 0, -(d - 2 * b) / 2);
+  return new THREE.Mesh(g, mat);
 }
 
 /** Kamera merceği (+x yönüne bakan) */

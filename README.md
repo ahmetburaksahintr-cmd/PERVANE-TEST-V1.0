@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.26.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.27.0
 
-> **Güncel sürüm: v1.26.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.27.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.26.0** | 2026-11-21 | iFlight Chimera7 Pro V2 resmî görsellerine göre baştan çizildi |
+| **v1.27.0** | 2026-11-21 | Test standı gerçek bir itki standı gibi baştan tasarlandı |
+| v1.26.0 | 2026-11-21 | iFlight Chimera7 Pro V2 resmî görsellerine göre baştan çizildi |
 | v1.25.0 | 2026-11-21 | iFlight Nazgul Evoque F5X V2 resmî görsellerine göre baştan çizildi |
 | v1.24.0 | 2026-11-21 | Happymodel Mobula7 1S gerçek fotoğraflarına göre baştan çizildi |
 | v1.23.0 | 2026-11-21 | GEPRC CineLog35 V2 gerçek görsellerine göre baştan çizildi (itici düzen) |
@@ -54,7 +55,7 @@ Proje iki parçadan oluşur:
 - **Sayfa sekmeleri:** Başlığın altındaki ince şeritte dört sekme var: 🧪 Laboratuvar (3D sahne ve ayarlar), 📈 Grafikler ve karşılaştırma, 🔌 Ölçümler ve kayıtlar, 🔬 Nasıl hesaplanıyor? Başka bir sekmedeyken de test arka planda sürer; sekmelerdeki küçük işaretler canlı testi, uyarıları ve kayıt sayısını gösterir.
 - **6 malzeme:** PLA, PETG, ABS, ASA, Karbon fiber naylon (PA-CF) ve TPU 95A.
 - **Üç test düzeneği:** Sol menünün en üstünden seçilir.
-  - 🔧 **Test standı:** Tek motor, yük hücresiyle itki ölçümü (gerçek Arduino düzeneğinin dijital ikizi). Motorun üç faz kablosu ESC'ye, ESC de bataryaya ve kontrol kartına bağlı görünür (fırçasız motorda üç, fırçalı motorda iki kablo olur). Sahnenin sağ üstündeki **🎥 Bakış** düğmesi serbest bakış ile yandan (motor hizasından) bakış arasında geçiş yapar.
+  - 🔧 **Test standı:** Tek motor, yük hücresiyle itki ölçümü (gerçek Arduino düzeneğinin dijital ikizi). Stant gerçek bir itki standı gibi çizilir: lastik ayaklı alüminyum taban, köşebentli sigma profil direk, çubuk tip yük hücresi (ortasında gözlük deliği), HX711 kartı ve optik devir sensörü. İtki arttıkça yük hücresinin ucu hafifçe yukarı esner. Motorun üç faz kablosu ESC'ye, ESC de bataryaya ve kontrol kartına bağlı görünür (fırçasız motorda üç, fırçalı motorda iki kablo olur). Sahnenin sağ üstündeki **🎥 Bakış** düğmesi serbest bakış ile yandan (motor hizasından) bakış arasında geçiş yapar.
   - 🛸 **FPV drone:** Seçilen drone pede iplerle bağlıdır (tether). Gaz açılıp itki ağırlığı geçince kalkar ve ipler gerilir. Dört pervanenin ikisi saat yönünde, ikisi ters döner. Gösterge, 4 pervanenin toplam itkisini, itki/ağırlık oranını ve toplam akımı gösterir. Bir pervane kırılınca hangi motorun pervanesinin koptuğu yazılır; drone o köşeye yatar, savrulur ve pede düşer. Raporlara drone bilgileri de eklenir.
   - 🎮 **Uçuş:** Seçilen drone'u açık alanda klavyeyle uçurursun. `W` ileri, `S` geri, `A` sola, `D` sağa, `E` yüksel, `Q` alçal, `Z` sola dön, `X` sağa dön. Tuşu bırakınca drone havada asılı kalır. Altı turuncu halkanın içinden geçince süren yazılır. Gereken itki, drone'un ağırlığından ve yaptığın manevradan hesaplanır: seçtiğin pervane bu itkiyi veremiyorsa drone kalkamaz, dayanamıyorsa havada kırılır ve drone düşer. **🎥 Bakış** düğmesi takip kamerası ile serbest bakış arasında geçiş yapar.
 - **Drone modelleri (gerçek parçalarla):** Motorların çanında gerçekteki gibi model ve KV yazar; motor boyutu stator çapına göre ölçeklenir.

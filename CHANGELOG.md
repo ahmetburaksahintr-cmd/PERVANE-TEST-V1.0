@@ -1,5 +1,17 @@
 # Sürüm geçmişi
 
+## 1.27.0 — 2026-11-21
+Test standı gerçek bir itki standı gibi baştan tasarlandı
+- Taban: köşeleri yuvarlatılmış koyu eloksallı alüminyum plaka, dört lastik ayak, köşe cıvataları, montaj kanalları, isim plakası ve uyarı etiketi
+- Direk: T kanallı 20x20 sigma profil; tabana üç köşebent ve allen cıvatalarla bağlı
+- Köşe: direğin tepesinde adaptör plakası; yük hücresi buna iki cıvatayla bağlanıyor
+- Yük hücresi: çubuk tip, ortasında gözlük deliği, üstünde ve altında beyaz gerinim ölçer dolgusu, yanında "5 kg" etiketi
+- Motor plakası: anahtar deliği biçimli alüminyum; alttan iki cıvata, üstte somunlar
+- HX711 kartı direğin ön yüzünde; yük hücresinden dört tel geliyor, kontrol kartına dört tel gidiyor
+- Optik devir sensörü esnek kolun ucunda, pervanenin altında; ışığı pervane dönerken yanıp sönüyor
+- İtki arttıkça yük hücresinin serbest ucu ve motor hafifçe yukarı esniyor
+- Metal parçalar (alüminyum, cıvatalar, motor çanı ve mili) ortam yansımasıyla daha gerçekçi parlıyor
+
 ## 1.26.0 — 2026-11-21
 iFlight Chimera7 Pro V2 resmî görsellerine göre baştan çizildi
 - "Deadcat" kollar: ön kollar neredeyse yana, arka kollar geriye açılıyor; yerleşim üreticinin üstten görünüşünden ölçüldü
