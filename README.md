@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.5.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.6.0
 
-> **Güncel sürüm: v1.5.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.6.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.5.0** | 2026-11-20 | DJI FPV tasarımı DJI'ın resmî bilgilerine göre yenilendi |
+| **v1.6.0** | 2026-11-20 | Veriler bölümü açılır-kapanır kartlara dönüştü |
+| v1.5.0 | 2026-11-20 | DJI FPV tasarımı DJI'ın resmî bilgilerine göre yenilendi |
 | v1.4.1 | 2026-11-20 | Sürüm geçmişine madde madde açıklama |
 | v1.4.0 | 2026-11-20 | Gerçek drone modelleri: DJI FPV ve BETAFPV Pavo35, Pavo20 Pro, Meteor75 Pro |
 | v1.3.1 | 2026-11-20 | Sürüm geçmişi düzeltmesi: CHANGELOG'a 1.3.0 girdisi eklendi |

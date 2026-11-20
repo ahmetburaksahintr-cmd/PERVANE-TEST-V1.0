@@ -92,6 +92,14 @@ function init() {
   $("#calBtn").onclick = calibrate;
   $("#clearMeas").onclick = () => { S.measured = []; S.prop.ctScale = 1; updateMeasInfo(); refreshCompare(); };
 
+  initAccordions();
+  $("#logFilters").onclick = (e) => {
+    const b = e.target.closest(".pill");
+    if (!b) return;
+    document.querySelectorAll("#logFilters .pill").forEach((p) => p.classList.toggle("active", p === b));
+    $("#log").dataset.filter = b.dataset.f;
+  };
+  $("#logClear").onclick = () => { $("#log").innerHTML = ""; S.logCount = 0; updateLogHead(); };
   $("#appVersion").textContent = "v" + APP_VERSION;
   Scene3D.init($("#view3d"));
   selectMaterial("PLA", true);
@@ -478,6 +486,9 @@ async function connectSerial() {
 }
 function updateMeasInfo() {
   const n = S.measured.length;
+  const chip = $("#measChip");
+  chip.textContent = n ? `${n} ölçüm${S.prop.ctScale !== 1 ? " · kalibre" : ""}` : "Ölçüm yok";
+  chip.className = "chip" + (n ? (S.prop.ctScale !== 1 ? " good" : " on") : "");
   if (!n) { $("#measInfo").textContent = "Henüz ölçüm yok."; return; }
   const errs = S.measured.map((m) => {
     const ev = Physics.evaluate({ mat: mat(), motor: motor(), prop: S.prop, rpm: m.rpm, tempC: S.tempC });
@@ -514,6 +525,47 @@ function log(msg, type = "info") {
   const ol = $("#log");
   ol.prepend(li);
   while (ol.children.length > 60) ol.lastChild.remove();
+  S.logCount = (S.logCount || 0) + 1;
+  updateLogHead(msg, type);
+}
+/** Günlük kartının başlığı: kayıt sayısı ve son olay (kart kapalıyken de görünür) */
+function updateLogHead(msg, type) {
+  const n = S.logCount || 0;
+  const chip = $("#logChip");
+  chip.textContent = `${n} kayıt`;
+  chip.className = "chip" + (n ? " on" : "");
+  $("#logEmpty").hidden = n > 0;
+  const last = $("#logLast");
+  if (!msg) { last.textContent = "Henüz kayıt yok"; last.className = "log-last"; return; }
+  last.textContent = msg.replace(/<[^>]+>/g, "");
+  last.className = "log-last " + type;
+  if (type === "bad" || type === "warn") { chip.classList.remove("ping"); void chip.offsetWidth; chip.classList.add("ping"); }
+}
+
+/* ---------------- Açılır-kapanır kartlar ---------------- */
+const ACC_KEY = "pervane.kartlar";
+function accSaved() { try { return JSON.parse(localStorage.getItem(ACC_KEY)) || {}; } catch (e) { return {}; } }
+function setAcc(el, open, save = true) {
+  el.classList.toggle("open", open);
+  el.querySelector(".acc-head").setAttribute("aria-expanded", String(open));
+  el.querySelector(".acc-body").inert = !open;        // kapalıyken içindeki düğmelere sekmeyle gidilmez
+  if (!save) return;
+  const st = accSaved();
+  st[el.dataset.acc] = open;
+  try { localStorage.setItem(ACC_KEY, JSON.stringify(st)); } catch (e) { /* özel pencere: hatırlanmaz */ }
+}
+function initAccordions() {
+  const st = accSaved();
+  document.querySelectorAll(".acc").forEach((el) => {
+    const saved = st[el.dataset.acc];
+    setAcc(el, typeof saved === "boolean" ? saved : el.hasAttribute("data-open"), false);
+    el.querySelector(".acc-head").onclick = () => setAcc(el, !el.classList.contains("open"));
+  });
+  document.querySelectorAll("[data-acc-all]").forEach((b) => {
+    b.onclick = () => b.closest(".group").querySelectorAll(".acc").forEach((el) => setAcc(el, b.dataset.accAll === "open"));
+  });
+  // İlk açılışta animasyon oynamasın
+  requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.add("ready")));
 }
 
 /* ---------------- Motor sesi (Web Audio) ---------------- */

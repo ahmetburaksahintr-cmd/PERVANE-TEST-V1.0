@@ -1,5 +1,13 @@
 # Sürüm geçmişi
 
+## 1.6.0 — 2026-11-20
+Veriler bölümü açılır-kapanır kartlara dönüştü
+- "Fiziksel test verisi" ve "Test günlüğü" artık tıklanınca açılan ayrı kartlar; yumuşak açılma-kapanma animasyonu
+- Kart başlığında canlı özet: ölçüm sayısı ve kalibrasyon durumu, günlükte kayıt sayısı ve son olay (kart kapalıyken de görünür)
+- Günlüğe süzgeç (Tümü / Uyarılar / Kırılmalar), "Günlüğü temizle" ve boş durum mesajı eklendi
+- "Tümünü aç / Tümünü kapat" düğmeleri; kartların açık-kapalı durumu tarayıcıda hatırlanır
+- Klavye ve ekran okuyucu desteği: aria-expanded, kapalı kartın içi sekme sırasına girmez
+
 ## 1.5.0 — 2026-11-20
 DJI FPV tasarımı DJI'ın resmî bilgilerine göre yenilendi
 - Gövde: mat koyu gri PA66 + %30 karbon fiber kabuk, parlak şeffaf siyah üst kapak ve öne bakan soğutma yarıkları

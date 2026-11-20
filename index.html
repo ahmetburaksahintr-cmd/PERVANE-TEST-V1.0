@@ -115,27 +115,64 @@
       <div class="panel chart-card"><h3>↪️ Uç bükülmesi – Devir</h3><canvas id="cDefl"></canvas></div>
     </div>
 
-    <div class="row2">
-      <div class="panel">
+    <div class="panel" id="cmpPanel">
         <div class="card-h"><h3>🏁 Tüm malzemelerin karşılaştırması</h3>
           <div class="btns"><button class="btn primary" id="seqBtn">▶ Hepsini sırayla canlı test et</button><button class="btn" id="csvOut">⬇️ Sonuçları CSV indir</button></div></div>
         <div class="table-wrap"><table id="cmpTable"></table></div>
         <canvas id="cBars" class="bars"></canvas>
         <p id="verdict" class="verdict"></p>
       </div>
-      <div class="panel">
-        <h3>🔌 Fiziksel test verisi (gerçek düzenek)</h3>
-        <p class="note">Arduino + yük hücresi (HX711) + devir sensörüyle ölçtüğün değerleri yükle veya USB'den canlı oku. Ölçümler itki grafiğinde <b>beyaz noktalar</b> olarak görünür ve modelle karşılaştırılır.</p>
-        <div class="btns">
-          <label class="btn">📄 CSV yükle<input type="file" id="csvIn" accept=".csv,.txt" hidden></label>
-          <button class="btn" id="serialBtn">🔌 USB'den canlı oku</button>
-          <button class="btn" id="calBtn">🎯 Modeli ölçüme göre kalibre et</button>
-          <button class="btn ghost" id="clearMeas">Temizle</button>
+
+    <!-- VERİLER: tıklanınca açılan kartlar -->
+    <div class="group" id="grpData">
+      <div class="group-head">
+        <div class="group-title"><span class="eyebrow">Veriler</span><h2>Ölçümler ve kayıtlar</h2></div>
+        <div class="group-actions">
+          <button class="link" data-acc-all="open">Tümünü aç</button>
+          <button class="link" data-acc-all="close">Tümünü kapat</button>
         </div>
-        <p class="small mono">CSV biçimi: <code>devir,itki_gram[,akim_amper]</code> — ör. <code>12000,310,4.2</code></p>
-        <div id="measInfo" class="meas-info">Henüz ölçüm yok.</div>
-        <h3 class="mt">📝 Test günlüğü</h3>
-        <ol id="log" class="log"></ol>
+      </div>
+      <div class="acc-grid">
+        <article class="panel acc" data-acc="meas">
+          <button class="acc-head" id="accMeasHead" aria-expanded="false" aria-controls="accMeasBody">
+            <span class="acc-ico" aria-hidden="true">🔌</span>
+            <span class="acc-titles"><b>Fiziksel test verisi</b><small>Gerçek düzenekten ölçüm yükle, canlı oku, modeli kalibre et</small></span>
+            <span class="chip" id="measChip">Ölçüm yok</span>
+            <span class="chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc-body" id="accMeasBody" role="region" aria-labelledby="accMeasHead"><div class="acc-clip"><div class="acc-content">
+            <p class="note lead">Arduino + yük hücresi (HX711) + devir sensörüyle ölçtüğün değerleri yükle veya USB'den canlı oku. Ölçümler itki grafiğinde <b>beyaz noktalar</b> olarak görünür ve modelle karşılaştırılır.</p>
+            <div class="btns">
+              <label class="btn">📄 CSV yükle<input type="file" id="csvIn" accept=".csv,.txt" hidden></label>
+              <button class="btn" id="serialBtn">🔌 USB'den canlı oku</button>
+              <button class="btn" id="calBtn">🎯 Modeli ölçüme göre kalibre et</button>
+              <button class="btn ghost" id="clearMeas">Temizle</button>
+            </div>
+            <p class="small mono">CSV biçimi: <code>devir,itki_gram[,akim_amper]</code> — ör. <code>12000,310,4.2</code></p>
+            <div id="measInfo" class="meas-info">Henüz ölçüm yok.</div>
+          </div></div></div>
+        </article>
+
+        <article class="panel acc" data-acc="log">
+          <button class="acc-head" id="accLogHead" aria-expanded="false" aria-controls="accLogBody">
+            <span class="acc-ico" aria-hidden="true">📝</span>
+            <span class="acc-titles"><b>Test günlüğü</b><small id="logLast" class="log-last">Henüz kayıt yok</small></span>
+            <span class="chip" id="logChip">0 kayıt</span>
+            <span class="chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc-body" id="accLogBody" role="region" aria-labelledby="accLogHead"><div class="acc-clip"><div class="acc-content">
+            <div class="log-bar">
+              <div class="log-filters" id="logFilters" role="group" aria-label="Günlük süzgeci">
+                <button class="pill active" data-f="all">Tümü</button>
+                <button class="pill" data-f="warn">⚠️ Uyarılar</button>
+                <button class="pill" data-f="bad">💥 Kırılmalar</button>
+              </div>
+              <button class="link" id="logClear">Günlüğü temizle</button>
+            </div>
+            <ol id="log" class="log"></ol>
+            <p id="logEmpty" class="empty">Henüz kayıt yok. Gazı aç veya otomatik rampa testini başlat.</p>
+          </div></div></div>
+        </article>
       </div>
     </div>
 
