@@ -1,5 +1,15 @@
 # Sürüm geçmişi
 
+## 1.20.0 — 2026-11-21
+BETAFPV Pavo35 gerçek görsellerine göre baştan çizildi (itici düzen)
+- Düzen düzeltildi: motorlar karbon üst plakanın altına asılı, pervaneler en altta halkaların içinde (önceden motorlar üstteydi)
+- Kum saati biçimli, dokulu 3 mm karbon plaka; ortasında dört yuvarlak pencereden görünen uçuş kartı
+- Yarı saydam füme, alt kenarı dışa açılan alçak koruma halkaları; çevrelerinde buz mavisi ışık şeridi
+- Motor çanında gerçekteki yazı: "LAVA 2006 2400KV", gri çan ve turuncu halka
+- Burunda O3 kamera ve GoPro tipi bağlantı, önde XT60 fiş, iki yanda gri alüminyum ara parçalar
+- Arkada yukarı-geriye eğik kısa silindir anten ve yatay beyaz alıcı anteni
+- 3D sahne: ters asılı (itici) motor desteği ve karbon fiber dokusu eklendi
+
 ## 1.19.0 — 2026-11-21
 DJI Avata 2 gerçek fotoğraflarına göre baştan çizildi
 - Koruma artık uzun kanal duvarı değil: gövdenin yanlarına ve birbirine yapışık, aşağı doğru genişleyen dört halka

@@ -66,7 +66,7 @@ const MOTORS = {
   xing2207: { name: "iFlight XING2 2207 · 1750KV · 6S", kv: 1750, cells: 6, pmax: 898, imax: 36, mass: 30.5, propIn: 5.1, stator: 22, label: "XING2  2207  1750KV", bell: 0x111827 },
   // iFlight XING2 2809 1250KV: 12N14P, 60,7 g (kablolu), tepe 50 A, 1145 W (üretici değerleri)
   xing2809: { name: "iFlight XING2 2809 · 1250KV · 6S", kv: 1250, cells: 6, pmax: 1145, imax: 50, mass: 60.7, propIn: 7.5, stator: 28, label: "XING2  2809  1250KV", bell: 0x111827 },
-  bf2006: { name: "BETAFPV 2006 · 2400KV · 6S", kv: 2400, cells: 6, pmax: 330, imax: 26, mass: 22, propIn: 3.5, stator: 20, label: "BETAFPV  2006  2400KV", bell: 0x1f2937 },
+  bf2006: { name: "BETAFPV LAVA 2006 · 2400KV · 6S", kv: 2400, cells: 6, pmax: 330, imax: 26, mass: 22, propIn: 3.5, stator: 20, label: "LAVA  2006  2400KV", bell: 0x6b7078, ring: 0xf97316 },
   bf1104: { name: "BETAFPV LAVA 1104 · 7200KV · 3S", kv: 7200, cells: 3, pmax: 50, imax: 9, mass: 7, propIn: 2.2, stator: 11, label: "LAVA  1104  7200KV", bell: 0x7c3aed },
   bf1102: { name: "BETAFPV 1102 · 22000KV · 1S", kv: 22000, cells: 1, pmax: 14, imax: 5, mass: 3.3, propIn: 1.77, stator: 11, label: "1102  22000KV", bell: 0x2563eb },
   // GEPRC SPEEDX2 2105.5: 12N14P, 21,0 g, en yüksek sürekli güç 559 W, en yüksek akım 34,9 A (üretici değerleri)
@@ -108,12 +108,12 @@ const DRONES = {
     note: "Resmî değerler: kalkış ağırlığı ~377 g, ölçüler 185 × 212 × 64 mm, en yüksek hız 27 m/sn (manuel mod), uçuş süresi ~23 dk. DJI motor değerlerini, pervane hatvesini ve motorlar arası mesafeyi yayımlamamıştır: motor (*), hatve (3032S adından 3,2\") ve 154 mm köşegen (üstten çekilmiş fotoğraftan ölçülerek) tahminidir. Kanat sayısı ve gövde rengi incelemelere dayanır."
   },
   pavo35: {
-    brand: "BETAFPV", name: "BETAFPV Pavo35 · 3,5\" cinewhoop", short: "Pavo35", style: "whoop",
+    brand: "BETAFPV", name: "BETAFPV Pavo35 · 3,5\" cinewhoop", short: "Pavo35", style: "cine", cine: { kind: "pavo35", ring: "smoke", led: 0x7dd3fc, plateMm: 3 },
     motorKey: "bf2006",
     prop: { diameterIn: 3.5, pitchIn: 2.4, chordMm: 11, thickMm: 2.0, blades: 3 }, propName: "Gemfan D90S · 3 kanat (kanallı)",
     wheelbaseMm: 148, massG: 450, battery: "6S 1100 mAh LiPo (XT60)", accent: 0xef4444, frame: 0x1f2937,
-    parts: "148 mm kanal korumalı şase · 4 × 2006 2400KV · F7 6S AIO · DJI O3 hava ünitesi · Gemfan D90S üç kanatlı pervane",
-    note: "Kanallı (ducted) sinema dronu. Resmî ağırlık O3 ile ~275 g (bataryasız); 6S 1100 mAh ile ~450 g."
+    parts: "148 mm itici (pusher) düzen: 3 mm karbon üst plaka, altına asılı 4 × LAVA 2006 2400KV, yarı saydam füme koruma halkaları · F7 6S AIO · DJI O3 hava ünitesi · Gemfan D90S üç kanatlı pervane · halkaların çevresinde ışık şeridi",
+    note: "İtici düzenli sinema dronu: motorlar plakanın altına asılıdır, pervaneler en altta halkaların içinde döner. Resmî ağırlık O3 ile ~275 g (bataryasız); 6S 1100 mAh ile ~450 g."
   },
   pavo20pro: {
     brand: "BETAFPV", name: "BETAFPV Pavo20 Pro · 2,2\" cinewhoop", short: "Pavo20 Pro", style: "whoop",

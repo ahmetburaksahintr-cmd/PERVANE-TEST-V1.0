@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.19.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.20.0
 
-> **Güncel sürüm: v1.19.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.20.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.19.0** | 2026-11-21 | DJI Avata 2 gerçek fotoğraflarına göre baştan çizildi |
+| **v1.20.0** | 2026-11-21 | BETAFPV Pavo35 gerçek görsellerine göre baştan çizildi (itici düzen) |
+| v1.19.0 | 2026-11-21 | DJI Avata 2 gerçek fotoğraflarına göre baştan çizildi |
 | v1.18.0 | 2026-11-21 | DJI FPV gerçek fotoğraflarına göre baştan çizildi |
 | v1.17.0 | 2026-11-21 | Arayüz: başlığın altında mini sekmeler, kırmızı TÜBİTAK rozeti |
 | v1.16.0 | 2026-11-21 | Uçuş bölümü: drone'u klavyeyle uçur |
@@ -57,7 +58,7 @@ Proje iki parçadan oluşur:
   | 5" Freestyle (genel yapım) | Açık karbon X şase | 4 × 2207 1950KV | 5043, 2 kanat | 6S 1100 mAh | ~645 g |
   | DJI FPV (2021) | Kapalı gövde, gimbal kamera | 4 × DJI FPV motoru, 2306 sınıfı, ~1900KV* | DJI 5328S, 3 kanat | 6S 2000 mAh, 295 g | ~795 g |
   | DJI Avata 2 (2024) | Koruma halkalı tek parça gövde, gimbal kamera | 4 × DJI Avata 2 motoru, ~1505 sınıfı, ~3600KV* | DJI 3032S, 75,66 mm, 3 kanat | 2150 mAh, 14,76 V, 145 g | ~377 g |
-  | BETAFPV Pavo35 | 3,5" cinewhoop (kanallı) | 4 × 2006 2400KV | Gemfan D90S, 3 kanat | 6S 1100 mAh | ~450 g |
+  | BETAFPV Pavo35 | 3,5" itici (pusher) cinewhoop | 4 × LAVA 2006 2400KV | Gemfan D90S, 3 kanat | 6S 1100 mAh | ~450 g |
   | BETAFPV Pavo20 Pro | 2,2" cinewhoop (kanallı) | 4 × LAVA 1104 7200KV | 2,2", 3 kanat | 3S 450 mAh | ~108 g |
   | BETAFPV Meteor75 Pro | 1S tiny whoop | 4 × 1102 22000KV | Gemfan 45 mm, 3 kanat | 1S 550 mAh | ~48 g |
   | GEPRC CineLog35 V2 HD O3 | 3,5" cinewhoop (kanallı) | 4 × SPEEDX2 2105.5 2650KV | HQProp DT90MMX3, 3 kanat | 6S 1300 mAh, 207 g | ~496 g |

@@ -420,7 +420,14 @@ const Scene3D = {
     u.group.scale.setScalar(u.s);
     u.bellMat.color.set(m.bell != null ? m.bell : 0x6366f1);
     const text = m.label || (m.name || "").split(" · ").slice(0, 2).join("  ");
-    u.labelMat.map = motorLabelTexture(text, m.bell != null && isLight(m.bell) ? "#111827" : "#f8fafc");
+    let tex = motorLabelTexture(text, m.bell != null && isLight(m.bell) ? "#111827" : "#f8fafc");
+    if (u.flip) {                                         // ters asılı motorda yazı 180° çevrilir
+      tex = tex.clone();
+      tex.center.set(0.5, 0.5);
+      tex.rotation = Math.PI;
+      tex.needsUpdate = true;
+    }
+    u.labelMat.map = tex;
     u.labelMat.needsUpdate = true;
   },
   /** Seçili motor değişince (test standı) motoru günceller */
@@ -471,7 +478,7 @@ const Scene3D = {
     this.rig.add(body);
     this.droneLeds = [];
     const ctx = { d, R, s, pos, rM, motor };
-    const style = { dji: this.styleDji, avata: this.styleAvata, whoop: this.styleWhoop }[d.style] || this.styleFreestyle;
+    const style = { dji: this.styleDji, avata: this.styleAvata, whoop: this.styleWhoop, cine: this.styleCine }[d.style] || this.styleFreestyle;
     const info = style.call(this, body, ctx);
     this.droneBaseY = info.baseY;
     this.droneTargetY = info.baseY + info.topY * 0.6;
@@ -484,6 +491,11 @@ const Scene3D = {
       const unit = this.createMotorUnit(motor);
       unit.group.position.set(x, typeof info.motorY === "function" ? info.motorY(i, x, z) : info.motorY, z);
       body.add(unit.group);
+      if (info.flip) {                                    // itici düzen: motor plakanın altına asılı, pervane altta
+        unit.flip = true;
+        unit.group.rotation.x = Math.PI;
+        this.styleMotor(unit, motor);                     // çandaki yazı ters durmasın
+      }
       this.units.push(Object.assign(unit, { dir: dirs[i], label: labels[i], home: unit.group.position.clone() }));
     });
     if (info.after) info.after();
@@ -992,6 +1004,141 @@ const Scene3D = {
     };
   },
 
+  /**
+   * İtici (pusher) cinewhoop: karbon üst plaka, altına asılı motorlar, en altta alçak koruma halkaları.
+   * Modele özgü ayrıntılar d.cine.kind ile seçilir (üretici fotoğraflarına göre):
+   *  · "pavo35": BETAFPV Pavo35 – yarı saydam füme halkalar, kum saati biçimli karbon plaka, gri alüminyum
+   *    ara parçalar, burunda O3 kamera ve GoPro bağlantısı, önde XT60, arkada kısa silindir anten ve
+   *    beyaz alıcı anteni, halkaların çevresinde buz mavisi ışık şeridi
+   */
+  styleCine(body, { d, R, s, pos, motor }) {
+    const C = (h) => new THREE.Color(h).convertSRGBToLinear();
+    const M = (color, o) => new THREE.MeshStandardMaterial(Object.assign({ color: C(color), metalness: 0.15, roughness: 0.6 }, o || {}));
+    const cfg = d.cine || {}, kind = cfg.kind;
+    const black = M(0x0d0e11, { metalness: 0.25, roughness: 0.5 }), alu = M(0x9aa0a8, { metalness: 0.45, roughness: 0.35 }), silver = M(0xd0d4da, { metalness: 0.4, roughness: 0.3 });
+    const carbon = (wMm, dMm) => {                              // dokulu karbon plaka malzemesi
+      const t = carbonTexture().clone();
+      t.wrapS = t.wrapT = THREE.RepeatWrapping;
+      t.repeat.set(Math.max(1, wMm / 12), Math.max(1, dMm / 12));
+      t.needsUpdate = true;
+      return new THREE.MeshStandardMaterial({ map: t, metalness: 0.35, roughness: 0.38 });
+    };
+    const add = (mesh, x, y, z, parent) => { mesh.position.set(x, y, z); (parent || body).add(mesh); return mesh; };
+    const box = (w, h, dp, mat, x, y, z, parent) => add(new THREE.Mesh(new THREE.BoxGeometry(w, h, dp), mat), x, y, z, parent);
+    const cyl = (r, len, mat, x, y, z, axis, parent) => {
+      const m = add(new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 24), mat), x, y, z, parent);
+      if (axis === "x") m.rotation.z = Math.PI / 2; else if (axis === "z") m.rotation.x = Math.PI / 2;
+      return m;
+    };
+    // Plaka düzleminde iki nokta arasında karbon kol
+    const strut = (a, b, w, y, t) => {
+      const dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz);
+      const m = box(len, t, w, carbon(len, w), (a[0] + b[0]) / 2, y, (a[1] + b[1]) / 2);
+      m.rotation.y = -Math.atan2(dz, dx);
+      return m;
+    };
+    const k = R / 45;                                           // boyut ölçeği (3,5" = 1)
+    const propY = 7.5 * Math.max(0.7, k), plateT = cfg.plateMm || 3;
+    const plateY = propY + 26 * s, top = plateY + plateT;        // plakanın altı ve üstü
+    const fx = Math.abs(pos[0][0]), fz = Math.abs(pos[0][1]);
+
+    // Koruma halkaları: alçak bant, alt kenarı dışa açılır
+    const bandH = 13 * Math.max(0.7, k), rTop = R + 2.6 * Math.max(0.7, k), rBot = rTop + 3.6 * Math.max(0.7, k);
+    const smoke = cfg.ring === "smoke";
+    const ringMat = new THREE.MeshStandardMaterial({ color: C(smoke ? 0x4b5058 : 0x15161a), roughness: smoke ? 0.25 : 0.7, metalness: 0.1,
+      transparent: smoke, opacity: smoke ? 0.62 : 1, side: THREE.DoubleSide, depthWrite: !smoke });
+    for (const [x, z] of pos) {
+      add(new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBot, bandH, 72, 1, true), ringMat), x, bandH / 2, z);
+      for (const [r, y] of [[rTop, bandH], [rBot, 0.6]]) {
+        const lip = add(new THREE.Mesh(new THREE.TorusGeometry(r, 1.5 * Math.max(0.7, k), 8, 72), ringMat), x, y, z);
+        lip.rotation.x = Math.PI / 2;
+      }
+      if (cfg.led != null) {                                    // halkanın dış alt kenarında ışık şeridi (COB LED)
+        const strip = add(new THREE.Mesh(new THREE.TorusGeometry(rBot + 1.6 * k, 0.9 * Math.max(0.8, k), 6, 72), new THREE.MeshBasicMaterial({ color: cfg.led, transparent: true })), x, 2.4 * k, z);
+        strip.rotation.x = Math.PI / 2;
+        this.droneLeds.push(strip);
+      }
+      // Motor yatağı (plakanın ucu)
+      cyl(15.5 * s, plateT, carbon(30, 30), x, plateY + plateT / 2, z);
+      cyl(4 * s, 0.8, M(0xf59e0b, { metalness: 0.5 }), x, top + 0.3, z);                    // motor mili ucu
+      for (let i = 0; i < 4; i++) {
+        const b = Math.PI / 4 + (i * Math.PI) / 2;
+        cyl(1.5 * s, 1, silver, x + Math.cos(b) * 9 * s, top + 0.4, z + Math.sin(b) * 9 * s);
+      }
+    }
+
+    if (kind === "pavo35") {
+      // Kum saati biçimli karbon plaka: orta gövde, burun ve kuyruk, motorlara çapraz kollar
+      const cw = 46;
+      box(cw, plateT, cw, carbon(cw, cw), 0, plateY + plateT / 2, 0);
+      box(26, plateT, 34, carbon(26, 34), fx + 12, plateY + plateT / 2, 0);
+      box(22, plateT, 30, carbon(22, 30), -fx - 4, plateY + plateT / 2, 0);
+      for (const [x, z] of pos) {
+        const xs = Math.sign(x), zs = Math.sign(z);
+        strut([xs * 18, zs * 18], [x, z], 13, plateY + plateT / 2, plateT);
+        strut([xs * (fx + 6), zs * 10], [x, z], 11, plateY + plateT / 2, plateT);
+      }
+      // Ortadaki dört yuvarlak pencereden görünen uçuş kartı
+      box(40, 1.2, 40, M(0x111827), 0, plateY - 4, 0);
+      for (const [x, z] of [[-10, -10], [10, -10], [-10, 10], [10, 10]]) {
+        cyl(7.4, 0.5, M(0x1b1f2a), x, top + 0.2, z);
+        cyl(1.2, 0.7, M(0xf59e0b), x - 2, top + 0.3, z + 1);
+        cyl(1, 0.7, M(0xef4444), x + 2.5, top + 0.3, z - 2);
+      }
+      // Gri alüminyum "Y" ara parçalar (iki yanda) ve plakanın altındaki gövde
+      for (const zs of [-1, 1]) {
+        box(12, plateY - bandH, 4, alu, 0, (plateY + bandH) / 2, zs * 25);
+        box(26, 3, 4, alu, 0, plateY - 2, zs * 25);
+      }
+      box(44, 10, 36, black, 0, plateY - 11, 0);
+      // Önde XT60 fiş (plakaya gömülü)
+      box(15, 6, 8, M(0xeab308), fx - 22, top + 2.6, 0);
+      for (const z of [-2.2, 2.2]) cyl(1.5, 6.4, M(0xd4a72c, { metalness: 0.7 }), fx - 22, top + 2.8, z, "x");
+      // Batarya (6S 1100 mAh): iki siyah ped üstünde, kayışla bağlı
+      for (const x of [-16, 16]) box(14, 2, 34, black, x, top + 1, 0);
+      box(72, 30, 34, M(0x1f2328), -6, top + 17, 0);
+      const bl = flatLabel(["LiPo 6S", "1100 mAh", "22,2 V"], 24, 26, "#f97316", "#111827");
+      bl.position.set(-28, top + 32.1, 0);
+      body.add(bl);
+      box(16, 31, 35, M(0x111214), -6, top + 17.4, 0);
+      // Burun: O3 kamera, lastik takozlu braket ve GoPro tipi iki dişli bağlantı
+      const cam = new THREE.Group();
+      cam.position.set(fx + 26, plateY - 2, 0);
+      cam.rotation.z = 0.28;
+      cam.add(new THREE.Mesh(new THREE.BoxGeometry(18, 21, 22), black));
+      addLens(cam, 7.2, 10, black);
+      body.add(cam);
+      for (const zs of [-1, 1]) {
+        box(16, 22, 3, black, fx + 22, plateY - 1, zs * 13.5);
+        cyl(2.6, 4, M(0x2b2d31), fx + 18, plateY + 4, zs * 13.5, "z");
+        const prong = box(4, 13, 3, black, fx + 14, top + 6.5, zs * 4.5);
+        prong.castShadow = true;
+      }
+      cyl(4, 12, black, fx + 14, top + 13, 0, "z");
+      // Arka: yukarı-geriye eğik kısa silindir anten, yatay beyaz alıcı anteni
+      body.add(capsule([-fx - 8, top, 9], [-fx - 17, top + 13, 9], 1.8, black));
+      const ant = new THREE.Mesh(new THREE.CylinderGeometry(6.2, 6.2, 18, 24), black);
+      ant.position.set(-fx - 22, top + 20, 9);
+      ant.rotation.z = 0.6;
+      body.add(ant);
+      box(14, 8, 26, black, -fx - 8, top + 3, 0);
+      cyl(1.1, 62, M(0xf1f5f9), -fx - 12, top + 4, 0, "z");
+    }
+    return {
+      baseY: 2.2, motorY: plateY, topY: top + (cfg.topMm || 34), attachY: bandH * 0.5, flip: true,
+      after: () => {
+        for (const u of this.units) {
+          u.stripe.visible = false;
+          if (motor.ring != null) {                             // çanın pervane tarafındaki ince renkli halka
+            const ring = new THREE.Mesh(new THREE.CylinderGeometry(14.9, 14.9, 1.8, 40), M(motor.ring, { roughness: 0.4 }));
+            ring.position.y = 19.4;
+            u.bell.add(ring);
+          }
+        }
+      }
+    };
+  },
+
   /* ---------- Hava akışı parçacıkları (itki) ---------- */
   buildAirflow() {
     const N = 500;
@@ -1073,6 +1220,7 @@ const Scene3D = {
       // Ters dönen motorlarda ayna pervane (CCW): kanat burulması tersine çevrilir
       // Motor gövdesi ölçeklendiği için pervane gerçek boyutunda kalsın (1/s); ters dönende z aynası
       group.scale.set(1 / unit.s, 1 / unit.s, (unit.dir < 0 ? -1 : 1) / unit.s);
+      if (unit.flip) group.rotation.x = Math.PI;          // ters asılı motorda pervane yine yukarı itki verecek yönde durur
       const hub = new THREE.Mesh(new THREE.CylinderGeometry(r0 + 1, r0 + 1, Math.min(7, R * 0.28), 32), hubMat);
       hub.castShadow = true;
       group.add(hub);
@@ -1277,7 +1425,7 @@ const Scene3D = {
     this.angle += visOmega * dt;
     const blurOp = Math.min(0.32, rpm / 90000);
     for (const u of this.units) {
-      u.bell.rotation.y = this.angle * u.dir;
+      u.bell.rotation.y = this.angle * u.dir * (u.flip ? -1 : 1);
       const whole = u.blades && u.blades.every((b) => !b.detached);
       u.blur.material.opacity = whole ? blurOp : blurOp * 0.5;
       u.blur.scale.setScalar((this.R || 64) / 64 / u.s);
@@ -1600,6 +1748,25 @@ function capsule(a, b, r, mat) {
   m.position.copy(A).add(B).multiplyScalar(0.5);
   m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
   return m;
+}
+
+/** Karbon fiber dokusu (çapraz örgü), tekrar eden küçük desen */
+let _carbonTex = null;
+function carbonTexture() {
+  if (_carbonTex) return _carbonTex;
+  const c = document.createElement("canvas");
+  c.width = c.height = 64;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#14161a"; ctx.fillRect(0, 0, 64, 64);
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+    const on = ((x + y) >> 1) % 2 === 0;                       // 2×2 çapraz (twill) örgü
+    const g = ctx.createLinearGradient(x * 8, y * 8, x * 8 + 8, y * 8 + 8);
+    g.addColorStop(0, on ? "#3a3e46" : "#1b1d22"); g.addColorStop(1, on ? "#23262c" : "#2c2f36");
+    ctx.fillStyle = g; ctx.fillRect(x * 8, y * 8, 8, 8);
+  }
+  _carbonTex = new THREE.CanvasTexture(c);
+  _carbonTex.encoding = THREE.sRGBEncoding;
+  return _carbonTex;
 }
 
 /** Kamera merceği (+x yönüne bakan) */
