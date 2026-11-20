@@ -1,5 +1,15 @@
 # Sürüm geçmişi
 
+## 1.9.0 — 2026-11-20
+Kanat sayısı sayfadan Arduino'ya gönderiliyor
+- Sayfa USB'den bağlanınca seçili kanat sayısını Arduino'ya gönderir; Arduino devri buna göre hesaplar (önceden kodda 2 kanada sabitti)
+- Kanat sayısı değişince yenisi kendiliğinden gönderilir; Arduino'nun onayı günlükte ve bağlantı satırında görünür
+- Arduino kodu "K3" gibi komutları okur (1-8 kanat); seri monitörden elle de yazılabilir, yalnızca "K" geçerli değeri sorar
+- Sensör motor çanındaki tek işareti sayıyorsa kodda değer kilitlenebilir (PULSES_LOCKED)
+- Karttaki kod eskiyse ve komutu onaylamıyorsa sayfa uyarır
+- "USB'den canlı oku" düğmesi bağlıyken "USB bağlantısını kes" olur; kablo çekilirse bağlantı düzgünce kapanır ve yeniden bağlanılabilir
+- README'ye "Kanat sayısı ve devir" bölümü eklendi
+
 ## 1.8.2 — 2026-11-20
 Arduino itki ölçümü düzeltmesi: sahte 0 g satırları gönderilmiyor
 - Yük hücresinde o an yeni örnek yoksa artık 0 g değil, son geçerli itki değeri gönderilir (sahte 0'lar grafiği ve kalibrasyonu bozuyordu)

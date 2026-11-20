@@ -148,6 +148,7 @@ function newProp(logMsg) {
   if (logMsg) log(logMsg, "info");
   refreshCompare();
   syncInputs();
+  sendBlades();                                   // USB bağlıysa Arduino'ya güncel kanat sayısı
 }
 
 /* ---------------- Test düzeneği (stand / FPV drone) ---------------- */
@@ -474,16 +475,29 @@ function importCsv(e) {
   reader.readAsText(f);
   e.target.value = "";
 }
+/* USB (Web Serial): Arduino'dan canlı ölçüm okunur, Arduino'ya kanat sayısı gönderilir.
+   S.serial açık bağlantıyı tutar; düğmeye ikinci kez basılınca bağlantı kesilir. */
 async function connectSerial() {
+  if (S.serial) { await disconnectSerial(); log("⏏️ USB bağlantısı kesildi", "info"); return; }
   if (!("serial" in navigator)) { log("Bu tarayıcı USB seri bağlantıyı desteklemiyor. Chrome veya Edge kullan.", "bad"); return; }
+  let c = null;
   try {
     const port = await navigator.serial.requestPort();
     await port.open({ baudRate: 115200 });
+    const decoder = new TextDecoderStream();
+    c = S.serial = {
+      port, pipe: port.readable.pipeTo(decoder.writable).catch(() => {}), reader: decoder.readable.getReader(),
+      writer: port.writable ? port.writable.getWriter() : null,
+      ready: false, sentBlades: null, ackBlades: null, locked: false, warned: false
+    };
+    // Arduino bağlanınca yeniden başlar ve hazır olunca "# hazir" yazar; kanat sayısı o zaman gönderilir.
+    // Yeniden başlamayan kartlar "hazir" yazmaz; 8 saniye içinde gelmezse yine de gönderilir.
+    c.readyTimer = setTimeout(() => { if (S.serial === c && !c.ready) { c.ready = true; sendBlades(true); } }, 8000);
     log("🔌 Arduino bağlandı, veri okunuyor…", "ok");
-    const reader = port.readable.pipeThrough(new TextDecoderStream()).getReader();
+    updateSerialUi();
     let buf = "";
     for (;;) {
-      const { value, done } = await reader.read();
+      const { value, done } = await c.reader.read();
       if (done) break;
       buf += value;
       let i;
@@ -493,12 +507,71 @@ async function connectSerial() {
         const pt = parseLine(line);
         if (pt) { S.measured.push(pt); if (S.measured.length > 2000) S.measured.shift(); updateMeasInfo(); }
       }
+      if (buf.length > 4096) buf = "";            // satır sonu gelmeyen bozuk veri birikmesin
     }
-  } catch (err) { log("USB bağlantısı kurulamadı: " + err.message, "bad"); }
+    if (S.serial === c) log("USB bağlantısı kapandı", "warn");
+  } catch (err) {
+    if (c) { if (S.serial === c) log("USB bağlantısı koptu: " + err.message, "bad"); }
+    else if (err && err.name === "NotFoundError") log("USB portu seçilmedi.", "info");
+    else log("USB bağlantısı kurulamadı: " + err.message + " (Arduino IDE'nin seri monitörü açıksa kapat.)", "bad");
+  } finally {
+    if (c && S.serial === c) await disconnectSerial();
+  }
+}
+async function disconnectSerial() {
+  const c = S.serial;
+  if (!c) return;
+  S.serial = null;
+  clearTimeout(c.readyTimer); clearTimeout(c.ackTimer);
+  try { await c.reader.cancel(); } catch (e) { /* akış zaten kapanmış */ }
+  await c.pipe;
+  try { if (c.writer) c.writer.releaseLock(); } catch (e) { /* yok say */ }
+  try { await c.port.close(); } catch (e) { /* kablo çekilmiş olabilir */ }
+  updateSerialUi();
+}
+/** Seçili kanat sayısını Arduino'ya gönderir ("K3"); Arduino devri buna göre hesaplar */
+function sendBlades(force) {
+  const c = S.serial;
+  if (!c || !c.writer || !c.ready) return;
+  const n = S.prop.blades || 2;
+  if (!force && n === c.sentBlades) return;
+  c.sentBlades = n;
+  c.writer.write(new TextEncoder().encode(`K${n}\n`)).catch(() => {});
+  // Eski Arduino kodu komutu tanımaz ve cevap vermez: kullanıcıyı uyar
+  clearTimeout(c.ackTimer);
+  c.ackTimer = setTimeout(() => {
+    if (S.serial !== c || c.ackBlades === n || c.locked || c.warned) return;
+    c.warned = true;
+    log(`⚠️ Arduino kanat sayısını (${n}) onaylamadı. Arduino kodu eski olabilir: <code>arduino/pervane_itki_testi.ino</code> dosyasının güncel halini karta yükle. O zamana kadar devir, koddaki sabit değere (varsayılan 2 kanat) göre hesaplanır.`, "warn");
+    updateSerialUi();
+  }, 2500);
+}
+function updateSerialUi() {
+  const c = S.serial;
+  $("#serialBtn").textContent = c ? "⏏️ USB bağlantısını kes" : "🔌 USB'den canlı oku";
+  const info = $("#serialInfo");
+  info.hidden = !c;
+  if (!c) return;
+  info.textContent = c.ackBlades ? `USB bağlı · Arduino devri ${c.ackBlades} kanada göre hesaplıyor${c.locked ? " (Arduino kodunda kilitli)" : ""}`
+    : c.warned ? "USB bağlı · Arduino kanat sayısını onaylamadı (Arduino kodunu güncelle)" : "USB bağlı · kanat sayısı gönderiliyor…";
 }
 /** Arduino'nun "#" ile başlayan durum mesajları (güvenlik kilidi uyarıları vb.) günlüğe yazılır */
 function arduinoNote(text) {
   if (!text) return;
+  const c = S.serial;
+  // Kart (yeniden) başladı: kanat sayısı varsayılana döndü, yeniden gönder
+  if (c && /^hazir/i.test(text)) { c.ready = true; clearTimeout(c.readyTimer); sendBlades(true); }
+  // Kanat sayısı onayı: "kanat=3" ya da "kanat=1 (kilitli)"
+  const k = /^kanat=(\d+)(\s*\(kilitli\))?/.exec(text);
+  if (k && c) {
+    const n = Number(k[1]), locked = !!k[2], changed = n !== c.ackBlades || locked !== c.locked;
+    c.ackBlades = n; c.locked = locked;
+    updateSerialUi();
+    if (!changed) return;                         // aynı onay yeniden gelirse günlüğü doldurma
+    if (locked && n !== (S.prop.blades || 2)) log(`🔧 Arduino kodunda darbe sayısı kilitli: tur başına ${n} (sayfadaki pervane ${S.prop.blades || 2} kanatlı). Sensör, motor çanındaki tek işareti sayıyorsa bu doğrudur.`, "info");
+    else log(`🔧 Arduino devri ${n} kanatlı pervaneye göre hesaplıyor`, "ok");
+    return;
+  }
   // Günlük HTML olarak yazıldığı için karttan gelen metindeki < > işaretleri etkisizleştirilir
   const safe = text.slice(0, 160).replace(/</g, "‹").replace(/>/g, "›");
   const type = /GÜVENLİK|UYARI|HATA/i.test(safe) ? "warn" : "info";

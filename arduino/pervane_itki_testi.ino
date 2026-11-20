@@ -7,6 +7,9 @@
    Web sayfasında "USB'den canlı oku" ile doğrudan grafiğe düşer.
    "#" ile başlayan satırlar durum mesajıdır (ölçüm değildir).
    Yük hücresi yanıt vermezse ölçüm satırı gönderilmez, uyarı yazılır.
+   Alır: "K3" gibi bir satır → devir, 3 kanatlı pervaneye göre hesaplanır.
+         Web sayfası bağlanınca ve kanat sayısı değişince bunu kendisi gönderir.
+         Seri monitörden elle de yazılabilir (satır sonu: "Yeni Satır").
 
    BAĞLANTILAR
    - HX711 yük hücresi modülü : DT → D3, SCK → D4  (kütüphane: "HX711" by Bogdan Necula)
@@ -36,7 +39,10 @@
 
 const uint8_t PIN_HX_DT = 3, PIN_HX_SCK = 4, PIN_ESC = 9, PIN_RPM = 2, PIN_ARM = 7;
 const uint8_t PIN_THROTTLE = A1, PIN_CURRENT = A0;
-const uint8_t BLADES = 2;            // devir sensörü pervane başına kaç darbe görür
+uint8_t pulsesPerRev = 2;            // devir sensörünün bir turda gördüğü darbe sayısı (= kanat sayısı).
+                                     // Web sayfası bağlanınca kendi kanat sayısını gönderir ("K3" gibi), elle değiştirmen gerekmez.
+const bool PULSES_LOCKED = false;    // true: sayfadan gelen kanat sayısı yok sayılır. Sensör kanatları değil de
+                                     // motor çanındaki tek işareti sayıyorsa pulsesPerRev = 1 yap ve bunu true yap.
 float CAL_FACTOR = 420.0;            // HX711 kalibrasyon katsayısı (aşağıdaki "kalibrasyon" notuna bak)
 const float ACS_MV_PER_A = 40.0;     // ACS758-50B: 40 mV/A, 0 A = 2.5 V
 const int THROTTLE_SAFE = 40;        // gaz bu değerin altındayken (≈ %4) motor devreye alınabilir (0–1023)
@@ -92,6 +98,42 @@ int throttleUs() {
   return map(pot, 0, 1023, 1000, 2000);
 }
 
+/* Kanat sayısını ayarlar ve geçerli değeri bildirir. n < 0: yalnızca bildir. */
+void setPulses(int n) {
+  if (n >= 0) {
+    if (n < 1 || n > 8) { Serial.println(F("# UYARI: kanat sayısı 1 ile 8 arasında olmalı")); return; }
+    if (!PULSES_LOCKED) pulsesPerRev = n;
+  }
+  Serial.print(F("# kanat="));
+  Serial.print(pulsesPerRev);
+  Serial.println(PULSES_LOCKED ? F(" (kilitli)") : F(""));
+}
+
+/* Seri porttan gelen komutlar (her komut bir satırdır):
+   K<n> : devir sensörünün bir turda gördüğü darbe (kanat) sayısı, 1–8. Ör. "K3"
+   K    : geçerli kanat sayısını sorar
+   Cevap: "# kanat=3" */
+void readCommands() {
+  static char cmd = 0;               // satırın ilk harfi
+  static int val = -1;               // harften sonraki sayı (-1: sayı yok)
+  while (Serial.available()) {
+    char c = Serial.read();
+    if (c == '\n' || c == '\r') {
+      if (cmd == 'K' || cmd == 'k') setPulses(val);
+      else if (cmd) Serial.println(F("# UYARI: bilinmeyen komut"));
+      cmd = 0; val = -1;
+    } else if (c == ' ') {
+      // boşluklar yok sayılır
+    } else if (!cmd) {
+      cmd = c;
+    } else if (c >= '0' && c <= '9' && val < 100) {
+      val = (val < 0 ? 0 : val * 10) + (c - '0');
+    } else {
+      val = 1000;                    // sayı olmayan karakter ya da çok uzun sayı: geçersiz
+    }
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   pinMode(PIN_ARM, INPUT_PULLUP);
@@ -118,12 +160,13 @@ void setup() {
 void loop() {
   // Gaz: güvenlik kilidi açılmadıkça motor her zaman durur (bkz. throttleUs)
   esc.writeMicroseconds(throttleUs());
+  readCommands();                                // sayfadan gelen kanat sayısı
 
   unsigned long now = millis();
   if (now - lastReport >= 100) {                 // saniyede 10 ölçüm
     noInterrupts(); unsigned long p = pulses; interrupts();
     float dt = (now - lastReport) / 1000.0;
-    float rpm = ((p - lastPulses) / (float)BLADES) / dt * 60.0;
+    float rpm = ((p - lastPulses) / (float)pulsesPerRev) / dt * 60.0;
     lastPulses = p; lastReport = now;
 
     // İtki (gram): yük hücresinde yeni örnek varsa okunur, yoksa son geçerli değer kullanılır.

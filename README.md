@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.8.2
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.9.0
 
-> **Güncel sürüm: v1.8.2** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.9.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.8.2** | 2026-11-20 | Arduino itki ölçümü düzeltmesi: sahte 0 g satırları gönderilmiyor |
+| **v1.9.0** | 2026-11-20 | Kanat sayısı sayfadan Arduino'ya gönderiliyor |
+| v1.8.2 | 2026-11-20 | Arduino itki ölçümü düzeltmesi: sahte 0 g satırları gönderilmiyor |
 | v1.8.1 | 2026-11-20 | Arduino güvenlik kilidi: gaz açıkken motor devreye girmez |
 | v1.8.0 | 2026-11-20 | Ekran tasarımı baştan elden geçirildi |
 | v1.7.0 | 2026-11-20 | Sonuçlar bölümü açılır-kapanır kartlara dönüştü |
@@ -50,7 +51,7 @@ Proje iki parçadan oluşur:
   \* DJI, DJI FPV motorunun stator ölçüsünü ve KV değerini açıklamamıştır; bu değerler tahminidir. Ağırlık, köşegen, batarya ve pervane bilgileri üreticilerin ve satıcıların yayımladığı değerlerdendir. Hatve ve kanat kesiti ise pervanenin 3D baskı karşılığı için yaklaşık değerlerdir.
 
   Küçük whoop pervaneleri çok yüksek devirde dönse de kanatları kısa olduğundan gerilme düşüktür; sert filamentlerde en yüksek devirde bile kırılmayabilirler. Göstergedeki **öngörü** satırı bunu önceden söyler. Kırılma sınırını bulmak için kök kalınlığını azalt veya sıcaklığı artır.
-- **Kanat sayısı:** Test standında pervane 2–5 kanatlı seçilebilir. Kanat arttıkça aynı devirde itki ve çekilen güç artar, ama her kanadın taşıdığı yük azalır.
+- **Kanat sayısı:** Test standında pervane 2–5 kanatlı seçilebilir. Kanat arttıkça aynı devirde itki ve çekilen güç artar, ama her kanadın taşıdığı yük azalır. USB'den bağlıyken seçili kanat sayısı Arduino'ya da gönderilir; gerçek devir ölçümü buna göre hesaplanır.
 - **4 fırçasız motor:** 1404 3800KV, 2207 1950KV, 2806.5 1300KV ve 3115 900KV.
 - **Pervane geometrisi:** Çap, hatve, kök veter genişliği ve kök kalınlığı değiştirilebilir. Göbek sıcaklığı da ayarlanabilir; PLA'nın ısıyla yumuşamasını görebilirsin.
 - **Otomatik rampa testi:** Gaz 11 saniyede %0'dan %100'e çıkar. Pervane sırayla şu aşamalardan geçer:
@@ -110,6 +111,14 @@ Motor yalnızca şu sırayla devreye girer:
 - Yük hücresinde o an yeni örnek yoksa son geçerli itki değeri gönderilir (sahte 0 g gönderilmez).
 - Yük hücresi yarım saniyeden uzun yanıt vermezse ölçüm gönderilmez ve günlüğe uyarı düşer. Bağlantıyı kontrol et: DT → D3, SCK → D4.
 - Yük hücresi kart açılırken takılı değilse bağlantıyı düzeltip kartı yeniden başlat; sıfırlama (dara) açılışta yapılır.
+
+### Kanat sayısı ve devir
+Optik sensör her kanat geçişinde bir darbe üretir; devir, darbe sayısının kanat sayısına bölünmesiyle bulunur.
+- Sayfa USB'den bağlanınca seçili kanat sayısını Arduino'ya gönderir (`K3` gibi bir satır). Arduino `# kanat=3` diye onaylar; onay **Test günlüğü**nde ve bağlantı satırında görünür.
+- Sayfada kanat sayısını değiştirirsen yenisi kendiliğinden gönderilir. Koda elle dokunman gerekmez.
+- Seri monitörden de yazabilirsin: `K3` kanat sayısını 3 yapar, yalnızca `K` geçerli değeri sorar (1–8 arası kabul edilir).
+- Sensörün kanatları değil de motor çanındaki tek işareti sayıyorsa kodda `pulsesPerRev = 1` ve `PULSES_LOCKED = true` yap; sayfadan gelen değer o zaman yok sayılır.
+- Sayfa "Arduino kanat sayısını onaylamadı" derse karttaki kod eskidir; `arduino/pervane_itki_testi.ino` dosyasının güncel halini yükle.
 
 ## Önerilen deney planı (bilim fuarı)
 1. **Değişkenler:**
