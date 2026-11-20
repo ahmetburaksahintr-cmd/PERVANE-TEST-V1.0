@@ -19,7 +19,8 @@ const S = {
 const mat = () => MATERIALS[S.matKey];
 const motor = () => MOTORS[S.motorKey];
 const drone = () => DRONES[S.droneKey];
-const isDrone = () => S.rig === "drone";
+const isDrone = () => S.rig !== "stand";          // bağlı drone testi ya da uçuş bölümü
+const isFly = () => S.rig === "fly";
 const maxRpm = () => Physics.maxRpm(motor(), Physics.geometry(S.prop));
 
 /* ---------------- Başlatma ---------------- */
@@ -45,8 +46,8 @@ function init() {
   $("#droneSel").onchange = (e) => {
     S.droneKey = e.target.value;
     applyDrone();
-    Scene3D.setRig("drone", drone());
-    newProp(`🛸 ${drone().name} test düzeneğine alındı`);
+    Scene3D.setRig(S.rig, drone());
+    newProp(isFly() ? `🎮 ${drone().name} uçuşa hazır` : `🛸 ${drone().name} test düzeneğine alındı`);
   };
 
   const bindRange = (id, apply) => { $(id).oninput = (e) => { apply(Number(e.target.value)); syncInputs(); }; };
@@ -88,11 +89,7 @@ function init() {
   $("#csvOut").onclick = exportCsv;
   $("#soundBtn").onclick = toggleSound;
   // Bakış açısı: serbest (çapraz) ↔ yandan (motor hizasından)
-  $("#viewBtn").onclick = () => {
-    Scene3D.setView(Scene3D.viewName === "side" ? "free" : "side");
-    $("#viewBtn").textContent = Scene3D.viewName === "side" ? "🎥 Bakış: Yandan" : "🎥 Bakış: Serbest";
-    $("#viewBtn").classList.toggle("on", Scene3D.viewName === "side");
-  };
+  $("#viewBtn").onclick = () => { Scene3D.setView(Scene3D.viewName === "side" ? "free" : "side"); updateViewBtn(); };
   $("#csvIn").onchange = importCsv;
   $("#serialBtn").onclick = connectSerial;
   $("#calBtn").onclick = calibrate;
@@ -151,30 +148,44 @@ function newProp(logMsg) {
   Scene3D.buildProp(S.prop, mat(), colorSpec());
   S.simT = 0; S.lastRecT = -1; S.breakShot = null; S.breakInfo = null;
   updateLegend();
+  if (isFly()) Fly.reset();                       // yeni pervane: drone pede döner
   if (logMsg) log(logMsg, "info");
   refreshCompare();
   syncInputs();
   sendBlades();                                   // USB bağlıysa Arduino'ya güncel kanat sayısı
 }
 
-/* ---------------- Test düzeneği (stand / FPV drone) ---------------- */
+/** Bakış düğmesinin yazısı: standda ve bağlı drone'da Serbest/Yandan, uçuşta Takip/Serbest */
+function updateViewBtn() {
+  const side = Scene3D.viewName === "side";
+  $("#viewBtn").textContent = "🎥 Bakış: " + (isFly() ? (side ? "Serbest" : "Takip") : (side ? "Yandan" : "Serbest"));
+  $("#viewBtn").classList.toggle("on", side);
+}
+
+/* ---------------- Test düzeneği (stand / bağlı FPV drone / uçuş) ---------------- */
 function setRig(mode) {
   if (S.rig === mode) return;
   S.seq = null;
-  if (mode === "drone") {
-    S.standCfg = { motorKey: S.motorKey, prop: { ...S.prop } };
-    S.rig = mode;
+  stopRamp();
+  const wasStand = S.rig === "stand";
+  S.rig = mode;
+  if (mode !== "stand") {
+    if (wasStand) S.standCfg = { motorKey: S.motorKey, prop: { ...S.prop } };
     applyDrone();
-  } else {
-    S.rig = mode;
-    if (S.standCfg) { S.motorKey = S.standCfg.motorKey; S.prop = { ...S.standCfg.prop, ctScale: S.prop.ctScale }; }
-  }
+  } else if (S.standCfg) { S.motorKey = S.standCfg.motorKey; S.prop = { ...S.standCfg.prop, ctScale: S.prop.ctScale }; }
+  const fly = mode === "fly";
   document.querySelectorAll("#rigSeg button").forEach((b) => b.classList.toggle("active", b.dataset.rig === mode));
-  $("#dronePick").hidden = $("#hDrone").hidden = $("#motorLock").hidden = mode !== "drone";
-  $("#motorSel").disabled = $("#dia").disabled = $("#blades").disabled = mode === "drone";
+  $("#dronePick").hidden = $("#hDrone").hidden = $("#motorLock").hidden = mode === "stand";
+  $("#flyHelp").hidden = $("#hFly").hidden = !fly;
+  $("#motorSel").disabled = $("#dia").disabled = $("#blades").disabled = mode !== "stand";
+  $("#thr").disabled = $("#rampBtn").disabled = $("#seqBtn").disabled = fly;      // uçuşta gazı tuşlar belirler
   $("#motorSel").value = S.motorKey;
+  Fly.keys.clear();
+  Scene3D.viewName = "free";
   Scene3D.setRig(mode, drone());
-  newProp(mode === "drone" ? `🛸 FPV drone düzeneği: ${drone().name} (4 × ${motor().name})` : "🔧 Test standına geçildi (tek motor + yük hücresi)");
+  updateViewBtn();
+  newProp(fly ? `🎮 Uçuş bölümü: ${drone().name}. E ile kalk, W A S D ile uç, Z / X ile dön, Q ile alçal.`
+    : mode === "drone" ? `🛸 FPV drone düzeneği: ${drone().name} (4 × ${motor().name})` : "🔧 Test standına geçildi (tek motor + yük hücresi)");
 }
 
 /** Drone modelinin motorunu ve pervane ölçüsünü uygular */
@@ -265,6 +276,7 @@ function loop(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
   stepRamp(dt);
+  if (isFly()) Fly.step(dt);                      // uçuşta gazı klavye ve gereken itki belirler
 
   // Motor ivmesi (pervanenin ataleti ve ESC tepkisi)
   const target = S.throttle * maxRpm();
@@ -320,7 +332,8 @@ function checkEvents(ev) {
     Scene3D.breakBlade(ev.rpm);
     if (isDrone()) {
       S.breakInfo.where = Scene3D.brokenLabel;
-      log(`🛸 ${Scene3D.brokenLabel} pervanesi koptu → drone dengesini kaybetti, kalan 3 motorla savrularak pede düştü`, "bad");
+      log(isFly() ? `🎮 ${Scene3D.brokenLabel} pervanesi havada koptu → drone takla atarak düştü. "Yeni pervane tak" ile yeniden başla.`
+        : `🛸 ${Scene3D.brokenLabel} pervanesi koptu → drone dengesini kaybetti, kalan 3 motorla savrularak pede düştü`, "bad");
     }
     // Kırılma anının görüntüsü (parçalar havadayken) ve indirme sorusu
     setTimeout(() => { S.breakShot = { url: Scene3D.snapshot(), w: Scene3D.renderer.domElement.width, h: Scene3D.renderer.domElement.height }; }, 350);
@@ -361,6 +374,15 @@ function updateHud(ev, realDefl) {
   if (cc.textContent !== ccTxt) { cc.textContent = ccTxt; cc.className = "chip" + (S.broken ? " bad" : S.rpm < 100 ? "" : pctS > 75 ? " warn" : " on"); }
   // Başlık: (drone) + malzeme + renk
   $("#hTitle").innerHTML = `<i style="background:${legendStart()}"></i>${isDrone() ? "🛸 " + drone().short + " · " : ""}${mat().name} · ${colorName()}`;
+  if (isFly()) {
+    const total = (Scene3D.flyGates || []).length;
+    $("#hFAlt").textContent = `${fmt(Fly.y / 1000, 1)} m`;
+    $("#hFSpd").textContent = `${fmt(Fly.speedKmh())} km/sa`;
+    $("#hFGate").textContent = `${Fly.passed}/${total}${Fly.timing || Fly.done ? " · " + fmt(Fly.time, 1) + " sn" : ""}`;
+    $("#hFMsg").textContent = S.broken ? "Pervane kırıldı. Yeni pervane tak."
+      : Fly.noLift ? "Bu pervane drone'u kaldıramıyor: itki ağırlıktan az."
+      : Fly.y <= 0 ? "Kalkmak için E tuşuna bas." : Fly.done ? "Parkur tamamlandı!" : "";
+  }
   if (S.droneEval) {
     const de = S.droneEval;
     $("#hDThrust").textContent = `${fmt(de.total)} g`;

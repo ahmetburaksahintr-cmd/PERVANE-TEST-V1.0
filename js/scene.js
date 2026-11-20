@@ -27,6 +27,8 @@ const Scene3D = {
     key.shadow.mapSize.set(1024, 1024);
     Object.assign(key.shadow.camera, { left: -200, right: 200, top: 200, bottom: -200 });
     this.scene.add(key);
+    this.scene.add(key.target);
+    this.keyLight = key;
     const rim = new THREE.PointLight(0x7c8cff, 0.8, 600);
     rim.position.set(-160, 120, -120);
     this.scene.add(rim);
@@ -61,15 +63,34 @@ const Scene3D = {
     this.potKnob = null;
     this.rig = new THREE.Group();
     this.scene.add(this.rig);
-    if (mode === "drone") this.buildDrone(drone);
+    if (mode !== "stand") this.buildDrone(drone, mode === "fly");
     else this.buildStand();
+    // Uçuş bölümü: masa yerine açık alan, gökyüzü, drone'u izleyen ışık ve kamera
+    const fly = mode === "fly";
+    for (const m of this.deskParts || []) m.visible = !fly;
+    this.scene.fog = fly ? new THREE.Fog(0x9fd3f7, 9000, 27000) : null;
+    this.camera.far = fly ? 40000 : 5000;
+    this.camera.updateProjectionMatrix();
+    const sc = this.keyLight.shadow.camera, sr = fly ? Math.max(280, this.droneSpan * 1.9) : 200;
+    Object.assign(sc, { left: -sr, right: sr, top: sr, bottom: -sr, far: fly ? 9000 : 500 });
+    sc.updateProjectionMatrix();
+    this.keyLight.position.set(160, 260, 140);
+    this.keyLight.target.position.set(0, 0, 0);
+    this.flyPose = null;
+    this.flyGates = [];
+    if (fly) this.buildFlyWorld();
     // Kamera ön ayarları: "free" (serbest, çapraz) ve "side" (yandan, motor hizasından)
-    const dd = mode === "drone" ? Math.max(110, this.droneSpan * 2.7) : 0;
-    this.views = mode === "drone"
+    const dd = mode !== "stand" ? Math.max(110, this.droneSpan * 2.7) : 0;
+    this.views = mode !== "stand"
       ? { free: { theta: 0.62, phi: 0.98, dist: dd, target: [0, this.droneTargetY, 0] },
           side: { theta: 0, phi: 1.42, dist: dd * 0.9, target: [0, this.droneTargetY, 0] } }
       : { free: { theta: 0.75, phi: 1.05, dist: 410, target: [22, 46, 12] },
           side: { theta: 0, phi: 1.3, dist: 340, target: [25, 52, 20] } };
+    if (fly) {                                          // "free" = takip kamerası, "side" = serbest (elle döndürülür)
+      const cd = Math.min(1700, Math.max(430, this.droneSpan * 5.5));
+      this.views = { free: { theta: -Math.PI / 2, phi: 1.2, dist: cd, target: [0, this.droneTargetY, 0] },
+                     side: { theta: 0.6, phi: 1.1, dist: cd * 1.25, target: [0, this.droneTargetY, 0] } };
+    }
     this.setView(this.viewName || "free", true);
   },
 
@@ -77,9 +98,9 @@ const Scene3D = {
   setView(name, instant) {
     this.viewName = this.views[name] ? name : "free";
     const v = this.views[this.viewName];
-    if (instant) {
+    if (instant || this.mode === "fly") {
       Object.assign(this.orbit, { theta: v.theta, phi: v.phi, dist: v.dist });
-      this.orbit.target.set(v.target[0], v.target[1], v.target[2]);
+      if (instant) this.orbit.target.set(v.target[0], v.target[1], v.target[2]);
       this.viewAnim = null;
       this.updateCamera();
     } else {
@@ -110,6 +131,7 @@ const Scene3D = {
     mat.position.y = -0.6;
     mat.receiveShadow = true;
     this.scene.add(mat);
+    this.deskParts = [desk, mat];                       // uçuş bölümünde gizlenir
   },
 
   /* ---------- Kamera (sürükle-döndür, tekerlek-yakınlaştır) ---------- */
@@ -137,7 +159,7 @@ const Scene3D = {
     el.addEventListener("wheel", (e) => {
       e.preventDefault();
       this.viewAnim = null;
-      this.orbit.dist = Math.min(900, Math.max(40, this.orbit.dist * (1 + Math.sign(e.deltaY) * 0.08)));
+      this.orbit.dist = Math.min(this.mode === "fly" ? 6000 : 900, Math.max(40, this.orbit.dist * (1 + Math.sign(e.deltaY) * 0.08)));
       this.updateCamera();
     }, { passive: false });
   },
@@ -409,7 +431,7 @@ const Scene3D = {
 
   /* ---------- FPV drone – bağlı (tether) kırılma testi ----------
      Her model kendi gövde stilinde çizilir: freestyle · dji · whoop */
-  buildDrone(drone) {
+  buildDrone(drone, free) {
     const d = drone || {};
     const motor = (typeof MOTORS !== "undefined" && MOTORS[d.motorKey]) || {};
     const R = ((d.prop && d.prop.diameterIn) || 5) * 25.4 / 2;
@@ -467,6 +489,8 @@ const Scene3D = {
     if (info.after) info.after();
     body.traverse((o) => { if (o.isMesh && !o.material.transparent) o.castShadow = true; });
 
+    this.tetherMm = 0;
+    if (free) return;                                   // uçuş bölümünde ip yok
     // Bağlama ipleri: drone kalkınca en fazla tetherMm kadar yükselebilir
     this.tetherMm = Math.max(18, Math.min(60, this.droneSpan * 0.34));
     this.tetherAttachY = info.attachY;
@@ -1132,7 +1156,7 @@ const Scene3D = {
   /** Kırılma: bir kanat kökten kopar ve fırlar (drone'da rastgele bir motorun pervanesi) */
   breakBlade(rpm) {
     const intact = this.units.filter((u) => u.blades && u.blades.every((b) => !b.detached));
-    const unit = this.mode === "drone" && intact.length ? intact[Math.floor(Math.random() * intact.length)] : this.units[0];
+    const unit = this.mode !== "stand" && intact.length ? intact[Math.floor(Math.random() * intact.length)] : this.units[0];
     const bl = unit && unit.blades && unit.blades.find((b) => !b.detached);
     if (!bl) return;
     bl.detached = true;
@@ -1141,7 +1165,7 @@ const Scene3D = {
     if (bl.ring) { bl.ring.material.opacity = 1; bl.ring.material.color.set(0xff1f3d); bl.ring.scale.setScalar(1.25); }
     const rootPos = new THREE.Vector3(bl.r0 + 3, 0, 0);
     bl.holder.localToWorld(rootPos);
-    this.breakLabel = makeLabel(this.mode === "drone" ? `💥 Kırılma noktası: ${unit.label || "motor"} · kanat kökü` : "💥 Kırılma noktası: kanat kökü", "#ff4d6d");
+    this.breakLabel = makeLabel(this.mode !== "stand" ? `💥 Kırılma noktası: ${unit.label || "motor"} · kanat kökü` : "💥 Kırılma noktası: kanat kökü", "#ff4d6d");
     this.breakLabel.position.copy(rootPos).add(new THREE.Vector3(0, 10 + 24 * Math.min(1, this.R / 63), 0));
     this.breakLabel.scale.multiplyScalar(Math.max(0.45, Math.min(1, this.R / 63)));
     this.scene.add(this.breakLabel);
@@ -1170,7 +1194,7 @@ const Scene3D = {
       this.scene.add(m);
     }
     // Drone: itkisini kaybeden köşeye doğru yatar, kendi ekseninde savrulur ve pede düşer
-    if (this.mode === "drone") {
+    if (this.mode !== "stand") {
       const p = unit.home;
       this.droneFail = { t: 0, axis: new THREE.Vector3(p.z, 0, -p.x).normalize(), yaw: 0, spinDir: -unit.dir };
     }
@@ -1212,7 +1236,7 @@ const Scene3D = {
     this.shake *= Math.pow(0.4, dt);
     const unbalanced = this.blades && this.blades.some((b) => b.detached);
     const vib = (unbalanced ? Math.min(1, rpm / 8000) * 1.8 : 0) + this.shake * 2.5;
-    if (this.mode === "drone") this.updateDrone(dt, rpm, extra || {}, vib);
+    if (this.mode !== "stand") this.updateDrone(dt, rpm, extra || {}, vib);
     else {
       const u = this.units[0];
       u.group.position.x = u.home.x + (Math.random() - 0.5) * vib;
@@ -1226,7 +1250,7 @@ const Scene3D = {
     const speed = Math.min(1.6, rpm / 25000);
     this.air.material.opacity = Math.min(0.75, speed * 0.6);
     const tops = this.units.map((u) => u.pivot.getWorldPosition(new THREE.Vector3()));
-    const drone = this.mode === "drone";
+    const drone = this.mode !== "stand";
     for (let i = 0; i < this.airSeeds.length; i++) {
       const s = this.airSeeds[i];
       const top = tops[i % tops.length];
@@ -1260,15 +1284,101 @@ const Scene3D = {
     if (this.flash > 0) {
       this.flash = Math.max(0, this.flash - dt * 2);
       this.renderer.setClearColor(0xff3b3b, this.flash * 0.35);
-    } else this.renderer.setClearColor(0x000000, 0);
+    } else this.renderer.setClearColor(this.mode === "fly" ? 0x9fd3f7 : 0x000000, this.mode === "fly" ? 1 : 0);
 
     this.renderer.render(this.scene, this.camera);
+  },
+
+  /* ---------- Uçuş bölümü: açık alan, halkalar, ağaçlar ---------- */
+  buildFlyWorld() {
+    const g = this.rig, span = this.droneSpan;
+    const C = (h) => new THREE.Color(h).convertSRGBToLinear();
+    const M = (color, o) => new THREE.MeshStandardMaterial(Object.assign({ color: C(color), roughness: 0.8 }, o || {}));
+    const add = (mesh, x, y, z) => { mesh.position.set(x, y, z); mesh.castShadow = true; g.add(mesh); return mesh; };
+    // Çim alan
+    const tex = grassTexture();
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(30, 30);
+    tex.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(14000, 96), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95 }));
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    g.add(ground);
+    // Alan sınırı: kırmızı çizgi ve direkler
+    const edge = new THREE.Mesh(new THREE.RingGeometry(8380, 8460, 128), new THREE.MeshBasicMaterial({ color: 0xef4444, side: THREE.DoubleSide }));
+    edge.rotation.x = -Math.PI / 2;
+    edge.position.y = 1.5;
+    g.add(edge);
+    for (let i = 0; i < 24; i++) {
+      const a = (i / 24) * Math.PI * 2;
+      add(new THREE.Mesh(new THREE.CylinderGeometry(22, 22, 520, 12), M(i % 2 ? 0xffffff : 0xef4444)), Math.cos(a) * 8420, 260, Math.sin(a) * 8420);
+    }
+    // Halkalar: daire üzerinde sıralı bir parkur; içinden geçilince yeşile döner
+    const gr = Math.max(430, span * 2.6), R = 3300, N = 6;
+    for (let i = 0; i < N; i++) {
+      const a = (i / N) * Math.PI * 2 + 0.55;
+      const cx = Math.cos(a) * R, cz = Math.sin(a) * R, cy = gr + 260 + (i % 3) * 420;
+      const ringMat = new THREE.MeshStandardMaterial({ color: C(0xf97316), emissive: C(0x7c2d12), roughness: 0.45 });
+      const ring = add(new THREE.Mesh(new THREE.TorusGeometry(gr, gr * 0.065, 14, 56), ringMat), cx, cy, cz);
+      ring.rotation.y = -a;                                   // halka düzlemi parkur yönüne dik
+      for (const sgn of [-1, 1]) {
+        const px = cx + Math.cos(a) * gr * sgn, pz = cz + Math.sin(a) * gr * sgn;
+        add(new THREE.Mesh(new THREE.CylinderGeometry(gr * 0.035, gr * 0.045, cy, 12), M(0x475569, { metalness: 0.5, roughness: 0.4 })), px, cy / 2, pz);
+      }
+      const label = makeLabel(String(i + 1), "#f97316");
+      label.scale.multiplyScalar(gr / 55);
+      label.position.set(cx, cy + gr * 1.28, cz);
+      g.add(label);
+      this.flyGates.push({ mesh: ring, c: new THREE.Vector3(cx, cy, cz), n: new THREE.Vector3(-Math.sin(a), 0, Math.cos(a)), r: gr * 0.94, passed: false, base: ringMat.color.clone(), baseE: ringMat.emissive.clone() });
+    }
+    // Ağaçlar (her açılışta aynı yerde olsun diye sabit sayı üreteci)
+    let seed = 7;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const trunk = M(0x7c4a21), leaf1 = M(0x15803d), leaf2 = M(0x16a34a);
+    for (let i = 0; i < 34; i++) {
+      const a = rnd() * Math.PI * 2, r = 5200 + rnd() * 2900, k = 0.7 + rnd() * 0.9;
+      const x = Math.cos(a) * r, z = Math.sin(a) * r;
+      add(new THREE.Mesh(new THREE.CylinderGeometry(45 * k, 60 * k, 520 * k, 10), trunk), x, 260 * k, z);
+      add(new THREE.Mesh(new THREE.ConeGeometry(420 * k, 950 * k, 12), i % 2 ? leaf1 : leaf2), x, 520 * k + 420 * k, z);
+      add(new THREE.Mesh(new THREE.ConeGeometry(300 * k, 760 * k, 12), i % 2 ? leaf2 : leaf1), x, 520 * k + 950 * k, z);
+    }
+    // Parkur konileri ve birkaç konteyner (ölçek için)
+    for (let i = 0; i < 18; i++) {
+      const a = (i / 18) * Math.PI * 2;
+      add(new THREE.Mesh(new THREE.ConeGeometry(70, 190, 14), M(0xf97316)), Math.cos(a) * 2100, 95, Math.sin(a) * 2100);
+    }
+    [[5200, -900, 0x2563eb], [-4700, 2600, 0xdc2626], [-1500, -5200, 0xf59e0b]].forEach(([x, z, c], i) => {
+      const box = add(new THREE.Mesh(new THREE.BoxGeometry(1900, 800, 760), M(c, { metalness: 0.3, roughness: 0.55 })), x, 400, z);
+      box.rotation.y = i * 0.9;
+    });
+  },
+
+  /** Uçuş bölümü: gövde konumu/eğimi Fly.push() ile gelir; ışık ve kamera drone'u izler */
+  updateFly(dt, vib) {
+    const f = this.flyPose || { x: 0, y: 0, z: 0, yaw: 0, pitch: 0, roll: 0 };
+    const body = this.droneGroup, y = this.droneBaseY + f.y;
+    body.position.set(f.x + (Math.random() - 0.5) * vib, y, f.z + (Math.random() - 0.5) * vib);
+    body.rotation.set(f.roll, f.yaw, f.pitch, "YXZ");
+    this._t = (this._t || 0) + dt;
+    const blink = f.crashed ? (Math.sin(this._t * 18) > 0 ? 1 : 0.15) : 1;
+    for (const led of this.droneLeds || []) led.material.opacity = blink;
+    this.keyLight.position.set(f.x + 800, y + 1300, f.z + 700);
+    this.keyLight.target.position.set(f.x, y, f.z);
+    // Kamera: hedef drone; "takip" görünümünde kamera drone'un arkasına döner
+    const o = this.orbit;
+    o.target.lerp(new THREE.Vector3(f.x, y + 20, f.z), Math.min(1, dt * 9));
+    if (this.viewName !== "side") {
+      const want = f.yaw - Math.PI / 2;
+      o.theta += Math.atan2(Math.sin(want - o.theta), Math.cos(want - o.theta)) * Math.min(1, dt * 3.5);
+    }
+    this.updateCamera();
   },
 
   /** Drone gövdesi: itki/ağırlık > 1 olunca kalkar, ip gerilir; pervane kırılınca yatıp düşer */
   updateDrone(dt, rpm, extra, vib) {
     const body = this.droneGroup;
     if (!body) return;
+    if (this.mode === "fly") return this.updateFly(dt, vib);
     const tw = extra.tw || 0;
     const fail = this.droneFail;
     const target = fail ? 0 : smoothstep(0.9, 1.3, tw) * this.tetherMm;
@@ -1386,6 +1496,25 @@ function flatLabel(lines, wMm, dMm, bg, fg) {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(wMm, dMm), new THREE.MeshBasicMaterial({ map: tex }));
   m.rotation.x = -Math.PI / 2;
   return m;
+}
+
+/** Çim dokusu (uçuş alanı): yeşil zemin, benekler ve soluk kareler */
+function grassTexture() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 256;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#3f9b4b"; ctx.fillRect(0, 0, 256, 256);
+  let s = 11;
+  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 2600; i++) {
+    ctx.fillStyle = ["#368a42", "#4bab57", "#2f7d3a", "#58b863"][i % 4];
+    ctx.fillRect(rnd() * 256, rnd() * 256, 1 + rnd() * 3, 1 + rnd() * 3);
+  }
+  ctx.strokeStyle = "rgba(255,255,255,.16)"; ctx.lineWidth = 2;
+  ctx.strokeRect(0, 0, 256, 256);
+  const tex = new THREE.CanvasTexture(c);
+  tex.encoding = THREE.sRGBEncoding;
+  return tex;
 }
 
 /** Kamera merceği (+x yönüne bakan) */

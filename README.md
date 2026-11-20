@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.15.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.16.0
 
-> **Güncel sürüm: v1.15.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.16.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.15.0** | 2026-11-21 | Test standı: devir ekranı, dönen potansiyometre ve ayrıntılı elektronik |
+| **v1.16.0** | 2026-11-21 | Uçuş bölümü: drone'u klavyeyle uçur |
+| v1.15.0 | 2026-11-21 | Test standı: devir ekranı, dönen potansiyometre ve ayrıntılı elektronik |
 | v1.14.0 | 2026-11-20 | Geniş ekran yerleşimi: sayfa tüm genişliği kullanıyor |
 | v1.13.0 | 2026-11-20 | Test standı: ESC, gerçekçi kablolar, kontrol kartı ve bakış açısı düğmesi |
 | v1.12.0 | 2026-11-20 | Çalışma alanı: yeşil kesim matı ve daha canlı sahne |
@@ -41,9 +42,10 @@ Proje iki parçadan oluşur:
 
 ## Neler yapabilirsin?
 - **6 malzeme:** PLA, PETG, ABS, ASA, Karbon fiber naylon (PA-CF) ve TPU 95A.
-- **İki test düzeneği:** Sol menünün en üstünden seçilir.
+- **Üç test düzeneği:** Sol menünün en üstünden seçilir.
   - 🔧 **Test standı:** Tek motor, yük hücresiyle itki ölçümü (gerçek Arduino düzeneğinin dijital ikizi). Motorun üç faz kablosu ESC'ye, ESC de bataryaya ve kontrol kartına bağlı görünür (fırçasız motorda üç, fırçalı motorda iki kablo olur). Sahnenin sağ üstündeki **🎥 Bakış** düğmesi serbest bakış ile yandan (motor hizasından) bakış arasında geçiş yapar.
   - 🛸 **FPV drone:** Seçilen drone pede iplerle bağlıdır (tether). Gaz açılıp itki ağırlığı geçince kalkar ve ipler gerilir. Dört pervanenin ikisi saat yönünde, ikisi ters döner. Gösterge, 4 pervanenin toplam itkisini, itki/ağırlık oranını ve toplam akımı gösterir. Bir pervane kırılınca hangi motorun pervanesinin koptuğu yazılır; drone o köşeye yatar, savrulur ve pede düşer. Raporlara drone bilgileri de eklenir.
+  - 🎮 **Uçuş:** Seçilen drone'u açık alanda klavyeyle uçurursun. `W` ileri, `S` geri, `A` sola, `D` sağa, `E` yüksel, `Q` alçal, `Z` sola dön, `X` sağa dön. Tuşu bırakınca drone havada asılı kalır. Altı turuncu halkanın içinden geçince süren yazılır. Gereken itki, drone'un ağırlığından ve yaptığın manevradan hesaplanır: seçtiğin pervane bu itkiyi veremiyorsa drone kalkamaz, dayanamıyorsa havada kırılır ve drone düşer. **🎥 Bakış** düğmesi takip kamerası ile serbest bakış arasında geçiş yapar.
 - **Drone modelleri (gerçek parçalarla):** Motorların çanında gerçekteki gibi model ve KV yazar; motor boyutu stator çapına göre ölçeklenir.
 
   | Model | Tip | Motor | Pervane | Batarya | Ağırlık |

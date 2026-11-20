@@ -544,3 +544,16 @@ code { background: rgba(13, 17, 33, .8); border-color: var(--line); }
   html { font-size: 18.5px; }
   .acc-grid { gap: 22px; }
 }
+
+/* Uçuş bölümü: üçlü düzenek seçimi, tuş açıklamaları, uçuş göstergesi */
+#rigSeg { grid-template-columns: repeat(3, 1fr); }
+#rigSeg button { font-size: .78rem; padding: 9px 4px; white-space: nowrap; }
+.fly-help { display: grid; gap: 8px; margin-top: 4px; }
+.fly-help .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; font-size: .74rem; color: var(--muted); }
+.fly-help .keys span { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+kbd { display: inline-grid; place-items: center; min-width: 30px; height: 30px; padding: 0 6px; border-radius: 8px; font: 700 .86rem Consolas, monospace; color: var(--text);
+  background: linear-gradient(180deg, #2a3157, #1a2040); border: 1px solid #47519a; box-shadow: 0 2px 0 #10142b; }
+.hud-fly { background: rgba(56, 189, 248, .1); border-color: rgba(56, 189, 248, .4); }
+.hud-fly p { grid-column: 1 / -1; margin: 2px 0 0; font-size: .74rem; color: #7dd3fc; min-height: 1em; }
+.hud-fly p:empty { display: none; }
+[hidden] { display: none !important; }

@@ -1,5 +1,15 @@
 # Sürüm geçmişi
 
+## 1.16.0 — 2026-11-21
+Uçuş bölümü: drone'u klavyeyle uçur
+- Test düzeneğine üçüncü sekme eklendi: Uçuş. Seçili drone açık bir alanda klavyeyle uçuruluyor
+- Tuşlar: W ileri, S geri, A sola, D sağa, E yüksel, Q alçal, Z sola dön, X sağa dön; tuşu bırakınca drone havada asılı kalır
+- Açık alan: çim zemin, ağaçlar, sınır direkleri ve içinden geçilecek 6 halka; hepsi geçilince süre yazılır
+- Takip kamerası drone'un arkasından izler; Bakış düğmesiyle serbest bakışa geçilir
+- Gereken itki, drone ağırlığı ve manevradan hesaplanır: pervane bu itkiyi veremiyorsa drone kalkamaz, dayanamıyorsa havada kırılır ve drone düşer
+- Göstergede yükseklik, hız, geçilen halka sayısı ve süre
+- "Yeni pervane tak" drone'u pede geri koyar
+
 ## 1.15.0 — 2026-11-21
 Test standı: devir ekranı, dönen potansiyometre ve ayrıntılı elektronik
 - Kontrol kartına küçük bir ekran eklendi: devir ve gaz yüzdesi canlı görünüyor

@@ -37,6 +37,12 @@
         <div class="seg" id="rigSeg">
           <button data-rig="stand" class="active">🔧 Test standı</button>
           <button data-rig="drone">🛸 FPV drone</button>
+          <button data-rig="fly">🎮 Uçuş</button>
+        </div>
+        <div id="flyHelp" class="fly-help" hidden>
+          <div class="keys"><span><kbd>W</kbd> ileri</span><span><kbd>S</kbd> geri</span><span><kbd>A</kbd> sola</span><span><kbd>D</kbd> sağa</span></div>
+          <div class="keys"><span><kbd>E</kbd> yüksel</span><span><kbd>Q</kbd> alçal</span><span><kbd>Z</kbd> sola dön</span><span><kbd>X</kbd> sağa dön</span></div>
+          <p class="note">Tuşu bırakınca drone havada asılı kalır. Turuncu halkaların içinden geç; hepsi yeşil olunca süren yazılır. Gereken itki seçtiğin pervane ve malzemeyle hesaplanır: zayıf pervane drone'u kaldıramaz ya da havada kırılır.</p>
         </div>
         <div id="dronePick" hidden>
           <select id="droneSel"></select>
@@ -98,6 +104,12 @@
           <div><small>Güç / akım</small><b id="hPower">–</b></div>
           <div><small>Verim</small><b id="hEff">–</b></div>
           <div><small>Pervane kütlesi</small><b id="hMass">–</b></div>
+        </div>
+        <div class="hud-drone hud-fly" id="hFly" hidden>
+          <div><small>Yükseklik</small><b id="hFAlt">–</b></div>
+          <div><small>Hız</small><b id="hFSpd">–</b></div>
+          <div><small>Halkalar</small><b id="hFGate">–</b></div>
+          <p id="hFMsg"></p>
         </div>
         <div class="hud-drone" id="hDrone" hidden>
           <div><small>Toplam itki (4 pervane)</small><b id="hDThrust">–</b></div>
@@ -286,6 +298,7 @@
   <script src="js/charts.js"></script>
   <script src="js/scene.js"></script>
   <script src="js/report.js"></script>
+  <script src="js/fly.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
