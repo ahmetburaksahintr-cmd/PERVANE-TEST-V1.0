@@ -1010,6 +1010,9 @@ const Scene3D = {
    *  · "pavo35": BETAFPV Pavo35 – yarı saydam füme halkalar, kum saati biçimli karbon plaka, gri alüminyum
    *    ara parçalar, burunda O3 kamera ve GoPro bağlantısı, önde XT60, arkada kısa silindir anten ve
    *    beyaz alıcı anteni, halkaların çevresinde buz mavisi ışık şeridi
+   *  · "pavo20": BETAFPV Pavo20 Pro – tamamı siyah; yan raylı karbon plaka, üstte O3 hava ünitesini tutan kafes
+   *    ("dji" logosu, yanında "PAVO"), arkada "BETAFPV" yazılı anten yuvası ve uzun saplı anten, alta kayışla
+   *    bağlanan batarya, kırmızı-siyah XT30 kablosu
    */
   styleCine(body, { d, R, s, pos, motor }) {
     const C = (h) => new THREE.Color(h).convertSRGBToLinear();
@@ -1060,7 +1063,7 @@ const Scene3D = {
       }
       // Motor yatağı (plakanın ucu)
       cyl(15.5 * s, plateT, carbon(30, 30), x, plateY + plateT / 2, z);
-      cyl(4 * s, 0.8, M(0xf59e0b, { metalness: 0.5 }), x, top + 0.3, z);                    // motor mili ucu
+      cyl(4 * s, 0.8, M(cfg.padDot != null ? cfg.padDot : 0xc7ccd3, { metalness: 0.5 }), x, top + 0.3, z);   // motor mili ucu
       for (let i = 0; i < 4; i++) {
         const b = Math.PI / 4 + (i * Math.PI) / 2;
         cyl(1.5 * s, 1, silver, x + Math.cos(b) * 9 * s, top + 0.4, z + Math.sin(b) * 9 * s);
@@ -1123,6 +1126,73 @@ const Scene3D = {
       body.add(ant);
       box(14, 8, 26, black, -fx - 8, top + 3, 0);
       cyl(1.1, 62, M(0xf1f5f9), -fx - 12, top + 4, 0, "z");
+    }
+    if (kind === "pavo20") {
+      const y = plateY + plateT / 2;
+      // Karbon plaka: iki yan ray (ön ve arka motoru birleştirir), ortada kare gövde ve enine köprü
+      for (const zs of [-1, 1]) strut([fx, zs * fz], [-fx, zs * fz], 8, y, plateT);
+      box(30, plateT, 30, carbon(30, 30), 0, y, 0);
+      box(16, plateT, fz * 2, carbon(16, fz * 2), 0, y, 0);
+      // Halkaları birleştiren ince köprüler (ön, arka ve iki yan)
+      for (const [x, z] of [[fx, 0], [-fx, 0], [0, fz], [0, -fz]]) box(x ? 8 : 5, bandH * 0.8, x ? 5 : 8, ringMat, x, bandH * 0.45, z);
+      // Plakanın altında uçuş kartı (AIO)
+      box(27, 1.2, 27, M(0x14181f), 0, plateY - 3.4, 0);
+      for (const [x, z] of [[-8, -7], [7, -8], [8, 6], [-6, 8]]) box(4, 1.4, 3, M(0xd4a72c, { metalness: 0.6 }), x, plateY - 4.4, z);
+      // Üst kafes: DJI O3 hava ünitesi (yanında eğik havalandırma yarıkları, üstünde "dji" logosu)
+      const cy = top + 8.5, cageMat = M(0x17181c, { roughness: 0.55 });
+      for (const [x, z] of [[13, 13], [13, -13], [-15, 13], [-15, -13]]) cyl(1.3, 5, alu, x, top + 2.5, z);
+      box(36, 11, 30, cageMat, -3, cy, 0);
+      for (const zs of [-1, 1]) for (let i = 0; i < 7; i++) {
+        const slot = box(4.2, 0.8, 0.5, M(0x3a3d44), -14 + i * 3.2, cy - 0.5, zs * 15.2);
+        slot.rotation.z = zs * -0.6;
+      }
+      box(15, 0.5, 14, M(0x222429), -2, cy + 5.7, 0);
+      const djiLogo = label3d(["dji"], 9, 5, null, "#c9ced6");
+      djiLogo.rotation.order = "YXZ";
+      djiLogo.rotation.set(-Math.PI / 2, -Math.PI / 2, 0);
+      add(djiLogo, -2, cy + 6.1, 0);
+      for (const zs of [-1, 1]) {
+        const pavo = label3d(["PAVO"], 9, 3.2, null, "#8b9099");
+        if (zs < 0) pavo.rotation.y = Math.PI;
+        add(pavo, 12, cy + 3, zs * 15.15);
+      }
+      // Burun: kafesin içinde, lastik takozlu O3 kamera
+      for (const zs of [-1, 1]) {
+        box(16, 13, 2, cageMat, 22, cy - 2.5, zs * 9.6);
+        cyl(1.6, 2.6, M(0x2a2c31), 20, cy - 3.5, zs * 9.8, "z");
+      }
+      box(12, 2, 21, cageMat, 21, cy + 4.5, 0);
+      const cam = new THREE.Group();
+      cam.position.set(27, cy - 3.5, 0);
+      cam.rotation.z = 0.3;
+      cam.add(new THREE.Mesh(new THREE.BoxGeometry(12, 14, 16), black));
+      addLens(cam, 5.4, 7, black);
+      body.add(cam);
+      // Arka: "BETAFPV" yazılı anten yuvası, yukarı-geriye eğik uzun sap ve kalın silindir anten
+      const holder = box(9, 8, 15, cageMat, -24.5, cy - 0.5, 0);
+      holder.rotation.z = 0.35;
+      const brand = label3d(["BETAFPV"], 12, 2.8, null, "#9aa0a8");
+      brand.rotation.order = "YXZ";
+      brand.rotation.set(-Math.PI / 2 + 0.35, -Math.PI / 2, 0);
+      add(brand, -25.8, cy + 3.8, 0);
+      body.add(capsule([-26, cy + 2, 0], [-44, cy + 27, 0], 1.7, black));
+      const ant = new THREE.Mesh(new THREE.CylinderGeometry(8.2, 8.2, 15, 28), black);
+      ant.position.set(-48.5, cy + 33.5, 0);
+      ant.rotation.z = 0.62;
+      body.add(ant);
+      // Alta kayışla bağlanan batarya (3S 450 mAh) ve arkadan çıkan kırmızı-siyah XT30 kablosu
+      box(50, 11, 17, M(0x1f2328), 0, 6.6, 0);
+      const bl = label3d(["LiPo 3S 450 mAh"], 30, 5, "#f97316", "#111827");
+      add(bl, -10, 6.6, 8.6);
+      box(11, plateY - 0.8, 19.5, M(0x8b9099, { roughness: 0.85 }), 12, (plateY + 0.8) / 2, 0);
+      for (const zs of [-1, 1]) {
+        const st = label3d(["BETAFPV"], 9.5, 2.6, null, "#111827");
+        st.rotation.set(0, zs < 0 ? Math.PI : 0, Math.PI / 2);
+        add(st, 12, 7, zs * 9.9);
+      }
+      body.add(capsule([-25, 7, 1.4], [-47, 7.5, 1.4], 0.9, M(0xdc2626)));
+      body.add(capsule([-25, 7, -1.4], [-47, 7.5, -1.4], 0.9, black));
+      box(9, 5.5, 7.5, M(0x1a1b1f), -52, 7.6, 0);
     }
     return {
       baseY: 2.2, motorY: plateY, topY: top + (cfg.topMm || 34), attachY: bandH * 0.5, flip: true,

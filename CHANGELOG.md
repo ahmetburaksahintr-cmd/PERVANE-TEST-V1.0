@@ -1,5 +1,15 @@
 # Sürüm geçmişi
 
+## 1.21.0 — 2026-11-21
+BETAFPV Pavo20 Pro gerçek görsellerine göre baştan çizildi (itici düzen)
+- Düzen düzeltildi: motorlar karbon plakanın altına asılı, pervaneler en altta mat siyah halkaların içinde
+- Yan raylı 2,4 mm karbon plaka: ön ve arka motor yataklarını birleştiren iki ray ve ortada kare gövde
+- Üstte DJI O3 hava ünitesini tutan kafes: yanında eğik havalandırma yarıkları ve "PAVO" yazısı, üstünde "dji" logosu
+- Burunda kafesin içinde O3 kamera; arkada "BETAFPV" yazılı anten yuvası, uzun eğik sap ve kalın silindir anten
+- Motor çanı siyah, beyaz "LAVA 1104 7200KV" yazılı ve kırmızı halkalı (önceden mor ve yazısı farklıydı)
+- Batarya alta kayışla bağlı; arkadan kırmızı-siyah XT30 kablosu çıkıyor
+- Halkaların alt dış kenarında buz mavisi ışık şeridi
+
 ## 1.20.0 — 2026-11-21
 BETAFPV Pavo35 gerçek görsellerine göre baştan çizildi (itici düzen)
 - Düzen düzeltildi: motorlar karbon üst plakanın altına asılı, pervaneler en altta halkaların içinde (önceden motorlar üstteydi)
