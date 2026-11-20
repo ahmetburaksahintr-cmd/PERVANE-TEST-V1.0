@@ -248,12 +248,16 @@ const Scene3D = {
     const s = Math.min(1.5, Math.max(0.45, (motor.stator || 22) / 22));
     // Motor konumları (ön = +x): M1 sağ ön, M2 sağ arka, M3 sol arka, M4 sol ön
     let pos;
-    if (d.layout) pos = [[d.layout.x, d.layout.z], [-d.layout.x, d.layout.z], [-d.layout.x, -d.layout.z], [d.layout.x, -d.layout.z]];
+    // layout: ön motorlar (x, z); arka motorlar farklıysa (xr, zr) – ör. öne açılan "deadcat" şaseler
+    if (d.layout) {
+      const L = d.layout, xr = L.xr != null ? L.xr : L.x, zr = L.zr != null ? L.zr : L.z;
+      pos = [[L.x, L.z], [-xr, zr], [-xr, -zr], [L.x, -L.z]];
+    }
     else {
       const r = (d.wheelbaseMm || 225) / 2;
       pos = [0, 1, 2, 3].map((i) => { const a = Math.PI / 4 + (i * Math.PI) / 2; return [Math.cos(a) * r, Math.sin(a) * r]; });
     }
-    const rM = Math.hypot(pos[0][0], pos[0][1]);
+    const rM = Math.max(...pos.map(([x, z]) => Math.hypot(x, z)));
     this.droneSpan = rM + R;
     this.droneRm = rM;
 
@@ -321,7 +325,8 @@ const Scene3D = {
     return led;
   },
 
-  /** Açık karbon X şase (5" freestyle) */
+  /** Açık karbon şase (freestyle / uzun menzil). d.layout verilirse kollar o motor konumlarına gider;
+   *  d.bodyScale orta gövdeyi (plakalar, batarya, kamera) büyütür, d.armMm kol kalınlığıdır. */
   styleFreestyle(body, { d, pos, rM }) {
     const carbon = new THREE.MeshStandardMaterial({ color: 0x1b1d24, metalness: 0.35, roughness: 0.5 });
     const carbonTop = new THREE.MeshStandardMaterial({ color: 0x262a35, metalness: 0.4, roughness: 0.45 });
@@ -329,42 +334,49 @@ const Scene3D = {
     const anod = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, metalness: 0.85, roughness: 0.3 });
     const black = new THREE.MeshStandardMaterial({ color: 0x0b0d12, metalness: 0.3, roughness: 0.6 });
 
-    // X kollar (5 mm karbon)
-    for (const a of [-Math.PI / 4, Math.PI / 4]) {
-      const arm = new THREE.Mesh(new THREE.BoxGeometry(rM * 2 + 30, 5, 14), carbon);
-      arm.rotation.y = a;
+    // Kollar (karbon): gövde merkezinden her motora, motorun 15 mm ötesine kadar
+    const bs = d.bodyScale || 1, armT = d.armMm || 5;
+    for (const [x, z] of pos) {
+      const len = Math.hypot(x, z) + 15, a = Math.atan2(z, x);
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(len, armT, 14), carbon);
+      arm.position.set(Math.cos(a) * len / 2, 0, Math.sin(a) * len / 2);
+      arm.rotation.y = -a;
       body.add(arm);
     }
+    // Orta gövde ayrı bir grupta: büyük şaselerde ölçeklenir
+    const core = new THREE.Group();
+    core.scale.setScalar(bs);
+    body.add(core);
     // Alt ve üst plaka, aralayıcılar (standoff)
-    body.add(new THREE.Mesh(new THREE.BoxGeometry(110, 4, 46), carbon));
+    core.add(new THREE.Mesh(new THREE.BoxGeometry(110, 4, 46), carbon));
     const top = new THREE.Mesh(new THREE.BoxGeometry(90, 2.5, 36), carbonTop);
     top.position.y = 30;
-    body.add(top);
+    core.add(top);
     for (const [x, z] of [[40, 15], [40, -15], [-40, 15], [-40, -15]]) {
       const so = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.6, 28, 12), anod);
       so.position.set(x, 15, z);
-      body.add(so);
+      core.add(so);
     }
     // Uçuş kontrol kartı + ESC yığını
     const esc = new THREE.Mesh(new THREE.BoxGeometry(32, 5, 32), new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.6 }));
     esc.position.y = 7;
-    body.add(esc);
+    core.add(esc);
     const fc = new THREE.Mesh(new THREE.BoxGeometry(30, 4, 30), new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.6 }));
     fc.position.y = 16;
-    body.add(fc);
+    core.add(fc);
     // 6S LiPo batarya + kayış
     const bat = new THREE.Mesh(new THREE.BoxGeometry(75, 28, 36), new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.55 }));
     bat.position.y = 45.5;
-    body.add(bat);
+    core.add(bat);
     const batLabel = new THREE.Mesh(new THREE.BoxGeometry(50, 28.4, 36.4), new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.5 }));
     batLabel.position.set(-6, 45.5, 0);
-    body.add(batLabel);
+    core.add(batLabel);
     const strap = new THREE.Mesh(new THREE.BoxGeometry(10, 29.5, 37.5), new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.7 }));
     strap.position.set(18, 45, 0);
-    body.add(strap);
+    core.add(strap);
     const xt60 = new THREE.Mesh(new THREE.BoxGeometry(10, 8, 16), new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.5 }));
     xt60.position.set(-46, 36, 0);
-    body.add(xt60);
+    core.add(xt60);
 
     // FPV kamera (önde, +x), TPU kafes içinde, 25° yukarı bakar
     const cam = new THREE.Group();
@@ -377,12 +389,12 @@ const Scene3D = {
     }
     cam.add(new THREE.Mesh(new THREE.BoxGeometry(19, 19, 19), black));
     addLens(cam, 7, 13, black);
-    body.add(cam);
+    core.add(cam);
 
     // Video vericisi anteni (arkada, -x)
     const antMount = new THREE.Mesh(new THREE.BoxGeometry(14, 10, 20), tpu);
     antMount.position.set(-50, 31, 0);
-    body.add(antMount);
+    core.add(antMount);
     const ant = new THREE.Group();
     ant.position.set(-52, 35, 0);
     ant.rotation.z = 0.55;
@@ -393,17 +405,42 @@ const Scene3D = {
     lolly.position.y = 44;
     lolly.rotation.x = Math.PI / 2;
     ant.add(lolly);
-    body.add(ant);
+    core.add(ant);
+
+    // Yan paneller (ör. iFlight Nazgul Evoque): plakaların arasını kapatan yarı saydam kapaklar, kenarında LED şerit
+    if (d.sidePanels != null) {
+      const panelMat = new THREE.MeshStandardMaterial({ color: d.sidePanels, metalness: 0.2, roughness: 0.35, transparent: true, opacity: 0.82 });
+      for (const zs of [-1, 1]) {
+        const panel = new THREE.Mesh(new THREE.BoxGeometry(74, 25, 1.6), panelMat);
+        panel.position.set(0, 15.5, zs * 19.4);
+        core.add(panel);
+        this.addLed(core, 70, 1.6, 1, 0, 27, zs * 20.4, d.accent != null ? d.accent : 0x38bdf8);
+        this.addLed(core, 70, 1.6, 1, 0, 4, zs * 20.4, d.accent != null ? d.accent : 0x38bdf8);
+      }
+    }
+    // GPS modülü (uzun menzil şaseleri): arkada, direğin üstünde
+    if (d.gps) {
+      const mast = new THREE.Mesh(new THREE.BoxGeometry(6, 26, 14), tpu);
+      mast.position.set(-40, 44, 0);
+      mast.rotation.z = 0.35;
+      core.add(mast);
+      const puck = new THREE.Mesh(new THREE.BoxGeometry(20, 6, 20), black);
+      puck.position.set(-45, 59, 0);
+      core.add(puck);
+      const patch = new THREE.Mesh(new THREE.BoxGeometry(14, 1, 14), new THREE.MeshStandardMaterial({ color: 0xd6d3d1, roughness: 0.5 }));
+      patch.position.set(-45, 62.2, 0);
+      core.add(patch);
+    }
 
     // Ayaklar ve LED'ler
     for (const [x, z] of pos) {
       const foot = new THREE.Mesh(new THREE.CylinderGeometry(6, 7, 8, 16), tpu);
       foot.position.set(x, -6.5, z);
       body.add(foot);
-      const a = Math.atan2(z, x), k = (rM - 30) / rM;
+      const a = Math.atan2(z, x), r = Math.hypot(x, z), k = (r - 30) / r;
       this.addLed(body, 10, 2, 5, x * k, -3.4, z * k, x > 0 ? 0xe0f2fe : 0xff2244, -a);
     }
-    return { baseY: 12.5, motorY: 2.5, topY: 60, attachY: -2.5 };
+    return { baseY: 12.5, motorY: armT / 2, topY: (d.gps ? 66 : 60) * bs, attachY: -armT / 2 };
   },
 
   /**
@@ -424,13 +461,6 @@ const Scene3D = {
     const black = new THREE.MeshStandardMaterial({ color: C(0x0e0f12), metalness: 0.3, roughness: 0.45 });
     const grey = new THREE.MeshStandardMaterial({ color: C(0xa4a9b0), metalness: 0.55, roughness: 0.35 });
     const red = new THREE.MeshBasicMaterial({ color: 0xff2d3d });
-    const prism = (pts, depth, bevel, mat) => {
-      const shape = new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y)));
-      const g = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, steps: 1 });
-      g.translate(0, 0, -depth / 2);
-      g.computeVertexNormals();
-      return new THREE.Mesh(g, mat);
-    };
 
     // Gövde (yan profil, ön = +x): arkada yüksek, öne doğru inen sırt, dik burun, altta çene
     body.add(prism([[-48, -22], [-48, 28], [-12, 36], [36, 33], [58, 22], [66, 4], [62, -12], [44, -24], [-20, -26]], 48, 5, shell));
@@ -555,6 +585,7 @@ const Scene3D = {
   /** BETAFPV whoop / cinewhoop: kanal korumalı (ducted) pervaneler, AIO kart, HD veya analog kamera */
   styleWhoop(body, { d, R, s, pos, rM }) {
     const frameMat = new THREE.MeshStandardMaterial({ color: d.frame != null ? d.frame : 0x1f2937, metalness: 0.1, roughness: 0.6, side: THREE.DoubleSide });
+    if (d.body === "avata") frameMat.color.convertSRGBToLinear();   // kanallar gövdeyle aynı tonda görünsün
     const accent = new THREE.MeshStandardMaterial({ color: d.accent != null ? d.accent : 0xdc2626, metalness: 0.15, roughness: 0.5 });
     const black = new THREE.MeshStandardMaterial({ color: 0x0b0d12, metalness: 0.3, roughness: 0.5 });
     const k = R / 44;                                   // boyut ölçeği (Pavo35 = 1)
@@ -590,8 +621,10 @@ const Scene3D = {
       }
       // Kanal dışında LED
       const a = Math.atan2(z, x);
-      this.addLed(body, 6 * k + 2, 1.5 * k + 0.8, 1.2, x + Math.cos(a) * (ductR + wall), ductBot + 2 * k + 1, z + Math.sin(a) * (ductR + wall), x > 0 ? 0x60a5fa : 0xff2244, -a + Math.PI / 2);
+      if (d.body !== "avata") this.addLed(body, 6 * k + 2, 1.5 * k + 0.8, 1.2, x + Math.cos(a) * (ductR + wall), ductBot + 2 * k + 1, z + Math.sin(a) * (ductR + wall), x > 0 ? 0x60a5fa : 0xff2244, -a + Math.PI / 2);
     }
+    if (d.body === "avata") return this.bodyAvata(body, { d, pos, ductR, ductTop, ductH, motorY });
+
     // Kanalları birleştiren orta şase
     const cw = rM * 1.15, cd = rM * 0.75;
     const plate = new THREE.Mesh(new THREE.BoxGeometry(cw, 2.4 * k + 0.8, cd), frameMat);
@@ -640,6 +673,78 @@ const Scene3D = {
     body.add(cam);
 
     return { baseY, motorY, topY, attachY: 0 };
+  },
+
+  /**
+   * DJI Avata 2 gövdesi (styleWhoop kanalları çizdikten sonra çağırır):
+   *  · Pervane korumalarıyla tek parça gri gövde, kanallar birbirine köprülerle bağlı
+   *  · Akıllı batarya arkadan takılır (arka yüzünde düğme ve 4 seviye ışığı)
+   *  · Önde, koruyucu çerçevenin içinde tek eksenli gimbal kamera
+   *  · Altta ve arkada görüş sensörleri
+   */
+  bodyAvata(body, { d, pos, ductR, ductTop, ductH, motorY }) {
+    const C = (h) => new THREE.Color(h).convertSRGBToLinear();
+    const shell = new THREE.MeshStandardMaterial({ color: C(d.frame != null ? d.frame : 0x5a5f66), metalness: 0.15, roughness: 0.62 });
+    const dark = new THREE.MeshStandardMaterial({ color: C(0x26292e), metalness: 0.25, roughness: 0.5 });
+    const black = new THREE.MeshStandardMaterial({ color: C(0x0e0f12), metalness: 0.3, roughness: 0.45 });
+    const fx = Math.abs(pos[0][0]), fz = Math.abs(pos[0][1]);
+    const hullW = Math.max(24, 2 * (fz - ductR) + 6);            // gövde, kanalların arasını doldurur
+    const xr = fx + ductR * 0.45, xf = fx + ductR * 0.3;          // arka ve ön uç
+    const topY = Math.max(ductTop + 18, (d.heightMm || 64) - 4);  // resmî toplam yükseklik
+
+    // Orta gövde (yan profil, ön = +x): arkada yüksek, öne doğru alçalır
+    body.add(prism([[-xr, 3], [-xr, topY - 14], [-6, topY - 8], [xf * 0.55, topY - 16], [xf, ductTop - 2], [xf, 3]], hullW, 3, shell));
+    // Arkadan takılan akıllı batarya: gövdenin üst arkasında, biraz dışarı taşar
+    const batt = prism([[-xr - 12, ductTop * 0.55], [-xr - 12, topY - 6], [-xr * 0.2, topY], [2, topY - 9], [-xr * 0.2, ductTop * 0.55]], hullW - 8, 2.5, dark);
+    body.add(batt);
+    const btn = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.2, 1.4, 20), shell);
+    btn.rotation.z = Math.PI / 2;
+    btn.position.set(-xr - 14.8, topY - 14, -hullW * 0.18);
+    body.add(btn);
+    for (let i = 0; i < 4; i++) this.addLed(body, 1, 1.8, 2.4, -xr - 14.8, topY - 14, hullW * 0.02 + i * 3.6, 0x22c55e);
+    // Kanalları birbirine bağlayan köprüler (koruma tek parça bir çerçevedir)
+    for (const zs of [-1, 1]) {
+      const bridge = new THREE.Mesh(new THREE.BoxGeometry(Math.max(8, 2 * (fx - ductR) + 8), ductH * 0.8, 14), shell);
+      bridge.position.set(0, ductH * 0.45, zs * fz);
+      body.add(bridge);
+    }
+    for (const xs of [-1, 1]) {
+      const rib = new THREE.Mesh(new THREE.BoxGeometry(12, ductH * 0.6, Math.max(10, 2 * (fz - ductR) + 10)), shell);
+      rib.position.set(xs * fx, ductH * 0.36, 0);
+      body.add(rib);
+    }
+    // Ön koruyucu çerçeve (kamera tamponu) ve tek eksenli gimbal kamera
+    const hoopR = hullW * 0.5 + 1;
+    for (const y of [5, ductTop - 3]) {
+      const hoop = new THREE.Mesh(new THREE.TorusGeometry(hoopR, 2.2, 8, 28, Math.PI), shell);
+      hoop.rotation.set(Math.PI / 2, 0, -Math.PI / 2);          // yay öne (+x) doğru bombeli, yatay düzlemde
+      hoop.position.set(xf, y, 0);
+      body.add(hoop);
+    }
+    const cam = new THREE.Group();
+    cam.position.set(xf + 6, ductTop * 0.5 + 1, 0);
+    cam.rotation.z = 0.12;
+    cam.add(new THREE.Mesh(new THREE.BoxGeometry(15, 17, 21), dark));
+    addLens(cam, 6.2, 9, black);
+    body.add(cam);
+    for (const zs of [-1, 1]) {
+      const yoke = new THREE.Mesh(new THREE.BoxGeometry(9, 12, 2.5), black);
+      yoke.position.set(xf + 3, ductTop * 0.5 + 1, zs * 12.5);
+      body.add(yoke);
+    }
+    // Alt görüş sensörleri + ToF, arka görüş sensörleri
+    for (const x of [-10, 12]) {
+      const ds = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.2, 1.2, 20), black);
+      ds.position.set(x, 2.4, 0);
+      body.add(ds);
+    }
+    for (const zs of [-1, 1]) {
+      const rs = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.6, 1.4, 18), black);
+      rs.rotation.z = Math.PI / 2;
+      rs.position.set(-xr - 0.6, ductTop * 0.3, zs * hullW * 0.26);
+      body.add(rs);
+    }
+    return { baseY: 2, motorY, topY, attachY: 0 };
   },
 
   /* ---------- Hava akışı parçacıkları (itki) ---------- */
@@ -1023,6 +1128,15 @@ const Scene3D = {
 function smoothstep(a, b, x) {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
+}
+
+/** Yan profili (x, y noktaları) z ekseninde uzatılmış, kenarları yumuşatılmış gövde parçası */
+function prism(pts, depth, bevel, mat) {
+  const shape = new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y)));
+  const g = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, steps: 1 });
+  g.translate(0, 0, -depth / 2);
+  g.computeVertexNormals();
+  return new THREE.Mesh(g, mat);
 }
 
 /** Kamera merceği (+x yönüne bakan) */

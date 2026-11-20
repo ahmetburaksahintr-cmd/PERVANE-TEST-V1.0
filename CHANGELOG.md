@@ -1,5 +1,13 @@
 # Sürüm geçmişi
 
+## 1.10.0 — 2026-11-20
+Yeni drone modelleri: GEPRC CineLog35 V2 ve Happymodel Mobula7 1S
+- GEPRC CineLog35 V2 HD O3: 3,5" kanallı sinema dronu, SPEEDX2 2105.5 2650KV (6S), HQProp DT90MMX3 üç kanatlı pervane, 142 mm, 285,8 g (bataryasız)
+- Happymodel Mobula7 1S: 75 mm tiny whoop, RS0802 20000KV (1S), Gemfan 1610-2 iki kanatlı 40 mm pervane, 24 g (bataryasız)
+- Değerler üreticilerin kendi sayfalarından alındı; Happymodel'in yayımlamadığı motor gücü ve akımı tahmini olarak işaretlendi
+- Drone listesine GEPRC ve Happymodel marka grupları eklendi
+- 3D sahne hazırlığı: açık şasede farklı motor yerleşimi, gövde ölçeği, yan panel ve GPS direği; tek parça kanallı gövde (sonraki modeller için)
+
 ## 1.9.0 — 2026-11-20
 Kanat sayısı sayfadan Arduino'ya gönderiliyor
 - Sayfa USB'den bağlanınca seçili kanat sayısını Arduino'ya gönderir; Arduino devri buna göre hesaplar (önceden kodda 2 kanada sabitti)

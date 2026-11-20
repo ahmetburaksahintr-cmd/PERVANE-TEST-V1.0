@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.9.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.10.0
 
-> **Güncel sürüm: v1.9.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.10.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.9.0** | 2026-11-20 | Kanat sayısı sayfadan Arduino'ya gönderiliyor |
+| **v1.10.0** | 2026-11-20 | Yeni drone modelleri: GEPRC CineLog35 V2 ve Happymodel Mobula7 1S |
+| v1.9.0 | 2026-11-20 | Kanat sayısı sayfadan Arduino'ya gönderiliyor |
 | v1.8.2 | 2026-11-20 | Arduino itki ölçümü düzeltmesi: sahte 0 g satırları gönderilmiyor |
 | v1.8.1 | 2026-11-20 | Arduino güvenlik kilidi: gaz açıkken motor devreye girmez |
 | v1.8.0 | 2026-11-20 | Ekran tasarımı baştan elden geçirildi |
@@ -47,6 +48,8 @@ Proje iki parçadan oluşur:
   | BETAFPV Pavo35 | 3,5" cinewhoop (kanallı) | 4 × 2006 2400KV | Gemfan D90S, 3 kanat | 6S 1100 mAh | ~450 g |
   | BETAFPV Pavo20 Pro | 2,2" cinewhoop (kanallı) | 4 × LAVA 1104 7200KV | 2,2", 3 kanat | 3S 450 mAh | ~108 g |
   | BETAFPV Meteor75 Pro | 1S tiny whoop | 4 × 1102 22000KV | Gemfan 45 mm, 3 kanat | 1S 550 mAh | ~48 g |
+  | GEPRC CineLog35 V2 HD O3 | 3,5" cinewhoop (kanallı) | 4 × SPEEDX2 2105.5 2650KV | HQProp DT90MMX3, 3 kanat | 6S 1300 mAh, 207 g | ~496 g |
+  | Happymodel Mobula7 1S | 1S tiny whoop | 4 × RS0802 20000KV | Gemfan 1610-2, 40 mm, 2 kanat | 1S 450 mAh | ~38 g |
 
   \* DJI, DJI FPV motorunun stator ölçüsünü ve KV değerini açıklamamıştır; bu değerler tahminidir. Ağırlık, köşegen, batarya ve pervane bilgileri üreticilerin ve satıcıların yayımladığı değerlerdendir. Hatve ve kanat kesiti ise pervanenin 3D baskı karşılığı için yaklaşık değerlerdir.
 
