@@ -101,7 +101,19 @@ function init() {
   $("#csvOut").onclick = exportCsv;
   $("#soundBtn").onclick = toggleSound;
   // Bakış açısı: serbest (çapraz) ↔ yandan (motor hizasından)
-  $("#viewBtn").onclick = () => { Scene3D.setView(Scene3D.viewName === "side" ? "free" : "side"); updateViewBtn(); };
+  $("#viewBtn").onclick = () => {
+    // Uçuşta üç bakış sırayla: takip → FPV → serbest; diğer düzeneklerde serbest ↔ yandan
+    const order = isFly() ? ["free", "fpv", "side"] : ["free", "side"];
+    Scene3D.setView(order[(order.indexOf(Scene3D.viewName) + 1) % order.length]);
+    updateViewBtn();
+  };
+  // Uçuş modu ve kumanda
+  $("#flyModeSeg").onclick = (e) => { const b = e.target.closest("button"); if (b) setFlyMode(b.dataset.mode); };
+  let savedMode = "easy";
+  try { savedMode = localStorage.getItem(Fly.MODE_KEY) || "easy"; } catch (e) { /* özel pencere */ }
+  Fly.mode = Fly.MODES[savedMode] ? savedMode : "easy";
+  updateFlyModeUi();
+  initPadUi();
   $("#csvIn").onchange = importCsv;
   $("#serialBtn").onclick = connectSerial;
   $("#calBtn").onclick = calibrate;
@@ -174,9 +186,118 @@ function newProp(logMsg) {
 
 /** Bakış düğmesinin yazısı: standda ve bağlı drone'da Serbest/Yandan, uçuşta Takip/Serbest */
 function updateViewBtn() {
-  const side = Scene3D.viewName === "side";
-  $("#viewBtn").textContent = "🎥 Bakış: " + (isFly() ? (side ? "Serbest" : "Takip") : (side ? "Yandan" : "Serbest"));
-  $("#viewBtn").classList.toggle("on", side);
+  const v = Scene3D.viewName;
+  $("#viewBtn").textContent = "🎥 Bakış: " + (isFly() ? { free: "Takip", fpv: "FPV", side: "Serbest" }[v] || "Takip" : v === "side" ? "Yandan" : "Serbest");
+  $("#viewBtn").classList.toggle("on", v !== "free");
+}
+
+/* ---------------- Uçuş modu ---------------- */
+const FLY_NOTES = {
+  easy: "Yardımlı uçuş: çubuğu ya da tuşu bırakınca drone olduğu yerde asılı kalır. Hız, en yüksek hızın %40'ıyla sınırlıdır.",
+  angle: "Çubuk eğim açısını belirler (en çok 60°); bırakınca drone düzelir. Gaz elle verilir.",
+  horizon: "Çubuklar ortadayken kendini düzler; çubuğu sonuna itince takla atar. Gaz elle verilir.",
+  acro: "Kendini düzlemez: çubuk dönüş hızını belirler (en çok 670°/sn). Gerçek FPV uçuşu budur; alışmak zaman ister."
+};
+function setFlyMode(m) {
+  if (!Fly.MODES[m] || m === Fly.mode) return;
+  Fly.setMode(m);
+  updateFlyModeUi();
+  log(`🎮 Uçuş modu: ${Fly.MODES[m]}`, "info");
+}
+function updateFlyModeUi() {
+  document.querySelectorAll("#flyModeSeg button").forEach((b) => b.classList.toggle("active", b.dataset.mode === Fly.mode));
+  $("#flyModeNote").textContent = FLY_NOTES[Fly.mode];
+  const easy = Fly.mode === "easy";
+  $("#keyE").textContent = easy ? "yüksel" : "gaz +";
+  $("#keyQ").textContent = easy ? "alçal" : "gaz −";
+  $("#keyW").textContent = easy ? "ileri" : "burun aşağı";
+  $("#keyS").textContent = easy ? "geri" : "burun yukarı";
+  $("#keyA").textContent = easy ? "sola" : "sola yat";
+  $("#keyD").textContent = easy ? "sağa" : "sağa yat";
+}
+
+/* ---------------- Kumanda (gamepad / RC) ayarı ---------------- */
+let padUiId = null;
+function initPadUi() {
+  $("#padBtn").onclick = () => { $("#padModal").hidden = false; padUiId = "?"; };
+  $("#padClose").onclick = closePadModal;
+  $("#padModal").addEventListener("mousedown", (e) => { if (e.target.id === "padModal") closePadModal(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#padModal").hidden) closePadModal(); });
+  $("#padAuto").onclick = () => { if (Input.startWizard()) padUiId = "?"; };
+  $("#padWizNext").onclick = () => Input.wizardNext();
+  $("#padWizCancel").onclick = () => { Input.cancelWizard(); padUiId = "?"; };
+  for (const [id, which] of [["#padPresetRc", "rc"], ["#padPresetG45", "rc-g45"], ["#padPresetPad", "gamepad"]]) {
+    $(id).onclick = () => { const pad = Input.pad(); if (pad) { Input.setCfg(pad, Input.preset(pad, which)); padUiId = "?"; } };
+  }
+  $("#padThrType").onchange = (e) => padEdit((c) => { c.centered = e.target.value === "1"; });
+  $("#padDead").oninput = (e) => padEdit((c) => { c.dead = Number(e.target.value) / 100; });
+  $("#padRows").onchange = (e) => {
+    const row = e.target.closest("[data-f]");
+    if (!row) return;
+    padEdit((c) => { c.map[row.dataset.f] = { a: Number(row.querySelector("select").value), inv: row.querySelector("input").checked }; });
+  };
+  window.addEventListener("gamepadconnected", (e) => {
+    const pad = e.gamepad, name = Input.describe(pad);
+    log(`🎮 Kumanda bağlandı: ${name.replace(/</g, "‹").replace(/>/g, "›")} (${pad.axes.length} eksen)`, "ok");
+    toast(Input.kind(pad) === "rc" && !Input.hasCfg(pad) ? `Kumanda bağlandı: ${name}. Çubukları eşlemek için “Kumanda ayarı → Otomatik eşle”yi kullan.` : `Kumanda bağlandı: ${name}`, "ok");
+    padUiId = "?";
+  });
+  window.addEventListener("gamepaddisconnected", (e) => { log(`🎮 Kumanda ayrıldı: ${Input.describe(e.gamepad).replace(/</g, "‹").replace(/>/g, "›")}`, "warn"); padUiId = "?"; });
+}
+function closePadModal() { $("#padModal").hidden = true; Input.cancelWizard(); }
+/** Seçili kumandanın ayarını değiştirip kaydeder */
+function padEdit(fn) {
+  const pad = Input.pad();
+  if (!pad) return;
+  const c = JSON.parse(JSON.stringify(Input.cfg(pad)));
+  fn(c);
+  c.preset = "özel";
+  Input.setCfg(pad, c);
+  padUiId = "?";
+}
+/** Pencerenin iskeleti: cihaz ya da ayar değişince yeniden kurulur */
+function buildPadUi(pad) {
+  $("#padNone").hidden = !!pad;
+  $("#padBody").hidden = !pad;
+  if (!pad) { $("#padDevice").textContent = "Kumanda bulunamadı"; return; }
+  const c = Input.cfg(pad), wiz = !!Input.wiz;
+  $("#padDevice").textContent = `${Input.describe(pad)} · ${pad.axes.length} eksen, ${pad.buttons.length} düğme · ${Input.kind(pad) === "gamepad" ? "standart gamepad" : "RC kumanda / oyun çubuğu"} · ${Input.hasCfg(pad) ? "kayıtlı ayar" : "ön ayar (kaydedilmedi)"}`;
+  $("#padWiz").hidden = !wiz;
+  $("#padSettings").hidden = wiz;
+  const opts = (sel) => pad.axes.map((_, i) => `<option value="${i}"${i === sel ? " selected" : ""}>Eksen ${i}</option>`).join("");
+  $("#padRows").innerHTML = Input.FUNCS.map((f) => `<div class="pad-row" data-f="${f}"><span>${Input.NAMES[f]}</span><select aria-label="${Input.NAMES[f]} ekseni">${opts(c.map[f] ? c.map[f].a : -1)}</select>
+    <label class="check small"><input type="checkbox"${c.map[f] && c.map[f].inv ? " checked" : ""}> ters</label><i class="pad-bar"><b></b></i><em></em></div>`).join("");
+  $("#padThrType").value = c.centered ? "1" : "0";
+  $("#padDead").value = Math.round((c.dead || 0) * 100);
+  $("#padDeadV").textContent = `%${Math.round((c.dead || 0) * 100)}`;
+  $("#padAxes").innerHTML = pad.axes.map((_, i) => `<div class="pad-row raw"><span>Eksen ${i}</span><i class="pad-bar"><b></b></i><em></em></div>`).join("");
+}
+/** Her karede: kumanda durum satırı; pencere açıksa canlı çubuklar ve eşleme sihirbazı */
+function padUiTick(dt) {
+  const pad = Input.pad();
+  if (!padUiTick.t || performance.now() - padUiTick.t > 400) {
+    padUiTick.t = performance.now();
+    $("#padStatus").textContent = pad ? `${Input.kind(pad) === "gamepad" ? "🎮" : "📻"} ${Input.describe(pad)}` : "⌨️ Klavye (kumanda takılı değil)";
+  }
+  if ($("#padModal").hidden) return;
+  if (Input.wiz && Input.wizardTick(dt)) { toast("Kumanda eşlendi ve kaydedildi.", "ok"); log("🎮 Kumanda eşlemesi kaydedildi", "ok"); padUiId = "?"; }
+  const id = pad ? pad.id + "|" + pad.axes.length + "|" + (Input.wiz ? "w" : "") : "";
+  if (id !== padUiId) { padUiId = id; buildPadUi(pad); }
+  if (!pad) return;
+  const setBar = (row, v, txt) => { row.querySelector("b").style.left = `${50 + v * 50}%`; row.querySelector("em").textContent = txt; };
+  if (Input.wiz) {
+    const w = Input.wiz, st = Input.STEPS[w.step];
+    $("#padWizStep").textContent = `Adım ${w.step + 1} / ${Input.STEPS.length}`;
+    $("#padWizText").textContent = st.text + (st.k !== "range" && w.cand >= 0 && Math.abs(w.candD) > 0.15 ? `  (algılanan: eksen ${w.cand})` : "");
+    $("#padWizNext").hidden = st.k !== "range";
+  } else {
+    const c = Input.cfg(pad);
+    document.querySelectorAll("#padRows .pad-row").forEach((row) => {
+      const f = row.dataset.f, v = Input.axis(pad, c, f);
+      setBar(row, v, f === "thr" && !c.centered ? `%${Math.round(((v + 1) / 2) * 100)}` : v.toFixed(2));
+    });
+  }
+  document.querySelectorAll("#padAxes .pad-row").forEach((row, i) => setBar(row, Math.max(-1, Math.min(1, pad.axes[i] || 0)), (pad.axes[i] || 0).toFixed(2)));
 }
 
 /* ---------------- Test düzeneği (stand / bağlı FPV drone / uçuş) ---------------- */
@@ -202,7 +323,7 @@ function setRig(mode) {
   Scene3D.viewName = "free";
   rebuildRig();
   updateViewBtn();
-  newProp(fly ? `🎮 Uçuş bölümü: ${drone().name}. E ile kalk, W A S D ile uç, Z / X ile dön, Q ile alçal.`
+  newProp(fly ? `🎮 Uçuş bölümü: ${drone().name} · ${Fly.MODES[Fly.mode]} modu. Klavye, gamepad ya da RC kumandayla uç; tuşlar sol panelde.`
     : mode === "drone" ? `🛸 FPV drone düzeneği: ${drone().name} (4 × ${motor().name})` : "🔧 Test standına geçildi (tek motor + yük hücresi)");
 }
 
@@ -320,7 +441,8 @@ function loop(now) {
 
   // Motor ivmesi (pervanenin ataleti ve ESC tepkisi)
   const target = S.throttle * maxRpm();
-  const k = target > S.rpm ? 3.2 : 1.6;
+  // Uçuşta motorlar gaza hızlı cevap verir (gerçek ESC'ler gibi); testlerde yavaş rampa izlenebilirlik içindir
+  const k = isFly() ? (target > S.rpm ? 16 : 10) : target > S.rpm ? 3.2 : 1.6;
   S.rpm += (target - S.rpm) * Math.min(1, k * dt);
   if (S.broken && S.throttle === 0) S.rpm *= Math.pow(0.35, dt);
 
@@ -351,6 +473,7 @@ function loop(now) {
   updateHud(ev, realDefl);
   if (!loop.f || now - loop.f > 120) { loop.f = now; drawCharts(ev); }
   updateSound();
+  padUiTick(dt);
   requestAnimationFrame(loop);
 }
 
@@ -423,13 +546,17 @@ function updateHud(ev, realDefl) {
   // Başlık: (drone) + malzeme + renk
   $("#hTitle").innerHTML = `<i style="background:${legendStart()}"></i>${isDrone() ? "🛸 " + drone().short + " · " : ""}${mat().name} · ${colorName()}`;
   if (isFly()) {
-    const total = (Scene3D.flyGates || []).length;
+    const total = (Scene3D.flyGates || []).length, inp = Fly.inp;
     $("#hFAlt").textContent = `${fmt(Fly.y / 1000, 1)} m`;
     $("#hFSpd").textContent = `${fmt(Fly.speedKmh())} km/sa`;
-    $("#hFGate").textContent = `${Fly.passed}/${total}${Fly.timing || Fly.done ? " · " + fmt(Fly.time, 1) + " sn" : ""}`;
-    $("#hFMsg").textContent = S.broken ? "Pervane kırıldı. Yeni pervane tak."
+    $("#hFThr").textContent = `%${fmt(S.throttle * 100)}`;
+    $("#hFInfo").textContent = `${Fly.MODES[Fly.mode]} · ${!inp || inp.src === "klavye" ? "⌨️ Klavye" : (inp.src === "rc" ? "📻 " : "🎮 ") + inp.name} · Halka ${Fly.passed}/${total}${Fly.timing || Fly.done ? " · " + fmt(Fly.time, 1) + " sn" : ""}`;
+    $("#hFMsg").textContent = S.broken ? "Pervane kırıldı. Yeniden başlamak için R tuşuna bas."
+      : Fly.crashed ? "Çakıldı. Yeniden başlamak için R tuşuna bas."
       : Fly.noLift ? "Bu pervane drone'u kaldıramıyor: itki ağırlıktan az."
-      : Fly.y <= 0 ? "Kalkmak için E tuşuna bas." : Fly.done ? "Parkur tamamlandı!" : "";
+      : Fly.mode !== "easy" && !Fly.armed && Fly.needLow ? "Motorları çalıştırmak için gazı en alta indir."
+      : Fly.y <= 0 ? (Fly.mode === "easy" ? "Kalkmak için E tuşuna bas ya da gazı yukarı it." : `Kalkmak için gazı artır (askı gazı ≈ %${fmt(Fly.hover * 100)}).`)
+      : Fly.done ? "Parkur tamamlandı!" : "";
   }
   if (S.droneEval) {
     const de = S.droneEval;

@@ -604,3 +604,30 @@ body[data-page="lab"] .foot { padding-top: 0; padding-bottom: 14px; }
 .hud-drone p { grid-column: 1 / -1; margin: 2px 0 0; font-size: .74rem; color: #fdba74; }
 .hud-drone p:empty { display: none; }
 .hud-fly p { color: #7dd3fc; }
+
+/* Uçuş modları ve kumanda ayarı */
+.seg.seg4 { grid-template-columns: repeat(4, 1fr); margin-bottom: 0; }
+.seg.seg4 button { font-size: .76rem; padding: 8px 2px; }
+.pad-line { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: .78rem; color: var(--muted); }
+.pad-line span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fly-help .keys i { font-style: normal; }
+kbd.mini { min-width: 20px; height: 20px; font-size: .7rem; border-radius: 5px; padding: 0 4px; }
+.pad-modal { width: min(720px, 100%); }
+.pad-device { margin: 0 0 10px; font-weight: 700; font-size: .9rem; }
+.pad-none ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 6px; }
+.pad-wiz { border: 1px solid rgba(123, 140, 255, .5); background: rgba(123, 140, 255, .1); border-radius: var(--r-md); padding: 14px; display: grid; gap: 8px; margin-bottom: 12px; }
+.pad-wiz p { margin: 0; font-size: 1rem; font-weight: 600; line-height: 1.45; }
+.pad-wiz .btns { margin: 0; }
+.pad-rows { display: grid; gap: 8px; margin-bottom: 12px; }
+.pad-row { display: grid; grid-template-columns: 150px 96px 58px 1fr 46px; align-items: center; gap: 10px; font-size: .82rem; }
+.pad-row.raw { grid-template-columns: 70px 1fr 46px; }
+.pad-row select { padding: 6px 8px; font-size: .8rem; }
+.pad-row em { font-style: normal; font-variant-numeric: tabular-nums; text-align: right; color: var(--muted); font-size: .76rem; }
+.pad-bar { position: relative; height: 10px; border-radius: 99px; background: rgba(255, 255, 255, .08); border: 1px solid var(--line); }
+.pad-bar::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: rgba(255, 255, 255, .25); }
+.pad-bar b { position: absolute; top: -4px; width: 8px; height: 16px; margin-left: -4px; border-radius: 4px; background: linear-gradient(180deg, #8b9bff, #a66bff); left: 50%; }
+.pad-opt { display: grid; gap: 6px; font-size: .82rem; margin-bottom: 10px; }
+.pad-raw { margin: 6px 0 10px; font-size: .8rem; color: var(--muted); }
+.pad-raw summary { cursor: pointer; margin-bottom: 8px; }
+.pad-raw > div { display: grid; gap: 6px; }
+@media (max-width: 620px) { .pad-row { grid-template-columns: 1fr 86px 54px; } .pad-row .pad-bar { grid-column: 1 / 3; } }

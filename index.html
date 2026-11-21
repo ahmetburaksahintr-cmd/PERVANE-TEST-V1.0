@@ -49,9 +49,15 @@
           <button data-rig="fly">🎮 Uçuş</button>
         </div>
         <div id="flyHelp" class="fly-help" hidden>
-          <div class="keys"><span><kbd>W</kbd> ileri</span><span><kbd>S</kbd> geri</span><span><kbd>A</kbd> sola</span><span><kbd>D</kbd> sağa</span></div>
-          <div class="keys"><span><kbd>E</kbd> yüksel</span><span><kbd>Q</kbd> alçal</span><span><kbd>Z</kbd> sola dön</span><span><kbd>X</kbd> sağa dön</span></div>
-          <p class="note">Tuşu bırakınca drone havada asılı kalır. Turuncu halkaların içinden geç; hepsi yeşil olunca süren yazılır. Gereken itki seçtiğin pervane ve malzemeyle hesaplanır: zayıf pervane drone'u kaldıramaz ya da havada kırılır.</p>
+          <div class="seg seg4" id="flyModeSeg" role="group" aria-label="Uçuş modu">
+            <button data-mode="easy" class="active">Kolay</button><button data-mode="angle">Angle</button><button data-mode="horizon">Horizon</button><button data-mode="acro">Acro</button>
+          </div>
+          <p class="note" id="flyModeNote"></p>
+          <div class="pad-line"><span id="padStatus">⌨️ Klavye</span><button class="btn small" id="padBtn">🎮 Kumanda ayarı</button></div>
+          <div class="keys"><span><kbd>W</kbd> <i id="keyW">ileri</i></span><span><kbd>S</kbd> <i id="keyS">geri</i></span><span><kbd>A</kbd> <i id="keyA">sola</i></span><span><kbd>D</kbd> <i id="keyD">sağa</i></span></div>
+          <div class="keys"><span><kbd>E</kbd> <i id="keyE">yüksel</i></span><span><kbd>Q</kbd> <i id="keyQ">alçal</i></span><span><kbd>Z</kbd> <i>sola dön</i></span><span><kbd>X</kbd> <i>sağa dön</i></span></div>
+          <div class="keys"><span><kbd>R</kbd> <i>baştan</i></span><span><kbd>V</kbd> <i>bakış</i></span><span><kbd>H</kbd> <i>askı gazı</i></span><span><kbd>␣</kbd> <i>gazı kes</i></span></div>
+          <p class="note">Modlar <kbd class="mini">1</kbd>–<kbd class="mini">4</kbd> tuşlarıyla da seçilir. Turuncu halkaların içinden geç; hepsi yeşil olunca süren yazılır. İtki seçtiğin pervane ve malzemeden gelir: zayıf pervane drone'u kaldıramaz ya da havada kırılır.</p>
         </div>
         <div id="dronePick" hidden>
           <select id="droneSel"></select>
@@ -127,7 +133,8 @@
         <div class="hud-drone hud-fly" id="hFly" hidden>
           <div><small>Yükseklik</small><b id="hFAlt">–</b></div>
           <div><small>Hız</small><b id="hFSpd">–</b></div>
-          <div><small>Halkalar</small><b id="hFGate">–</b></div>
+          <div><small>Gaz</small><b id="hFThr">–</b></div>
+          <p id="hFInfo"></p>
           <p id="hFMsg"></p>
         </div>
         <div class="hud-drone" id="hDrone" hidden>
@@ -307,6 +314,49 @@
     <span>Kaynak kod: <a href="https://github.com/ahmetburaksahintr-cmd/PERVANE-TEST-V1.0" target="_blank" rel="noopener">GitHub</a></span>
   </footer>
 
+  <!-- Kumanda ayarı penceresi -->
+  <div class="modal-bg" id="padModal" hidden>
+    <div class="modal pad-modal" role="dialog" aria-modal="true" aria-labelledby="padTitle">
+      <header><h2 id="padTitle">🎮 Kumanda ayarı</h2><button class="icon" id="padClose" aria-label="Kapat">✕</button></header>
+      <div class="rm-body">
+        <p id="padDevice" class="pad-device">Kumanda bulunamadı</p>
+        <div id="padNone" class="note pad-none">
+          <b>Kumandayı USB'den tak</b>, sonra tarayıcının görmesi için <b>bir düğmesine bas ya da bir çubuğunu sonuna kadar it</b> (tarayıcı, kumandaya dokunulana kadar onu göstermez).
+          <ul>
+            <li><b>Xbox / PlayStation kumandası:</b> kendiliğinden tanınır (sol çubuk gaz + yön, sağ çubuk yunuslama + yatış).</li>
+            <li><b>FlySky FS-SM600:</b> önündeki 4 konumlu anahtarı <b>takmadan önce</b> ayarla. “G3–G4.5” konumunu dene; çubuklardan bazıları görünmezse “APD” konumunu dene. Her değişiklikten sonra kumandayı kapatıp aç. “PhoenixRC” konumunu tarayıcı büyük olasılıkla görmez.</li>
+            <li>Gaz kolunu bir kez en üste ve en alta götür: tarayıcı, bir eksen ortadan geçene kadar onu 0 gösterir.</li>
+          </ul>
+        </div>
+        <div id="padBody" hidden>
+          <div class="pad-wiz" id="padWiz" hidden>
+            <b id="padWizStep"></b>
+            <p id="padWizText"></p>
+            <div class="btns"><button class="btn primary" id="padWizNext">Devam</button><button class="btn ghost" id="padWizCancel">Vazgeç</button></div>
+          </div>
+          <div id="padSettings">
+            <div id="padRows" class="pad-rows"></div>
+            <label class="pad-opt">Gaz çubuğu
+              <select id="padThrType">
+                <option value="0">Yaysız: en alt = %0, en üst = %100 (RC kumanda)</option>
+                <option value="1">Yaylı: orta = askı gazı (gamepad)</option>
+              </select>
+            </label>
+            <label class="pad-opt">Ölü bölge <b id="padDeadV"></b><input type="range" id="padDead" min="0" max="20" step="1"></label>
+            <div class="btns">
+              <button class="btn primary" id="padAuto">🪄 Otomatik eşle</button>
+              <button class="btn" id="padPresetRc">RC ön ayarı (AETR)</button>
+              <button class="btn" id="padPresetG45">FlySky “G4.5” ön ayarı</button>
+              <button class="btn" id="padPresetPad">Gamepad ön ayarı</button>
+            </div>
+          </div>
+          <details class="pad-raw"><summary>Ham eksen değerleri</summary><div id="padAxes"></div></details>
+          <p class="note">Çubuğu oynatınca ilgili çizgi hareket etmeli: yatış ve yön sağa itilince sağa, yunuslama ileri itilince sağa, gaz yukarı itilince %100'e gitmeli. Yön tersse “ters” kutusunu işaretle; yanlış çubuk oynuyorsa <b>Otomatik eşle</b>'yi kullan. Ayar bu tarayıcıda kumandanın adına göre saklanır.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toasts"></div>
 
   <script src="vendor/three.min.js"></script>
@@ -319,6 +369,7 @@
   <script src="js/scene.js"></script>
   <script src="js/report.js"></script>
   <script src="js/sound.js"></script>
+  <script src="js/input.js"></script>
   <script src="js/fly.js"></script>
   <script src="js/app.js"></script>
 </body>

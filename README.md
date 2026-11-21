@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.29.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.29.1
 
-> **Güncel sürüm: v1.29.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.29.1** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.29.0** | 2026-11-21 | Bağlı drone testine ekranlı tartı ve asılabilir ağırlıklar |
+| **v1.29.1** | 2026-11-21 | Otomatik sürüm: css/style.css güncellendi, index.html güncellendi, js/app.js güncellendi, js/fly.js güncellendi |
+| v1.29.0 | 2026-11-21 | Bağlı drone testine ekranlı tartı ve asılabilir ağırlıklar |
 | v1.28.0 | 2026-11-21 | Gerçekçi motor sesi: yayımlanmış ölçümlere göre, gerçek devire bağlı |
 | v1.27.0 | 2026-11-21 | Test standı gerçek bir itki standı gibi baştan tasarlandı |
 | v1.26.0 | 2026-11-21 | iFlight Chimera7 Pro V2 resmî görsellerine göre baştan çizildi |

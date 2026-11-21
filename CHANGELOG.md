@@ -1,5 +1,14 @@
 # Sürüm geçmişi
 
+## 1.29.1 — 2026-11-21
+Otomatik sürüm.
+- `css/style.css` güncellendi
+- `index.html` güncellendi
+- `js/app.js` güncellendi
+- `js/fly.js` güncellendi
+- `js/scene.js` güncellendi
+- `js/input.js` eklendi
+
 ## 1.29.0 — 2026-11-21
 Bağlı drone testine ekranlı tartı ve asılabilir ağırlıklar
 - FPV drone düzeneğinde drone artık paslanmaz tablalı bir platform tartının üstünde duruyor
