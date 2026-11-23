@@ -29,7 +29,7 @@ const Scene3D = {
     this.scene.add(key);
     this.scene.add(key.target);
     this.keyLight = key;
-    const rim = new THREE.PointLight(0x7c8cff, 0.8, 600);
+    const rim = new THREE.PointLight(0xd6dde8, 0.7, 600);           // nötr arka ışık (metal parçalar renk almasın)
     rim.position.set(-160, 120, -120);
     this.scene.add(rim);
 
@@ -1870,7 +1870,7 @@ const Scene3D = {
     if (bl.ring) { bl.ring.material.opacity = 1; bl.ring.material.color.set(0xff1f3d); bl.ring.scale.setScalar(1.25); }
     const rootPos = new THREE.Vector3(bl.r0 + 3, 0, 0);
     bl.holder.localToWorld(rootPos);
-    this.breakLabel = makeLabel(this.mode !== "stand" ? `💥 Kırılma noktası: ${unit.label || "motor"} · kanat kökü` : "💥 Kırılma noktası: kanat kökü", "#ff4d6d");
+    this.breakLabel = makeLabel(this.mode !== "stand" ? `Kırılma noktası: ${unit.label || "motor"} · kanat kökü` : "Kırılma noktası: kanat kökü", "#ff4d6d");
     this.breakLabel.position.copy(rootPos).add(new THREE.Vector3(0, 10 + 24 * Math.min(1, this.R / 63), 0));
     this.breakLabel.scale.multiplyScalar(Math.max(0.45, Math.min(1, this.R / 63)));
     this.scene.add(this.breakLabel);

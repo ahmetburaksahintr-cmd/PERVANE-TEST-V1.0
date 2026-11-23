@@ -1,5 +1,18 @@
 # Sürüm geçmişi
 
+## 1.31.0 — 2026-11-23
+Arayüz baştan tasarlandı: ölçüm cihazı estetiği, emoji yerine çizgi ikonlar
+- Mor-mavi renk geçişleri, buzlu cam ve parlama efektleri kaldırıldı; nötr grafit yüzeyler, ince çizgiler ve tek vurgu rengi (havacılık turuncusu)
+- Yazı tipleri: metinlerde IBM Plex Sans, ölçüm değerlerinde IBM Plex Mono (eş aralıklı, sayılar titremez); vendor/fonts klasöründe, internet gerekmez
+- Tüm emojiler kaldırıldı: sekmeler, düğmeler ve kartlar aynı çizgi kalınlığında SVG ikonlar kullanır; günlük, bildirim ve durum yazıları sade metin
+- Başlık tek satır: marka, sayfa sekmeleri (turuncu alt çizgi), TÜBİTAK rozeti, sürüm ve ses düğmesi; sahneye daha fazla yer kalır
+- Ayar bölümleri 01-07 diye numaralı; parçalı seçimler, malzeme kartları, renk seçimi ve kaydırıcılar yeniden çizildi
+- Gösterge ölçüm paneli gibi: büyük değerler eş aralıklı yazıyla, kırılma sınırı çubuğunda %75 ve %100 çentikleri, durum etiketi; başlıktaki düğmeyle daraltılır, seçim hatırlanır
+- Uçuşta gösterge önce yükseklik, hız ve gazı gösterir; pervane ayrıntıları gizlenir
+- Grafik, tablo, günlük, rapor, kumanda ve anahtar pencereleri aynı sisteme uyarlandı; grafik yazıları da yeni yazı tipinde
+- 3D sahnedeki mor arka ışık nötr yapıldı (metal parçalar renk almasın)
+- README: Arayüz bölümü, yazı tipi lisansı; gerçek dünya sınırlarındaki bina tanımı düzeltildi
+
 ## 1.30.0 — 2026-11-23
 Uçuş bölümünde gerçek dünya: kendi sokağında, gerçek binaların arasında uç (CesiumJS)
 - Uçuş düzeneğine "Uçuş alanı" seçimi: Parkur ya da Gerçek dünya

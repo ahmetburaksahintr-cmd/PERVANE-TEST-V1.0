@@ -131,7 +131,7 @@ const Report = {
 
     const children = [
       new D.Paragraph({ heading: D.HeadingLevel.TITLE, children: [new D.TextRun({ text: "Pervane Test Raporu" })] }),
-      P(`${m.name} · ${rec.colorName} · ${rec.motor.name}${rec.rig && rec.rig.mode === "drone" ? " · 🛸 " + rec.rig.short + " FPV drone" : ""}`, { r: { size: 26, color: "4F46E5", bold: true } }),
+      P(`${m.name} · ${rec.colorName} · ${rec.motor.name}${rec.rig && rec.rig.mode === "drone" ? " · " + rec.rig.short + " FPV drone" : ""}`, { r: { size: 26, color: "4F46E5", bold: true } }),
       P(`Tarih: ${rec.date.toLocaleString("tr-TR")} · Pervane Test Laboratuvarı v${typeof APP_VERSION !== "undefined" ? APP_VERSION : ""}`, { r: { color: "666666", size: 18 } }),
       H("1. Sonuç"),
       P(verdict + (rec.rig && rec.rig.mode === "drone"

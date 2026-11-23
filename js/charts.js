@@ -28,7 +28,7 @@ const Chart = {
     const X = (x) => pad.l + (x / xMax) * (w - pad.l - pad.r);
     const Y = (y) => h - pad.b - (Math.min(y, yMax * 1.05) / yMax) * (h - pad.t - pad.b);
 
-    ctx.font = "11px Inter, system-ui, sans-serif";
+    ctx.font = "11px 'IBM Plex Mono', Consolas, monospace";
     ctx.fillStyle = muted; ctx.strokeStyle = grid; ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
       const yv = (yMax * i) / 4, yy = Y(yv);
@@ -92,7 +92,7 @@ const Chart = {
     const text = css.getPropertyValue("--text").trim() || "#fff";
     const top = max || Math.max(1, ...items.map((i) => i.value));
     const rowH = Math.min(34, (h - 10) / Math.max(1, items.length));
-    ctx.font = "12px Inter, system-ui, sans-serif";
+    ctx.font = "12px 'IBM Plex Sans', 'Segoe UI', sans-serif";
     items.forEach((it, i) => {
       const y = 6 + i * rowH;
       const bw = Math.max(4, ((w - 290) * it.value) / top);

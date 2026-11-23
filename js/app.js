@@ -3,6 +3,10 @@
    ========================================================= */
 
 const $ = (s) => document.querySelector(s);
+/** Çizgi ikon (index.html'deki SVG sembollerinden) */
+const ico = (n) => `<svg class="ic" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+/** Günlük ve bildirim metinlerinden emoji ve resim karakterlerini ayıklar (arayüz yazı ve ikonla konuşur) */
+const plain = (t) => String(t).replace(/[\p{Extended_Pictographic}\uFE0F\u200D]+\s*/gu, "").replace(/^\s+/, "");
 const fmt = (n, d = 0) => Number(n).toLocaleString("tr-TR", { maximumFractionDigits: d, minimumFractionDigits: d });
 
 const S = {
@@ -59,7 +63,7 @@ function init() {
     S.droneKey = e.target.value;
     applyDrone();
     rebuildRig();
-    newProp(isFly() ? `🎮 ${drone().name} uçuşa hazır` : `🛸 ${drone().name} test düzeneğine alındı`);
+    newProp(isFly() ? `${drone().name} uçuşa hazır` : `${drone().name} test düzeneğine alındı`);
   };
 
   const bindRange = (id, apply) => { $(id).oninput = (e) => { apply(Number(e.target.value)); syncInputs(); }; };
@@ -86,7 +90,7 @@ function init() {
   // Rapor
   $("#reportBtn").onclick = () => {
     if (!S.history.length) { toast("Önce bir test yap (gazı aç veya rampa testini başlat).", "warn"); return; }
-    openReportModal(buildRecord(), "📄 Test raporu");
+    openReportModal(buildRecord(), "Test raporu");
   };
   $("#rmClose").onclick = $("#rmNo").onclick = closeReportModal;
   $("#reportModal").addEventListener("mousedown", (e) => { if (e.target.id === "reportModal") closeReportModal(); });
@@ -135,6 +139,20 @@ function init() {
   };
   $("#logClear").onclick = () => { $("#log").innerHTML = ""; S.logCount = 0; updateLogHead(); };
   $("#appVersion").textContent = $("#footVer").textContent = "v" + APP_VERSION;
+  document.body.dataset.rig = S.rig;
+  // Gösterge daraltma (uçuşta sahneyi açmak için); seçim hatırlanır
+  const HUD_KEY = "pervane.gostergeDar";
+  const setHud = (c, save) => {
+    $("#hud").classList.toggle("collapsed", c);
+    $("#hudToggle").setAttribute("aria-expanded", String(!c));
+    $("#hudToggle").title = c ? "Göstergeyi genişlet" : "Göstergeyi daralt";
+    $("#hudToggle").innerHTML = ico(c ? "plus" : "minus");
+    if (save) try { localStorage.setItem(HUD_KEY, c ? "1" : ""); } catch (e) { /* özel pencere */ }
+  };
+  $("#hudToggle").onclick = () => setHud(!$("#hud").classList.contains("collapsed"), true);
+  let hudC = false;
+  try { hudC = localStorage.getItem(HUD_KEY) === "1"; } catch (e) { /* özel pencere */ }
+  setHud(hudC, false);
   // Kaydırıcıların dolu kısmını boya (elle değişimde)
   document.addEventListener("input", (e) => { if (e.target.type === "range") paintRange(e.target); });
   Scene3D.init($("#view3d"));
@@ -189,7 +207,7 @@ function newProp(logMsg) {
 /** Bakış düğmesinin yazısı: standda ve bağlı drone'da Serbest/Yandan, uçuşta Takip/Serbest */
 function updateViewBtn() {
   const v = Scene3D.viewName;
-  $("#viewBtn").textContent = "🎥 Bakış: " + (isFly() ? { free: "Takip", fpv: "FPV", side: "Serbest" }[v] || "Takip" : v === "side" ? "Yandan" : "Serbest");
+  $("#viewBtn").innerHTML = ico("camera") + "Bakış: " + (isFly() ? { free: "Takip", fpv: "FPV", side: "Serbest" }[v] || "Takip" : v === "side" ? "Yandan" : "Serbest");
   $("#viewBtn").classList.toggle("on", v !== "free");
 }
 
@@ -204,7 +222,7 @@ function setFlyMode(m) {
   if (!Fly.MODES[m] || m === Fly.mode) return;
   Fly.setMode(m);
   updateFlyModeUi();
-  log(`🎮 Uçuş modu: ${Fly.MODES[m]}`, "info");
+  log(`Uçuş modu: ${Fly.MODES[m]}`, "info");
 }
 function updateFlyModeUi() {
   document.querySelectorAll("#flyModeSeg button").forEach((b) => b.classList.toggle("active", b.dataset.mode === Fly.mode));
@@ -240,11 +258,11 @@ function initPadUi() {
   };
   window.addEventListener("gamepadconnected", (e) => {
     const pad = e.gamepad, name = Input.describe(pad);
-    log(`🎮 Kumanda bağlandı: ${name.replace(/</g, "‹").replace(/>/g, "›")} (${pad.axes.length} eksen)`, "ok");
+    log(`Kumanda bağlandı: ${name.replace(/</g, "‹").replace(/>/g, "›")} (${pad.axes.length} eksen)`, "ok");
     toast(Input.kind(pad) === "rc" && !Input.hasCfg(pad) ? `Kumanda bağlandı: ${name}. Çubukları eşlemek için “Kumanda ayarı → Otomatik eşle”yi kullan.` : `Kumanda bağlandı: ${name}`, "ok");
     padUiId = "?";
   });
-  window.addEventListener("gamepaddisconnected", (e) => { log(`🎮 Kumanda ayrıldı: ${Input.describe(e.gamepad).replace(/</g, "‹").replace(/>/g, "›")}`, "warn"); padUiId = "?"; });
+  window.addEventListener("gamepaddisconnected", (e) => { log(`Kumanda ayrıldı: ${Input.describe(e.gamepad).replace(/</g, "‹").replace(/>/g, "›")}`, "warn"); padUiId = "?"; });
 }
 function closePadModal() { $("#padModal").hidden = true; Input.cancelWizard(); }
 /** Seçili kumandanın ayarını değiştirip kaydeder */
@@ -279,10 +297,10 @@ function padUiTick(dt) {
   const pad = Input.pad();
   if (!padUiTick.t || performance.now() - padUiTick.t > 400) {
     padUiTick.t = performance.now();
-    $("#padStatus").textContent = pad ? `${Input.kind(pad) === "gamepad" ? "🎮" : "📻"} ${Input.describe(pad)}` : "⌨️ Klavye (kumanda takılı değil)";
+    $("#padStatus").textContent = pad ? `${Input.kind(pad) === "gamepad" ? "Gamepad" : "RC kumanda"}: ${Input.describe(pad)}` : "Klavye · kumanda takılı değil";
   }
   if ($("#padModal").hidden) return;
-  if (Input.wiz && Input.wizardTick(dt)) { toast("Kumanda eşlendi ve kaydedildi.", "ok"); log("🎮 Kumanda eşlemesi kaydedildi", "ok"); padUiId = "?"; }
+  if (Input.wiz && Input.wizardTick(dt)) { toast("Kumanda eşlendi ve kaydedildi.", "ok"); log("Kumanda eşlemesi kaydedildi", "ok"); padUiId = "?"; }
   const id = pad ? pad.id + "|" + pad.axes.length + "|" + (Input.wiz ? "w" : "") : "";
   if (id !== padUiId) { padUiId = id; buildPadUi(pad); }
   if (!pad) return;
@@ -309,6 +327,7 @@ function setRig(mode) {
   stopRamp();
   const wasStand = S.rig === "stand";
   S.rig = mode;
+  document.body.dataset.rig = mode;
   if (mode !== "stand") {
     if (wasStand) S.standCfg = { motorKey: S.motorKey, prop: { ...S.prop } };
     applyDrone();
@@ -328,8 +347,8 @@ function setRig(mode) {
   rebuildRig();
   if (real) World.enter(); else if (World.on) World.exit();
   updateViewBtn();
-  newProp(fly ? `🎮 Uçuş bölümü: ${drone().name} · ${Fly.MODES[Fly.mode]} modu. Klavye, gamepad ya da RC kumandayla uç; tuşlar sol panelde.`
-    : mode === "drone" ? `🛸 FPV drone düzeneği: ${drone().name} (4 × ${motor().name})` : "🔧 Test standına geçildi (tek motor + yük hücresi)");
+  newProp(fly ? `Uçuş bölümü: ${drone().name} · ${Fly.MODES[Fly.mode]} modu. Klavye, gamepad ya da RC kumandayla uç; tuşlar sol panelde.`
+    : mode === "drone" ? `FPV drone düzeneği: ${drone().name} (4 × ${motor().name})` : "Test standına geçildi (tek motor + yük hücresi)");
 }
 
 /** 3D düzeneği yeniden kurar; asılı yük yalnızca bağlı drone testinde kullanılır */
@@ -360,9 +379,9 @@ function payloadChanged() {
   $("#payloadList").innerHTML = S.payload.slice().sort((a, b) => b - a).map((g) => `<button class="wchip on" data-i="${S.payload.indexOf(g)}" title="Çıkar">${massText(g)} ✕</button>`).join("");
   $("#payloadSum").textContent = sum ? `Toplam yük: ${massText(sum)}` : "Yük yok";
   $("#payloadClear").hidden = !sum;
-  $("#payloadBtn").textContent = sum ? `🏋️ Ağırlık: ${massText(sum)}` : "🏋️ Ağırlık ekle";
+  $("#payloadBtn").innerHTML = ico("weight") + (sum ? `Ağırlık: ${massText(sum)}` : "Ağırlık ekle");
   rebuildRig();
-  newProp(sum ? `🏋️ Drone'a ${massText(sum)} yük asıldı` : "🏋️ Yük kaldırıldı");
+  newProp(sum ? `Drone'a ${massText(sum)} yük asıldı` : "Yük kaldırıldı");
 }
 
 /** Drone modelinin motorunu ve pervane ölçüsünü uygular */
@@ -438,11 +457,11 @@ function startSequence() {
   const next = () => {
     if (!S.seq) return;
     if (S.seq.i >= keys.length) {
-      log("Tüm malzemeler test edildi ✔", "ok");
+      log("Tüm malzemeler test edildi", "ok");
       S.seq = null;
       const rec = buildRecord();
       rec.sequence = S.seqRecords.slice();
-      openReportModal(rec, "🏁 Tüm malzemeler test edildi");
+      openReportModal(rec, "Tüm malzemeler test edildi");
       return;
     }
     selectMaterial(keys[S.seq.i]);
@@ -486,7 +505,7 @@ function loop(now) {
   // Asılı yük ilk kez kalktığında günlüğe yazılır
   if (S.droneEval && S.droneEval.lifts && !S.payloadLifted) {
     S.payloadLifted = true;
-    log(`🏋️ ${massText(S.droneEval.load)} yük kalktı: toplam itki ${fmt(S.droneEval.total)} g ≥ drone ${fmt(S.droneEval.auw)} g + yük ${fmt(S.droneEval.load)} g (${fmt(S.rpm)} devir)`, "ok");
+    log(`${massText(S.droneEval.load)} yük kalktı: toplam itki ${fmt(S.droneEval.total)} g ≥ drone ${fmt(S.droneEval.auw)} g + yük ${fmt(S.droneEval.load)} g (${fmt(S.rpm)} devir)`, "ok");
   }
 
   // Ölçüm kaydı: simülasyon zamanıyla saniyede 10 satır (grafikler + Excel)
@@ -503,16 +522,16 @@ function loop(now) {
 function checkEvents(ev) {
   if (S.broken) return;
   const R = ev.geo.R * 1000;
-  if (!S.warnLogged && ev.state === "warn") { S.warnLogged = true; log(`⚠️ ${fmt(ev.rpm)} devir: gerilme sınıra yaklaşıyor (GK ${fmt(ev.sf, 2)})`, "warn"); }
+  if (!S.warnLogged && ev.state === "warn") { S.warnLogged = true; log(`${fmt(ev.rpm)} devir: gerilme sınıra yaklaşıyor (GK ${fmt(ev.sf, 2)})`, "warn"); }
   if (!S.bentLogged && ev.ratio >= 0.12) {
     S.bentLogged = true;
-    log(`↪️ ${fmt(ev.rpm)} devir: aşırı esneme! Uç ${fmt(ev.delta * 1000, 1)} mm büküldü, itki %${fmt(ev.flexLoss * 100)} azaldı`, "warn");
+    log(`${fmt(ev.rpm)} devir: aşırı esneme! Uç ${fmt(ev.delta * 1000, 1)} mm büküldü, itki %${fmt(ev.flexLoss * 100)} azaldı`, "warn");
   }
   if (ev.sigma >= ev.yieldS && !mat().brittle) {
     // Akma: kalıcı (plastik) bükülme birikir
     const over = ev.sigma / ev.yieldS - 1;
     S.plastic = Math.max(S.plastic, Math.min(R * 0.5, ev.delta * 1000 * (0.4 + over * 6)));
-    if (!S.yieldLogged) { S.yieldLogged = true; log(`🟠 ${fmt(ev.rpm)} devir: AKMA — pervane kalıcı olarak büküldü`, "warn"); }
+    if (!S.yieldLogged) { S.yieldLogged = true; log(`${fmt(ev.rpm)} devir: AKMA — pervane kalıcı olarak büküldü`, "warn"); }
   }
   if (ev.sigma >= ev.strength) {
     S.broken = true;
@@ -523,13 +542,13 @@ function checkEvents(ev) {
     Sound.crack();
     if (isDrone()) {
       S.breakInfo.where = Scene3D.brokenLabel;
-      log(isFly() ? `🎮 ${Scene3D.brokenLabel} pervanesi havada koptu → drone takla atarak düştü. "Yeni pervane tak" ile yeniden başla.`
-        : `🛸 ${Scene3D.brokenLabel} pervanesi koptu → drone dengesini kaybetti, kalan 3 motorla savrularak pede düştü`, "bad");
+      log(isFly() ? `${Scene3D.brokenLabel} pervanesi havada koptu → drone takla atarak düştü. "Yeni pervane tak" ile yeniden başla.`
+        : `${Scene3D.brokenLabel} pervanesi koptu → drone dengesini kaybetti, kalan 3 motorla savrularak pede düştü`, "bad");
     }
     // Kırılma anının görüntüsü (parçalar havadayken) ve indirme sorusu
     setTimeout(() => { S.breakShot = { url: Scene3D.snapshot(), w: Scene3D.renderer.domElement.width, h: Scene3D.renderer.domElement.height }; }, 350);
-    if (!S.seq && !S.muteReport) setTimeout(() => { if (S.broken) openReportModal(buildRecord(), "💥 Pervane kırıldı!"); }, 1600);
-    log(`💥 ${fmt(ev.rpm)} devir: KIRILMA — kök gerilmesi ${fmt(ev.sigma / 1e6, 1)} MPa ≥ dayanım ${fmt(ev.strength / 1e6, 1)} MPa`, "bad");
+    if (!S.seq && !S.muteReport) setTimeout(() => { if (S.broken) openReportModal(buildRecord(), "Pervane kırıldı"); }, 1600);
+    log(`${fmt(ev.rpm)} devir: KIRILMA — kök gerilmesi ${fmt(ev.sigma / 1e6, 1)} MPa ≥ dayanım ${fmt(ev.strength / 1e6, 1)} MPa`, "bad");
     syncInputs();
   }
   S.results[S.matKey] = S.results[S.matKey] || {};
@@ -552,28 +571,29 @@ function updateHud(ev, realDefl) {
   $("#hMass").textContent = `${fmt(ev.mass, 1)} g`;
   const st = $("#hState");
   let cls = "ok", txt = S.rpm < 100 ? "HAZIR" : "GÜVENLİ";
-  if (S.broken) { cls = "bad"; txt = "💥 KIRILDI"; }
-  else if (S.plastic > 0.05) { cls = "warn"; txt = "🟠 KALICI BÜKÜLME"; }
-  else if (ev.state === "yield") { cls = "bad"; txt = "🔴 KIRILMA EŞİĞİNDE"; }
-  else if (ev.ratio >= 0.12) { cls = "warn"; txt = "↪️ AŞIRI ESNEME"; }
-  else if (ev.state === "warn") { cls = "warn"; txt = "⚠️ SINIRDA"; }
+  if (S.broken) { cls = "bad"; txt = "KIRILDI"; }
+  else if (S.plastic > 0.05) { cls = "warn"; txt = "KALICI BÜKÜLME"; }
+  else if (ev.state === "yield") { cls = "bad"; txt = "KIRILMA EŞİĞİNDE"; }
+  else if (ev.ratio >= 0.12) { cls = "warn"; txt = "AŞIRI ESNEME"; }
+  else if (ev.state === "warn") { cls = "warn"; txt = "SINIRDA"; }
   st.className = "state " + cls;
   st.textContent = txt;
   // Grafik kartının rozeti (kart kapalıyken de anlık değeri gösterir)
   const cc = $("#chartsChip");
-  const ccTxt = S.broken ? "💥 Kırıldı" : S.rpm < 100 ? "Hazır" : `${fmt(Math.round(S.rpm / 100) * 100)} dev/dk · ${fmt(ev.thrustG)} g`;
-  const tr = $("#tabResults"), trTxt = S.broken ? "💥" : S.rpm < 100 ? "" : "●";
+  const ccTxt = S.broken ? "Kırıldı" : S.rpm < 100 ? "Hazır" : `${fmt(Math.round(S.rpm / 100) * 100)} dev/dk · ${fmt(ev.thrustG)} g`;
+  const tr = $("#tabResults"), trTxt = S.broken ? "!" : S.rpm < 100 ? "" : "●";
   if (tr.textContent !== trTxt) { tr.textContent = trTxt; tr.className = "tab-chip" + (S.broken ? " bad" : " live"); }
   if (cc.textContent !== ccTxt) { cc.textContent = ccTxt; cc.className = "chip" + (S.broken ? " bad" : S.rpm < 100 ? "" : pctS > 75 ? " warn" : " on"); }
   // Başlık: (drone) + malzeme + renk
-  $("#hTitle").innerHTML = `<i style="background:${legendStart()}"></i>${isDrone() ? "🛸 " + drone().short + " · " : ""}${mat().name} · ${colorName()}`;
+  const ht = `<i style="background:${legendStart()}"></i>${isDrone() ? drone().short + " · " : ""}${mat().name} · ${colorName()}`;
+  if (ht !== S._ht) { S._ht = ht; $("#hTitle").innerHTML = ht; }
   if (isFly()) {
     const total = (Scene3D.flyGates || []).length, inp = Fly.inp, wl = Fly.inWorld();
     $("#hFAlt").textContent = `${fmt((Fly.y - (wl ? Fly.floor : 0)) / 1000, 1)} m`;
     $("#hFSpd").textContent = `${fmt(Fly.speedKmh())} km/sa`;
     $("#hFThr").textContent = `%${fmt(S.throttle * 100)}`;
     const course = total ? `Halka ${Fly.passed}/${total}${Fly.timing || Fly.done ? " · " + fmt(Fly.time, 1) + " sn" : ""}` : "Serbest uçuş";
-    $("#hFInfo").textContent = `${Fly.MODES[Fly.mode]} · ${!inp || inp.src === "klavye" ? "⌨️ Klavye" : (inp.src === "rc" ? "📻 " : "🎮 ") + inp.name} · ${course}${wl ? " · Kalkış noktasına " + fmt(Math.hypot(Fly.x, Fly.z) / 1000) + " m" : ""}`;
+    $("#hFInfo").textContent = `${Fly.MODES[Fly.mode]} · ${!inp || inp.src === "klavye" ? "Klavye" : inp.name} · ${course}${wl ? " · Kalkış noktasına " + fmt(Math.hypot(Fly.x, Fly.z) / 1000) + " m" : ""}`;
     $("#hFMsg").textContent = World.on && !World.ready ? (World.picking ? "Haritada başlangıç noktasını seç ya da sol panelden bir yer ara." : "Harita hazırlanıyor…")
       : S.broken ? "Pervane kırıldı. Yeniden başlamak için R tuşuna bas."
       : Fly.crashed ? "Çakıldı. Yeniden başlamak için R tuşuna bas."
@@ -592,7 +612,7 @@ function updateHud(ev, realDefl) {
     // Taşıma payı: drone'un kendi ağırlığından sonra kaldırabildiği ek yük
     const spare = de.total - de.auw;
     $("#hDLoad").textContent = isFly() ? "" : de.load
-      ? `Asılı yük ${massText(de.load)} · ${de.lifts ? "kaldırıyor ✔" : "henüz kaldıramıyor"} · taşıma payı ${fmt(Math.max(0, spare))} g`
+      ? `Asılı yük ${massText(de.load)} · ${de.lifts ? "kaldırıyor" : "henüz kaldıramıyor"} · taşıma payı ${fmt(Math.max(0, spare))} g`
       : S.rpm < 100 ? "" : `Taşıma payı: ${fmt(Math.max(0, spare))} g (itki − drone ağırlığı)`;
   }
   // Kırılma sınırına yakınlık çubuğu
@@ -658,7 +678,7 @@ function refreshCompare() {
   S.reach = { pct: (atMax.sigma / atMax.strength) * 100, breakRpm: own.breakRpm };
   const rows = Object.entries(MATERIALS).map(([k, m]) => ({ k, m, s: Physics.sweep({ mat: m, motor: motor(), prop: S.prop, tempC: S.tempC }) }));
   const r = (v) => (v ? fmt(v) : "<span class='good'>dayanır</span>");
-  $("#cmpTable").innerHTML = `<thead><tr><th>Malzeme</th><th>Kütle</th><th>⚠️ Sınıra yaklaşma</th><th>↪️ Aşırı esneme</th><th>🟠 Kalıcı bükülme</th><th>💥 Kırılma</th><th>Güvenli maks. itki</th></tr></thead>
+  $("#cmpTable").innerHTML = `<thead><tr><th>Malzeme</th><th>Kütle</th><th>Sınıra yaklaşma</th><th>Aşırı esneme</th><th>Kalıcı bükülme</th><th>Kırılma</th><th>Güvenli maks. itki</th></tr></thead>
     <tbody>${rows.map(({ k, m, s }) => `<tr class="${k === S.matKey ? "sel" : ""}">
       <td><i class="dot" style="background:#${m.color.toString(16).padStart(6, "0")}"></i><b>${m.name}</b></td>
       <td>${fmt(s.mass, 1)} g</td>
@@ -669,10 +689,10 @@ function refreshCompare() {
   const best = rows.slice().sort((a, b) => b.s.bestThrust - a.s.bestThrust);
   Chart.bars($("#cBars"), best.map(({ m, s }) => ({ label: m.name, value: s.bestThrust, color: `#${m.color.toString(16).padStart(6, "0")}`, note: `${fmt(s.mass, 1)} g pervane` })), { unit: "g" });
   const top = best[0], worst = best[best.length - 1];
-  $("#cmpChip").textContent = `🏆 ${top.m.name}`;
+  $("#cmpChip").textContent = `En iyi: ${top.m.name}`;
   $("#cmpChip").className = "chip good";
   $("#cmpSub").textContent = `${fmt(S.prop.diameterIn, S.prop.diameterIn % 1 ? 2 : 0)}" pervane · ${motor().name} · ${S.tempC} °C`;
-  $("#verdict").innerHTML = `🏆 Bu koşullarda (${S.prop.diameterIn}" pervane, ${motor().name}, ${S.tempC} °C) en yüksek <b>güvenli</b> itkiyi <b>${top.m.name}</b> veriyor (${fmt(top.s.bestThrust)} g).
+  $("#verdict").innerHTML = `Bu koşullarda (${S.prop.diameterIn}" pervane, ${motor().name}, ${S.tempC} °C) en yüksek <b>güvenli</b> itkiyi <b>${top.m.name}</b> veriyor (${fmt(top.s.bestThrust)} g).
     En zayıf sonuç <b>${worst.m.name}</b> (${fmt(worst.s.bestThrust)} g). Sıcaklığı veya kanat kalınlığını değiştirip sıralamanın nasıl değiştiğini gözlemle.`;
   S.compareRows = rows;
 }
@@ -702,7 +722,7 @@ function importCsv(e) {
   reader.onload = () => {
     const pts = reader.result.split(/\r?\n/).map(parseLine).filter(Boolean);
     S.measured = S.measured.concat(pts);
-    log(`📄 ${pts.length} ölçüm noktası yüklendi (${f.name})`, "info");
+    log(`${pts.length} ölçüm noktası yüklendi (${f.name})`, "info");
     updateMeasInfo();
   };
   reader.readAsText(f);
@@ -711,7 +731,7 @@ function importCsv(e) {
 /* USB (Web Serial): Arduino'dan canlı ölçüm okunur, Arduino'ya kanat sayısı gönderilir.
    S.serial açık bağlantıyı tutar; düğmeye ikinci kez basılınca bağlantı kesilir. */
 async function connectSerial() {
-  if (S.serial) { await disconnectSerial(); log("⏏️ USB bağlantısı kesildi", "info"); return; }
+  if (S.serial) { await disconnectSerial(); log("USB bağlantısı kesildi", "info"); return; }
   if (!("serial" in navigator)) { log("Bu tarayıcı USB seri bağlantıyı desteklemiyor. Chrome veya Edge kullan.", "bad"); return; }
   let c = null;
   try {
@@ -726,7 +746,7 @@ async function connectSerial() {
     // Arduino bağlanınca yeniden başlar ve hazır olunca "# hazir" yazar; kanat sayısı o zaman gönderilir.
     // Yeniden başlamayan kartlar "hazir" yazmaz; 8 saniye içinde gelmezse yine de gönderilir.
     c.readyTimer = setTimeout(() => { if (S.serial === c && !c.ready) { c.ready = true; sendBlades(true); } }, 8000);
-    log("🔌 Arduino bağlandı, veri okunuyor…", "ok");
+    log("Arduino bağlandı, veri okunuyor…", "ok");
     updateSerialUi();
     let buf = "";
     for (;;) {
@@ -775,13 +795,13 @@ function sendBlades(force) {
   c.ackTimer = setTimeout(() => {
     if (S.serial !== c || c.ackBlades === n || c.locked || c.warned) return;
     c.warned = true;
-    log(`⚠️ Arduino kanat sayısını (${n}) onaylamadı. Arduino kodu eski olabilir: <code>arduino/pervane_itki_testi.ino</code> dosyasının güncel halini karta yükle. O zamana kadar devir, koddaki sabit değere (varsayılan 2 kanat) göre hesaplanır.`, "warn");
+    log(`Arduino kanat sayısını (${n}) onaylamadı. Arduino kodu eski olabilir: <code>arduino/pervane_itki_testi.ino</code> dosyasının güncel halini karta yükle. O zamana kadar devir, koddaki sabit değere (varsayılan 2 kanat) göre hesaplanır.`, "warn");
     updateSerialUi();
   }, 2500);
 }
 function updateSerialUi() {
   const c = S.serial;
-  $("#serialBtn").textContent = c ? "⏏️ USB bağlantısını kes" : "🔌 USB'den canlı oku";
+  $("#serialBtn").innerHTML = c ? ico("eject") + "USB bağlantısını kes" : ico("usb") + "USB'den canlı oku";
   const info = $("#serialInfo");
   info.hidden = !c;
   if (!c) return;
@@ -801,14 +821,14 @@ function arduinoNote(text) {
     c.ackBlades = n; c.locked = locked;
     updateSerialUi();
     if (!changed) return;                         // aynı onay yeniden gelirse günlüğü doldurma
-    if (locked && n !== (S.prop.blades || 2)) log(`🔧 Arduino kodunda darbe sayısı kilitli: tur başına ${n} (sayfadaki pervane ${S.prop.blades || 2} kanatlı). Sensör, motor çanındaki tek işareti sayıyorsa bu doğrudur.`, "info");
-    else log(`🔧 Arduino devri ${n} kanatlı pervaneye göre hesaplıyor`, "ok");
+    if (locked && n !== (S.prop.blades || 2)) log(`Arduino kodunda darbe sayısı kilitli: tur başına ${n} (sayfadaki pervane ${S.prop.blades || 2} kanatlı). Sensör, motor çanındaki tek işareti sayıyorsa bu doğrudur.`, "info");
+    else log(`Arduino devri ${n} kanatlı pervaneye göre hesaplıyor`, "ok");
     return;
   }
   // Günlük HTML olarak yazıldığı için karttan gelen metindeki < > işaretleri etkisizleştirilir
   const safe = text.slice(0, 160).replace(/</g, "‹").replace(/>/g, "›");
   const type = /GÜVENLİK|UYARI|HATA/i.test(safe) ? "warn" : "info";
-  log("🔧 Arduino: " + safe, type);
+  log("Arduino: " + safe, type);
   if (type === "warn") toast("Arduino: " + safe, "warn");
 }
 function updateMeasInfo() {
@@ -837,7 +857,7 @@ function calibrate() {
     num += m.thrust * s; den += s * s;
   }
   S.prop.ctScale = den ? num / den : prev;
-  log(`🎯 Model gerçek ölçüme göre kalibre edildi: itki katsayısı ×${fmt(S.prop.ctScale, 3)}`, "ok");
+  log(`Model gerçek ölçüme göre kalibre edildi: itki katsayısı ×${fmt(S.prop.ctScale, 3)}`, "ok");
   updateMeasInfo(); refreshCompare(); syncInputs();
 }
 
@@ -846,6 +866,7 @@ function log(msg, type = "info") {
   const t = ((performance.now() - S.t0) / 1000).toFixed(1);
   const li = document.createElement("li");
   li.className = type;
+  msg = plain(msg);
   li.innerHTML = `<span>${t} s</span>${msg}`;
   S.logLines.push(`${t} s – ${msg.replace(/<[^>]+>/g, "")}`);
   if (S.logLines.length > 200) S.logLines.shift();
@@ -923,7 +944,8 @@ function initAccordions() {
 /* ---------------- Motor sesi (js/sound.js) ---------------- */
 function toggleSound() {
   S.sound = Sound.toggle();
-  $("#soundBtn").textContent = S.sound ? "🔊" : "🔇";
+  $("#soundBtn").innerHTML = ico(S.sound ? "sound" : "mute");
+  $("#soundBtn").classList.toggle("on", S.sound);
   $("#soundBtn").title = S.sound ? "Motor sesi açık (gerçek devire göre)" : "Motor sesi";
 }
 /** Ses, gerçek devir, kanat sayısı ve pervane yarıçapından üretilir; dronlarda dört motor birlikte duyulur */
@@ -1025,7 +1047,7 @@ async function openReportModal(rec, title) {
   $("#rmShot").src = rec.snapshot.url;
   const st = (k, v, cls = "") => "<div><small>" + k + "</small><b class=\"" + cls + "\">" + v + "</b></div>";
   $("#rmStats").innerHTML = [
-    rec.rig.mode === "drone" ? st("Düzenek", "🛸 " + rec.rig.short + " · İ/A " + fmt(rec.rig.maxTw, 1) + ":1") : "",
+    rec.rig.mode === "drone" ? st("Düzenek", rec.rig.short + " · İ/A " + fmt(rec.rig.maxTw, 1) + ":1") : "",
     st("Pervane", rec.material.name + " · " + rec.colorName),
     rec.broken ? st("Kırılma devri", fmt(rec.breakRpm) + " dev/dk", "bad") : st("Sonuç", rec.plastic > 0.05 ? "Kalıcı bükülme" : "Hasarsız", rec.plastic > 0.05 ? "warn" : "good"),
     rec.broken ? st("Kırılma anındaki itki", fmt(rec.breakThrust) + " g") : st("En yüksek gerilme", "%" + fmt(rec.maxStressPct)),
@@ -1043,8 +1065,8 @@ async function exportReport(fmtKey) {
   const rec = currentRecord;
   if (!rec) return;
   try {
-    if (fmtKey === "xlsx" || fmtKey === "both") { Report.excel(rec); toast("📊 Excel dosyası indirildi", "ok"); }
-    if (fmtKey === "docx" || fmtKey === "both") { toast("📝 Word raporu hazırlanıyor…"); await Report.word(rec); toast("📝 Word raporu indirildi", "ok"); }
+    if (fmtKey === "xlsx" || fmtKey === "both") { Report.excel(rec); toast("Excel dosyası indirildi", "ok"); }
+    if (fmtKey === "docx" || fmtKey === "both") { toast("Word raporu hazırlanıyor…"); await Report.word(rec); toast("Word raporu indirildi", "ok"); }
     log("Rapor indirildi (" + (fmtKey === "both" ? "Excel + Word" : fmtKey === "xlsx" ? "Excel" : "Word") + ")", "ok");
     closeReportModal();
   } catch (err) {
@@ -1057,7 +1079,7 @@ async function exportReport(fmtKey) {
 function toast(msg, type = "info") {
   const el = document.createElement("div");
   el.className = "toast " + type;
-  el.textContent = msg;
+  el.textContent = plain(msg);
   $("#toasts").appendChild(el);
   requestAnimationFrame(() => el.classList.add("show"));
   setTimeout(() => { el.classList.remove("show"); setTimeout(() => el.remove(), 300); }, 3200);

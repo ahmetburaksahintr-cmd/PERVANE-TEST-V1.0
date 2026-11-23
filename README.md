@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.30.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.31.0
 
-> **Güncel sürüm: v1.30.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.31.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.30.0** | 2026-11-23 | Uçuş bölümünde gerçek dünya: kendi sokağında, gerçek binaların arasında uç (CesiumJS) |
+| **v1.31.0** | 2026-11-23 | Arayüz baştan tasarlandı: ölçüm cihazı estetiği, emoji yerine çizgi ikonlar |
+| v1.30.0 | 2026-11-23 | Uçuş bölümünde gerçek dünya: kendi sokağında, gerçek binaların arasında uç (CesiumJS) |
 | v1.29.1 | 2026-11-21 | Otomatik sürüm: css/style.css güncellendi, index.html güncellendi, js/app.js güncellendi, js/fly.js güncellendi |
 | v1.29.0 | 2026-11-21 | Bağlı drone testine ekranlı tartı ve asılabilir ağırlıklar |
 | v1.28.0 | 2026-11-21 | Gerçekçi motor sesi: yayımlanmış ölçümlere göre, gerçek devire bağlı |
@@ -57,13 +58,13 @@ Yalnızca **Uçuş → Gerçek dünya** internet ister: 3D harita kütüphanesi 
 **Not:** "USB'den canlı oku" özelliği yalnızca Chrome ve Edge'de çalışır.
 
 ## Neler yapabilirsin?
-- **Sayfa sekmeleri:** Başlığın altındaki ince şeritte dört sekme var: 🧪 Laboratuvar (3D sahne ve ayarlar), 📈 Grafikler ve karşılaştırma, 🔌 Ölçümler ve kayıtlar, 🔬 Nasıl hesaplanıyor? Başka bir sekmedeyken de test arka planda sürer; sekmelerdeki küçük işaretler canlı testi, uyarıları ve kayıt sayısını gösterir.
+- **Sayfa sekmeleri:** Üst çubukta dört sekme var: Laboratuvar (3D sahne ve ayarlar), Grafikler ve karşılaştırma, Ölçümler ve kayıtlar, Nasıl hesaplanıyor? Başka bir sekmedeyken de test arka planda sürer; sekmelerdeki küçük işaretler canlı testi, uyarıları ve kayıt sayısını gösterir.
 - **6 malzeme:** PLA, PETG, ABS, ASA, Karbon fiber naylon (PA-CF) ve TPU 95A.
 - **Üç test düzeneği:** Sol menünün en üstünden seçilir.
-  - 🔧 **Test standı:** Tek motor, yük hücresiyle itki ölçümü (gerçek Arduino düzeneğinin dijital ikizi). Stant gerçek bir itki standı gibi çizilir: lastik ayaklı alüminyum taban, köşebentli sigma profil direk, çubuk tip yük hücresi (ortasında gözlük deliği), HX711 kartı ve optik devir sensörü. İtki arttıkça yük hücresinin ucu hafifçe yukarı esner. Motorun üç faz kablosu ESC'ye, ESC de bataryaya ve kontrol kartına bağlı görünür (fırçasız motorda üç, fırçalı motorda iki kablo olur). Sahnenin sağ üstündeki **🎥 Bakış** düğmesi serbest bakış ile yandan (motor hizasından) bakış arasında geçiş yapar.
-  - 🛸 **FPV drone:** Seçilen drone pede iplerle bağlıdır (tether). Gaz açılıp itki ağırlığı geçince kalkar ve ipler gerilir. Dört pervanenin ikisi saat yönünde, ikisi ters döner. Gösterge, 4 pervanenin toplam itkisini, itki/ağırlık oranını ve toplam akımı gösterir. Bir pervane kırılınca hangi motorun pervanesinin koptuğu yazılır; drone o köşeye yatar, savrulur ve pede düşer. Raporlara drone bilgileri de eklenir.
-  - ⚖️ **Tartı ve ağırlıklar (FPV drone düzeneğinde):** Drone ekranlı bir platform tartının üstünde durur. Tartının darası alınmıştır; ekranda dört pervanenin toplam **kaldırma kuvveti** gram olarak canlı görünür. **🏋️ Ağırlık ekle** düğmesiyle drone'a 50 g, 100 g, 200 g, 500 g, 1 kg, 2 kg ve 5 kg'lık ağırlıklar asılabilir (en fazla 6 adet; üzerlerinde kütleleri yazar). Ağırlık seçilince drone şeffaf bir sehpanın üstüne çıkar, ağırlıklar altında tablada bekler. İtki drone'un ağırlığını geçince drone kalkıp ipi gerer; itki "drone + yük"ü geçince yük de tabladan kalkar. Göstergedeki **taşıma payı**, drone'un kendi ağırlığından sonra kaldırabildiği ek yüktür. Yük bilgisi Excel raporuna da yazılır.
-  - 🎮 **Uçuş:** Seçilen drone'u açık alanda klavyeyle uçurursun. `W` ileri, `S` geri, `A` sola, `D` sağa, `E` yüksel, `Q` alçal, `Z` sola dön, `X` sağa dön. Tuşu bırakınca drone havada asılı kalır. Altı turuncu halkanın içinden geçince süren yazılır. **Uçuş alanı** olarak *Parkur* (yapay açık alan) ya da *Gerçek dünya* seçilir; gerçek dünyada istediğin sokağı arayıp o sokakta, gerçek binaların arasında uçarsın (aşağıda ayrıntılı anlatılıyor). Gereken itki, drone'un ağırlığından ve yaptığın manevradan hesaplanır: seçtiğin pervane bu itkiyi veremiyorsa drone kalkamaz, dayanamıyorsa havada kırılır ve drone düşer. **🎥 Bakış** düğmesi takip kamerası ile serbest bakış arasında geçiş yapar.
+  - **Test standı:** Tek motor, yük hücresiyle itki ölçümü (gerçek Arduino düzeneğinin dijital ikizi). Stant gerçek bir itki standı gibi çizilir: lastik ayaklı alüminyum taban, köşebentli sigma profil direk, çubuk tip yük hücresi (ortasında gözlük deliği), HX711 kartı ve optik devir sensörü. İtki arttıkça yük hücresinin ucu hafifçe yukarı esner. Motorun üç faz kablosu ESC'ye, ESC de bataryaya ve kontrol kartına bağlı görünür (fırçasız motorda üç, fırçalı motorda iki kablo olur). Sahnenin sağ üstündeki **Bakış** düğmesi serbest bakış ile yandan (motor hizasından) bakış arasında geçiş yapar.
+  - **FPV drone:** Seçilen drone pede iplerle bağlıdır (tether). Gaz açılıp itki ağırlığı geçince kalkar ve ipler gerilir. Dört pervanenin ikisi saat yönünde, ikisi ters döner. Gösterge, 4 pervanenin toplam itkisini, itki/ağırlık oranını ve toplam akımı gösterir. Bir pervane kırılınca hangi motorun pervanesinin koptuğu yazılır; drone o köşeye yatar, savrulur ve pede düşer. Raporlara drone bilgileri de eklenir.
+  - **Tartı ve ağırlıklar (FPV drone düzeneğinde):** Drone ekranlı bir platform tartının üstünde durur. Tartının darası alınmıştır; ekranda dört pervanenin toplam **kaldırma kuvveti** gram olarak canlı görünür. **Ağırlık ekle** düğmesiyle drone'a 50 g, 100 g, 200 g, 500 g, 1 kg, 2 kg ve 5 kg'lık ağırlıklar asılabilir (en fazla 6 adet; üzerlerinde kütleleri yazar). Ağırlık seçilince drone şeffaf bir sehpanın üstüne çıkar, ağırlıklar altında tablada bekler. İtki drone'un ağırlığını geçince drone kalkıp ipi gerer; itki "drone + yük"ü geçince yük de tabladan kalkar. Göstergedeki **taşıma payı**, drone'un kendi ağırlığından sonra kaldırabildiği ek yüktür. Yük bilgisi Excel raporuna da yazılır.
+  - **Uçuş:** Seçilen drone'u açık alanda klavyeyle uçurursun. `W` ileri, `S` geri, `A` sola, `D` sağa, `E` yüksel, `Q` alçal, `Z` sola dön, `X` sağa dön. Tuşu bırakınca drone havada asılı kalır. Altı turuncu halkanın içinden geçince süren yazılır. **Uçuş alanı** olarak *Parkur* (yapay açık alan) ya da *Gerçek dünya* seçilir; gerçek dünyada istediğin sokağı arayıp o sokakta, gerçek binaların arasında uçarsın (aşağıda ayrıntılı anlatılıyor). Gereken itki, drone'un ağırlığından ve yaptığın manevradan hesaplanır: seçtiğin pervane bu itkiyi veremiyorsa drone kalkamaz, dayanamıyorsa havada kırılır ve drone düşer. **Bakış** düğmesi takip kamerası ile serbest bakış arasında geçiş yapar.
 - **Drone modelleri (gerçek parçalarla):** Motorların çanında gerçekteki gibi model ve KV yazar; motor boyutu stator çapına göre ölçeklenir.
 
   | Model | Tip | Motor | Pervane | Batarya | Ağırlık |
@@ -93,7 +94,7 @@ Yalnızca **Uçuş → Gerçek dünya** internet ister: 3D harita kütüphanesi 
   - ↪️ Aşırı esneme
   - 🟠 Kalıcı bükülme (akma)
   - 🔴 Kırılma eşiği (kırılgan malzemelerde)
-  - 💥 Kırılma: kanat kökten kopar ve fırlar
+  - Kırılma: kanat kökten kopar ve fırlar
 - **17 pervane rengi:**
   - Düz renkler: siyah, beyaz, kırmızı, turuncu, sarı, yeşil, turkuaz, mavi, mor, pembe
   - Özel görünümler: metalik ipek altın ve gümüş, yarı saydam şeffaf, parlayan fosforlu
@@ -107,7 +108,7 @@ Yalnızca **Uçuş → Gerçek dünya** internet ister: 3D harita kütüphanesi 
   - "Bükülme abartma" ayarı küçük esnemeleri görünür kılar.
 - **Test raporu (Excel / Word):**
   - Pervane kırılınca bir pencere açılır ve verilerin indirilip indirilmeyeceğini sorar.
-  - Aynı pencere her zaman **📄 Raporu indir** düğmesiyle de açılabilir.
+  - Aynı pencere her zaman **Raporu indir** düğmesiyle de açılabilir.
   - **Excel (.xlsx):** Özet, saniyede 10 satırlık ölçüm verisi (devir, itki, gerilme, bükülme, güç, akım, verim, durum), malzeme karşılaştırması ve olay günlüğü sayfaları.
   - **Word (.docx):** Sonuç yorumu, kırılma anının 3D görüntüsü, 3 grafik, koşullar ve karşılaştırma tabloları, yöntem. Bilim fuarı dosyasına doğrudan eklenebilir.
 - **Hepsini sırayla canlı test et:** 6 malzemeyi arka arkaya test eder ve karşılaştırma tablosunu doldurur. Sonuçları CSV olarak indirip raporunda kullanabilirsin.
@@ -147,10 +148,17 @@ Uçuş düzeneğinde **Uçuş alanı → Gerçek dünya** seçilince drone, arad
 
 **Neden Cesium, neden Leaflet değil?** Leaflet hafif ve çok iyi bir **2D** harita kütüphanesidir ama üç boyut, bina yüksekliği ya da kamera eğme desteği yoktur. Sokakta binaların arasında uçmak için 3D küre, arazi ve 3D Tiles desteği gerekir; bu yüzden CesiumJS seçildi. Arama ve sokak adları için ayrıca bir 2D haritaya gerek kalmadı: radar aynı veriden çizilir.
 
-**Sınırlar:** Anahtarsız kaynakta zemin düzdür (yokuşlar yoktur) ve binalar tek renkli kutulardır; uydu görüntüsü çok alçaktan bakınca bulanıklaşır. Bina tabanları OpenStreetMap'te çizildiği kadardır; bazı mahallelerde eksik olabilir. Drone her zaman binaların önünde çizilir (iki ayrı 3D sahne üst üste çizildiği için bir binanın arkasına geçse de görünür kalır).
+**Sınırlar:** Anahtarsız kaynakta zemin düzdür (yokuşlar yoktur) ve binalar gerçek dokusu olmayan, düz çatılı basitleştirilmiş bloklardır (pencereler temsilîdir); uydu görüntüsü çok alçaktan bakınca bulanıklaşır. Bina tabanları OpenStreetMap'te çizildiği kadardır; bazı mahallelerde eksik olabilir. Drone her zaman binaların önünde çizilir (iki ayrı 3D sahne üst üste çizildiği için bir binanın arkasına geçse de görünür kalır).
+
+## Arayüz
+Arayüz bir ölçüm cihazı yazılımı gibi tasarlandı: amaç, verinin öne çıkması ve göz yormaması.
+- **Renkler:** Nötr grafit yüzeyler ve tek vurgu rengi olarak havacılık turuncusu (drone halkalarıyla aynı). Yeşil / sarı / kırmızı yalnızca durum bildirir (güvenli / sınırda / kırıldı).
+- **Yazı tipleri:** Metinler IBM Plex Sans, ölçüm değerleri IBM Plex Mono (eş aralıklı: değişen sayılar titremez). Yazı tipleri `vendor/fonts` klasöründedir; internet gerekmez.
+- **İkonlar:** Tek elden çizilmiş, aynı çizgi kalınlığında SVG ikonlar. Arayüzde emoji kullanılmaz; günlük ve bildirim metinleri sade yazıdır.
+- **Gösterge:** 3D sahnenin sol üstündeki ölçüm paneli. Başlığındaki **−** düğmesiyle daraltılır (uçarken sahneyi açar); seçim hatırlanır. Uçuşta önce yükseklik, hız ve gaz görünür.
 
 ## Motor sesi
-Sağ üstteki 🔇 düğmesi motor sesini açar. Ses bir kayıt değildir; yayımlanmış ölçümlerde tarif edilen bileşenlerden üretilir ve hepsi **gerçek devire** bağlıdır (frekanslar ölçeklenmez):
+Sağ üstteki hoparlör düğmesi motor sesini açar. Ses bir kayıt değildir; yayımlanmış ölçümlerde tarif edilen bileşenlerden üretilir ve hepsi **gerçek devire** bağlıdır (frekanslar ölçeklenmez):
 
 - **Kanat geçiş frekansı ve katları:** kanat sayısı × devir / 60. 20.000 devir/dk'da iki kanatlı pervanenin temel tonu 667 Hz, üç kanatlınınki 1000 Hz'dir. Pervanenin "vızıltısı" budur.
 - **Mil frekansının katları:** kanatlar tam özdeş olmadığı için var olan, daha zayıf ara tonlar.
@@ -190,7 +198,7 @@ Motor yalnızca şu sırayla devreye girer:
 - Gaz açıkken anahtarı çevirirsen motor dönmez; önce gazı sıfıra indirmen gerekir.
 - Kart anahtar açıkken yeniden başlarsa da motor dönmez. USB kablosunu takınca veya sayfadan bağlanınca Arduino yeniden başlar; anahtarı kapatıp yeniden aç.
 - Anahtarı kapatmak motoru anında durdurur.
-- Arduino'nun uyarıları sayfadaki **Test günlüğü** kartında "🔧 Arduino:" ile görünür.
+- Arduino'nun uyarıları sayfadaki **Test günlüğü** kartında "Arduino:" ile görünür.
 
 ### Ölçüm satırları
 - Arduino saniyede 10 satır gönderir: `devir,itki_gram,akim_amper`.
@@ -251,6 +259,7 @@ Hepsi `vendor/` klasöründedir; sayfa internetsiz çalışır.
 | [three.js](https://threejs.org) | r149 | 3D sahne | MIT |
 | [SheetJS](https://sheetjs.com) | 0.20.3 | Excel (.xlsx) üretimi | Apache 2.0 |
 | [docx](https://docx.js.org) | 9.5.1 | Word (.docx) üretimi | MIT |
+| [IBM Plex Sans / Mono](https://github.com/IBM/plex) | 5.3.0 (Fontsource) | Arayüz yazı tipleri (`vendor/fonts`) | SIL OFL 1.1 |
 
 Gerçek dünya uçuşu için internetten yüklenenler (yalnızca o bölüm açılınca):
 
