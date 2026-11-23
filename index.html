@@ -112,7 +112,7 @@
                 <select id="worldSrc"></select>
               </label>
               <p class="note" id="worldSrcNote"></p>
-              <button class="btn small" id="worldKeyBtn" type="button">Cesium ion anahtarı ekle (ücretsiz)</button>
+              <button class="btn small" id="worldKeyBtn" type="button">Kendi Cesium anahtarını gir (isteğe bağlı)</button>
             </div>
           </div>
           <div class="sub-h">Uçuş modu</div>
@@ -442,7 +442,7 @@
     <div class="modal key-modal" role="dialog" aria-modal="true" aria-labelledby="wkTitle">
       <header><h2 id="wkTitle">Cesium ion anahtarı</h2><button class="icon" id="wkClose" aria-label="Kapat"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button></header>
       <div class="rm-body">
-        <p class="wk-lead">Gerçek fotoğraflı Google 3D binalar ve dağlı-yokuşlu arazi için ücretsiz bir <b>Cesium ion</b> hesabı gerekir (ticari olmayan kullanım için ücretsizdir). Anahtarsız “Açık veri” kaynağı da çalışır; binaları OpenStreetMap'ten kurar.</p>
+        <p class="wk-lead">Uygulama <b>projenin Cesium ion anahtarıyla</b> gelir: Google fotogerçekçi 3D şehirler ve dağlı-yokuşlu arazi hiçbir şey girmeden çalışır. Ücretsiz hesabın ayda 1.000 Google 3D açılışı bu anahtarı kullanan herkes için ortaktır; çok kullanacaksan kendi ücretsiz anahtarını buraya gir, o kullanılır.</p>
         <ol class="wk-steps">
           <li><a href="https://ion.cesium.com/signup/" target="_blank" rel="noopener">ion.cesium.com/signup</a> adresinden ücretsiz hesap aç.</li>
           <li>Üst menüden <b>Access Tokens</b> sayfasına gir ve <b>Default Token</b> satırındaki anahtarı kopyala.</li>
@@ -452,7 +452,7 @@
           <input id="wkInput" type="text" autocomplete="off" spellcheck="false" placeholder="eyJhbGciOi…">
         </label>
         <p id="wkNote" class="wk-note" role="status"></p>
-        <p class="note">Anahtar yalnızca bu tarayıcıda saklanır ve yalnızca Cesium'un sunucusuna gider. Google 3D binalar açılmazsa ion sitesinde <b>Asset Depot</b> → “Google Photorealistic 3D Tiles” → <b>Add to my assets</b> adımını yap.</p>
+        <p class="note">Girdiğin anahtar yalnızca bu tarayıcıda saklanır ve yalnızca Cesium'un sunucusuna gider. Kendi anahtarınla Google 3D açılmazsa ion sitesinde <b>Asset Depot</b> → “Google Photorealistic 3D Tiles” → <b>Add to my assets</b> adımını yap. Anahtarını silersen yeniden projenin anahtarı kullanılır.</p>
       </div>
       <footer><button class="btn ghost" id="wkRemove" hidden>Anahtarı sil</button><span class="grow"></span><button class="btn ghost" id="wkCancel">Vazgeç</button><button class="btn primary" id="wkSave"><svg class="ic" aria-hidden="true"><use href="#i-key"/></svg>Kaydet ve dene</button></footer>
     </div>
@@ -464,6 +464,7 @@
   <script src="vendor/xlsx.full.min.js"></script>
   <script src="vendor/docx.umd.js"></script>
   <script src="js/version.js"></script>
+  <script src="js/config.js"></script>
   <script src="js/materials.js"></script>
   <script src="js/physics.js"></script>
   <script src="js/charts.js"></script>

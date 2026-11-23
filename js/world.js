@@ -28,13 +28,14 @@ const World = {
   NOMINATIM: "https://nominatim.openstreetmap.org/search",
   K: { token: "pervane.cesiumIon", src: "pervane.haritaKaynagi", place: "pervane.ucusYeri", recent: "pervane.sonYerler", area: "pervane.ucusAlani" },
   SOURCES: {
-    open: { name: "Açık veri · anahtarsız", short: "Açık veri",
-      note: "Uydu görüntüsü (Esri) ve OpenStreetMap bina tabanları. Kat bilgisi girilmemiş binaların yüksekliği taban alanından tahmin edilir." },
-    osm3d: { name: "3D binalar + arazi · Cesium ion", short: "Cesium 3D", token: true,
-      note: "Cesium Dünya Arazisi (dağlar, yokuşlar), Bing uydu görüntüsü ve dünya çapında OpenStreetMap binaları." },
     google: { name: "Fotogerçekçi 3D · Google", short: "Google 3D", token: true,
-      note: "Binalar, ağaçlar ve arabalar gerçek fotoğraflarıyla. Ücretsiz Cesium ion hesabıyla ayda 1.000 açılış; kapsam büyük şehirlerde en iyisidir." }
+      note: "Binalar, ağaçlar, arabalar gerçek fotoğraflarıyla, gerçek arazinin üstünde. Kapsam büyük şehirlerde en iyisidir; 3D çekimi olmayan yerlerde arazi ve uydu görüntüsü görünür." },
+    osm3d: { name: "3D binalar + arazi · Cesium", short: "Cesium 3D", token: true,
+      note: "Cesium Dünya Arazisi (dağlar, yokuşlar), Bing uydu görüntüsü ve dünya çapında OpenStreetMap binaları. Google 3D'nin olmadığı yerler için." },
+    open: { name: "Açık veri · anahtarsız", short: "Açık veri",
+      note: "Uydu görüntüsü (Esri) ve OpenStreetMap bina tabanlarından kurulan binalar. Kat bilgisi girilmemiş binaların yüksekliği taban alanından tahmin edilir." }
   },
+  FALLBACK: { google: ["google", "osm3d", "open"], osm3d: ["osm3d", "open"], open: ["open"] },
   PRESETS: [
     { name: "Galata Kulesi", sub: "Beyoğlu, İstanbul", lon: 28.97416, lat: 41.02562 },
     { name: "Kızılay Meydanı", sub: "Çankaya, Ankara", lon: 32.85410, lat: 39.92077 },
@@ -51,7 +52,9 @@ const World = {
   /* ---------------- Kalıcı ayarlar ---------------- */
   get(k, def) { try { const v = localStorage.getItem(this.K[k]); return v == null ? def : JSON.parse(v); } catch (e) { return def; } },
   set(k, v) { try { if (v == null) localStorage.removeItem(this.K[k]); else localStorage.setItem(this.K[k], JSON.stringify(v)); } catch (e) { /* özel pencere: hatırlanmaz */ } },
-  token() { return (this.get("token", "") || "").trim(); },
+  /** Kullanıcının girdiği anahtar; yoksa projeye gömülü anahtar (js/config.js) */
+  token() { return this.userToken() || (typeof APP_CONFIG !== "undefined" && APP_CONFIG.cesiumIonToken ? APP_CONFIG.cesiumIonToken.trim() : ""); },
+  userToken() { return (this.get("token", "") || "").trim(); },
 
   /* ---------------- CesiumJS'i yükle (yalnızca ilk kullanımda) ---------------- */
   load() {
@@ -83,7 +86,7 @@ const World = {
     try {
       await this.load();
       if (!this.on) return;
-      if (!this.viewer || this.viewerSrc !== this.src) await this.makeViewer();
+      if (!this.viewer || this.viewerSrc !== this.src) await this.makeViewerSafe();
       if (!this.on) return;
       this.viewer.container.hidden = false;
       const last = this.place || this.get("place", null);
@@ -148,14 +151,50 @@ const World = {
       if (src === "osm3d") {
         v.terrainProvider = this.terrain;
         this.status("Cesium OSM binaları yükleniyor…", true);
-        this.tileset = sc.primitives.add(await C.createOsmBuildingsAsync());
+        // Yer altı yapıları (metro, otopark, alt geçit) yer üstünde kutu olarak çizilmesin
+        const under = "(${feature['location']} === 'underground' || ${feature['building']} === 'underground' || (${feature['layer']} !== undefined && Number(${feature['layer']}) < 0))";
+        this.tileset = sc.primitives.add(await C.createOsmBuildingsAsync({ style: new C.Cesium3DTileStyle({
+          show: "!" + under,
+          color: { conditions: [["${feature['cesium#color']} !== undefined", "color(${feature['cesium#color']})"], ["true", "color('#e7e2d8')"]] }
+        }) }));
       } else {
         sc.globe.show = false;                         // Google karoları araziyi de içerir
         this.status("Google fotogerçekçi 3D bağlanıyor…", true);
-        this.tileset = sc.primitives.add(await C.createGooglePhotorealistic3DTileset({ onlyUsingWithGoogleGeocoder: true }));
+        this.tileset = sc.primitives.add(await C.createGooglePhotorealistic3DTileset({ onlyUsingWithGoogleGeocoder: true }, { maximumScreenSpaceError: 12, cacheBytes: 768 * 1024 * 1024 }));
       }
+      // Karo yüklenemiyorsa (kota dolmuş, ağ kesik) kullanıcıya bir kez söyle
+      this._tileFails = 0;
+      this.tileset.tileFailed.addEventListener((e) => {
+        if (++this._tileFails === 6) toast(`3D karolar yüklenemiyor${e && e.message ? ": " + String(e.message).slice(0, 80) : ""}. Kaynağı “Açık veri”ye almayı dene.`, "warn");
+      });
     }
     v.resize();
+  },
+  /** Seçili kaynağı açar; açılamazsa (kota, ağ, anahtar) bir sonraki kaynağa geçer. Geçiş kaydedilmez: sonraki açılışta yine seçili kaynak denenir. */
+  async makeViewerSafe() {
+    const want = this.src, order = this.FALLBACK[want] || [want];
+    let last = null;
+    for (const s of order) {
+      if (this.SOURCES[s].token && !this.token()) continue;
+      try {
+        this.src = s;
+        await this.makeViewer();
+        if (s !== want) toast(`${this.SOURCES[want].short} açılamadı (${(last && last.message) || "bilinmeyen hata"}). ${this.SOURCES[s].short} ile devam ediliyor.`, "warn");
+        WorldUI.sync();
+        return;
+      } catch (err) { console.error(err); last = err; }
+    }
+    this.src = want;
+    throw last || new Error("Harita açılamadı");
+  },
+  /** Anahtar değişince görüntüleyici yeniden kurulur */
+  async reloadViewer() {
+    if (!this.on) { this.destroyViewer(); return; }
+    this.ready = false;
+    try {
+      await this.makeViewerSafe();
+      if (this.place) await this.goTo(this.place, { quiet: true }); else this.startPick(true);
+    } catch (err) { this.status(err.message || String(err), false, "bad"); }
   },
   destroyViewer() {
     if (!this.viewer) return;
@@ -177,7 +216,7 @@ const World = {
     this.ready = false;
     try {
       this.status("Harita kaynağı değişiyor…", true);
-      await this.makeViewer();
+      await this.makeViewerSafe();
       if (this.place) await this.goTo(this.place, { quiet: true }); else this.startPick(true);
     } catch (err) {
       console.error(err);
@@ -437,7 +476,10 @@ const World = {
       this.reapply(true);
       this.ready = true;                              // önce hazır: Fly.reset başlangıç yönünü ve zemini buradan alır
       Fly.reset();
+      Scene3D.worldView(this.src !== "open");
       Scene3D.snapFollow();
+      // 3D karolu kaynaklarda drone'un çevresindeki ayrıntılı karolar gelene kadar beklenir (kaba karoda zemin yanlış ölçülür)
+      if (this.tileset) { await this.waitTiles(job, place.name); if (job !== this.job) return; Fly.reset(); Scene3D.snapFollow(); }
       Fly.hold = false;
       document.body.classList.add("world-ready");
       const cnt = this.src === "open" ? ` · ${fmt(this.blds.length)} bina` : "";
@@ -544,6 +586,22 @@ const World = {
       gates.forEach((g, i) => { g.g = (r[i] && isFinite(r[i].height) ? r[i].height : g0) - g0; });
     } catch (e) { /* arazi örneklenemedi: düz kabul edilir */ }
   },
+  /** Drone kamerasından görünen 3D karolar yüklenene kadar bekler (en çok 40 sn); ilerleme durum yazısında */
+  waitTiles(job, name) {
+    const ts = this.tileset, t0 = performance.now();
+    return new Promise((res) => {
+      const tick = () => {
+        if (job !== this.job || !this.tileset) return res();
+        const st = ts.statistics, left = st ? st.numberOfPendingRequests + st.numberOfTilesProcessing : 0;
+        if ((ts.tilesLoaded && performance.now() - t0 > 600) || performance.now() - t0 > 40000) return res();
+        this.status(`${name} · 3D şehir yükleniyor${left ? " · " + left + " karo" : ""}`, true);
+        setTimeout(tick, 250);
+      };
+      tick();
+    });
+  },
+  /** Örnek yükseklik akla yatkın mı (henüz yüklenmemiş kaba karolar binlerce metre yanlış yükseklik verir) */
+  okHeight(h) { return h != null && isFinite(h) && h > this.h0 - 60 && h < this.h0 + 900; },
   /** Yüklenirken kamera: yerin 380 m üstünden, güneyden kuzeye bakış */
   overview(lon, lat, h) {
     const C = Cesium;
@@ -607,7 +665,7 @@ const World = {
     let h;
     try { h = this.viewer.scene.sampleHeight(C.Cartographic.fromDegrees(q.lon, q.lat), undefined, 0.3); } catch (err) { h = undefined; }
     this._sampleMs = (this._sampleMs || 2) * 0.8 + (performance.now() - t0) * 0.2;
-    const rel = h == null || !isFinite(h) ? (c ? c.h : 0) : Math.max(-30, h - this.h0);
+    const rel = this.okHeight(h) ? h - this.h0 : c ? c.h : 0;
     this.floorCache = { e, n, h: rel, t: performance.now() };
     return rel;
   },
@@ -639,7 +697,7 @@ const World = {
       const q = this.toGeo(ce, cn);
       let h;
       try { h = this.viewer.scene.sampleHeight(Cesium.Cartographic.fromDegrees(q.lon, q.lat), undefined, 0.3); } catch (e) { h = undefined; }
-      this._camFloor = { t: now, h: h == null ? -1e9 : h - this.h0 };
+      this._camFloor = { t: now, h: this.okHeight(h) ? h - this.h0 : -1e9 };
     }
     const minY = (this._camFloor.h + 0.4) * 1000;
     if (cam.position.y < minY) { cam.position.y = minY; cam.lookAt(target); }
@@ -666,11 +724,23 @@ const World = {
     if (!this.on || !v || (S.page && S.page !== "lab")) return;
     this._budget = 2;                                   // kare başına en çok 2 yükseklik örneği
     v.resize();
+    this.adaptQuality(dt);
     if (!this.picking && this.ready && this.enu) this.syncCamera(Scene3D.camera);
     v.render();
     // Sokak adı ve radar: saniyede ~8 kez
     this._ui = (this._ui || 0) + dt;
     if (this._ui > 0.12 && this.ready && !this.picking) { this._ui = 0; WorldUI.tick(); }
+  },
+  /** Zayıf ekran kartında akıcılık: 2 sn'lik ortalama kare süresi 40 ms'yi geçerse çözünürlük %85'e iner (en az %55), 20 ms'nin altında geri çıkar */
+  adaptQuality(dt) {
+    const q = this._q || (this._q = { t: 0, n: 0, sum: 0 });
+    q.t += dt; q.n++; q.sum += dt;
+    if (q.t < 2) return;
+    const avg = q.sum / q.n, v = this.viewer;
+    q.t = q.n = q.sum = 0;
+    if (!this.ready || this.picking) return;
+    if (avg > 0.04 && v.resolutionScale > 0.56) v.resolutionScale = Math.max(0.55, v.resolutionScale * 0.85);
+    else if (avg < 0.02 && v.resolutionScale < 1) v.resolutionScale = Math.min(1, v.resolutionScale * 1.12);
   },
   syncCamera(cam3) {
     const C = Cesium, cam = this.viewer.camera, A = this.ax;
@@ -1033,7 +1103,8 @@ void main() {
 const WorldUI = {
   init() {
     const $ = (s) => document.querySelector(s);
-    World.src = World.SOURCES[World.get("src", "open")] ? World.get("src", "open") : "open";
+    const def = World.token() ? "google" : "open", saved = World.get("src", def);
+    World.src = World.SOURCES[saved] ? saved : def;
     if (World.SOURCES[World.src].token && !World.token()) World.src = "open";
     $("#flyAreaSeg").onclick = (e) => { const b = e.target.closest("button"); if (b) setFlyArea(b.dataset.area); };
     $("#worldSrc").innerHTML = Object.entries(World.SOURCES).map(([k, s]) => `<option value="${k}">${s.name}</option>`).join("");
@@ -1053,7 +1124,14 @@ const WorldUI = {
     $("#wkClose").onclick = $("#wkCancel").onclick = () => this.closeKey();
     $("#worldKeyModal").addEventListener("mousedown", (e) => { if (e.target.id === "worldKeyModal") this.closeKey(); });
     $("#wkSave").onclick = () => this.saveKey();
-    $("#wkRemove").onclick = () => { World.set("token", null); $("#wkInput").value = ""; this.keyNote("Anahtar silindi.", ""); if (World.SOURCES[World.src].token) World.setSource("open"); this.sync(); };
+    $("#wkRemove").onclick = () => {
+      World.set("token", null);
+      $("#wkInput").value = "";
+      this.keyNote(World.token() ? "Kendi anahtarın silindi; projenin anahtarı kullanılacak." : "Anahtar silindi.", "");
+      $("#wkRemove").hidden = true;
+      if (!World.token() && World.SOURCES[World.src].token) World.setSource("open"); else World.reloadViewer();
+      this.sync();
+    };
     $("#worldPickCancel").onclick = () => World.cancelPick();
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
@@ -1072,9 +1150,9 @@ const WorldUI = {
     $("#worldBox").hidden = !real;
     $("#worldSrc").value = World.src;
     $("#worldSrcNote").textContent = World.SOURCES[World.src].note;
-    const tok = !!World.token();
-    $("#worldKeyBtn").textContent = tok ? "Cesium ion anahtarı: kayıtlı" : "Cesium ion anahtarı ekle (ücretsiz)";
-    $("#worldKeyBtn").classList.toggle("ok", tok);
+    const own = !!World.userToken();
+    $("#worldKeyBtn").innerHTML = ico("key") + (own ? "Kendi Cesium anahtarın kullanılıyor" : World.token() ? "Kendi Cesium anahtarını gir (isteğe bağlı)" : "Cesium ion anahtarı ekle (ücretsiz)");
+    $("#worldKeyBtn").classList.toggle("ok", own);
     const p = World.place;
     $("#worldPlace").innerHTML = p ? `<b>${esc(p.name)}</b><span>${esc(p.sub || "")}</span>` : "<span>Henüz yer seçilmedi. Adresini ara ya da haritada bir noktaya tıkla.</span>";
     const recent = World.get("recent", []);
@@ -1204,8 +1282,8 @@ const WorldUI = {
   openKey(wantSrc) {
     const $ = (s) => document.querySelector(s);
     this.wantSrc = wantSrc || null;
-    $("#wkInput").value = World.token();
-    $("#wkRemove").hidden = !World.token();
+    $("#wkInput").value = World.userToken();
+    $("#wkRemove").hidden = !World.userToken();
     this.keyNote("", "");
     $("#worldKeyModal").hidden = false;
     setTimeout(() => $("#wkInput").focus(), 30);
@@ -1226,7 +1304,11 @@ const WorldUI = {
     World.set("token", t);
     this.keyNote("Anahtar kaydedildi.", "good");
     this.sync();
-    setTimeout(() => { this.closeKey(); World.setSource(this.wantSrc || "google"); }, 500);
+    setTimeout(() => {
+      this.closeKey();
+      const to = this.wantSrc || "google";
+      if (to !== World.src) World.setSource(to); else World.reloadViewer();
+    }, 500);
   }
 };
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]); }

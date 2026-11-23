@@ -1,5 +1,18 @@
 # Sürüm geçmişi
 
+## 2.0.0 — 2026-11-23
+Sürüm 2.0: Gerçek dünya varsayılan olarak fotogerçekçi 3D (Google), anahtar girmeye gerek yok
+- Projenin Cesium ion anahtarı js/config.js içine gömüldü: Google fotogerçekçi 3D şehirler ve Cesium arazisi hiçbir şey girmeden açılır; isteyen kendi anahtarını girebilir (önceliklidir), silince proje anahtarına dönülür
+- Varsayılan harita kaynağı: Fotogerçekçi 3D (Google); kaynak listesi en iyiden başlayarak sıralandı
+- Kaynak açılamazsa (kota, ağ, anahtar) kendiliğinden bir sonrakine geçilir: Google 3D → Cesium 3D → Açık veri; karolar yüklenemezse uyarı çıkar
+- Drone, çevresindeki ayrıntılı 3D karolar gelene kadar bekler ("3D şehir yükleniyor · N karo"); yüklenmemiş kaba karolardan gelen yanlış yükseklikler elenir
+- 3D karolu kaynaklarda takip kamerası daha yukarıdan ve geriden bakar (fotogrametri yakından erimiş görünür)
+- Ekran kartı zorlanırsa 3D haritanın çizim çözünürlüğü kendiliğinden düşer, rahatlayınca geri çıkar
+- Cesium OSM Binaları: yer altı yapıları (metro, otopark) artık yer üstünde kutu olarak çizilmiyor
+- Google 3D, Cesium 3D, Google adres araması gerçek anahtarla test edildi (Galata, Kızılay)
+- Dar ekranda sol paneldeki uzun düğmenin paneli taşırması düzeltildi
+- README: harita kaynakları, gömülü anahtar ve kota notu güncellendi
+
 ## 1.31.0 — 2026-11-23
 Arayüz baştan tasarlandı: ölçüm cihazı estetiği, emoji yerine çizgi ikonlar
 - Mor-mavi renk geçişleri, buzlu cam ve parlama efektleri kaldırıldı; nötr grafit yüzeyler, ince çizgiler ve tek vurgu rengi (havacılık turuncusu)

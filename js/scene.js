@@ -2019,6 +2019,15 @@ const Scene3D = {
     this.rig.add(sc);
     this.shadowCatcher = sc;
   },
+  /** Gerçek dünyada takip mesafesi: fotogrametrik 3D şehirler yakından "erimiş" görünür, biraz yukarıdan ve geriden bakılır */
+  worldView(tiles) {
+    if (!this.views || this.mode !== "fly") return;
+    const cd = tiles ? Math.min(9000, Math.max(5200, this.droneSpan * 30)) : Math.min(6500, Math.max(2600, this.droneSpan * 18));
+    const ph = tiles ? 1.0 : 1.1;
+    for (const k of ["free", "fpv"]) { this.views[k].dist = cd; this.views[k].phi = ph; }
+    this.views.side.dist = cd * 1.3;
+    if (this.viewName !== "side") { this.orbit.dist = cd; this.orbit.phi = ph; this.updateCamera(); }
+  },
   /** Takip kamerasını hemen drone'un arkasına alır (başlangıçta kamera bir binanın içinde kalmasın) */
   snapFollow() {
     const f = this.flyPose || { x: 0, y: 0, z: 0, yaw: 0 };

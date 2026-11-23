@@ -275,7 +275,8 @@ kbd.mini { min-width: 18px; height: 18px; font-size: 10.5px; padding: 0 4px; bor
 .chipbtn.on { border-color: var(--accent); color: var(--accent); }
 .chipbtn.recent { border-style: dashed; }
 .world-src { display: grid !important; gap: 6px; margin: 4px 0 0 !important; font-size: 12.5px !important; color: var(--muted) !important; }
-#worldKeyBtn { justify-self: start; }
+#worldKeyBtn { justify-self: start; max-width: 100%; height: auto; min-height: 28px; padding-top: 5px; padding-bottom: 5px; white-space: normal; text-align: left; }
+.fly-help, .world-box, .fly-area { grid-template-columns: minmax(0, 1fr); }
 
 /* ---------- 3D sahne ---------- */
 .stage { position: relative; display: flex; flex-direction: column; overflow: hidden; padding: 0; min-height: 620px;

@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.31.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 2.0.0
 
-> **Güncel sürüm: v1.31.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v2.0.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.31.0** | 2026-11-23 | Arayüz baştan tasarlandı: ölçüm cihazı estetiği, emoji yerine çizgi ikonlar |
+| **v2.0.0** | 2026-11-23 | Sürüm 2.0: Gerçek dünya varsayılan olarak fotogerçekçi 3D (Google), anahtar girmeye gerek yok |
+| v1.31.0 | 2026-11-23 | Arayüz baştan tasarlandı: ölçüm cihazı estetiği, emoji yerine çizgi ikonlar |
 | v1.30.0 | 2026-11-23 | Uçuş bölümünde gerçek dünya: kendi sokağında, gerçek binaların arasında uç (CesiumJS) |
 | v1.29.1 | 2026-11-21 | Otomatik sürüm: css/style.css güncellendi, index.html güncellendi, js/app.js güncellendi, js/fly.js güncellendi |
 | v1.29.0 | 2026-11-21 | Bağlı drone testine ekranlı tartı ve asılabilir ağırlıklar |
@@ -130,21 +131,27 @@ Uçuş düzeneğinde **Uçuş alanı → Gerçek dünya** seçilince drone, arad
 
 **Fizik:** Zemin artık düz değildir: drone'un altında bina varsa zemin o binanın çatısıdır, çatıya inilebilir. Binaya yandan 6 m/sn'den (kolay modda 10 m/sn'den) hızlı çarpan drone çakılır; daha yavaşsa geri seker. Yerden 120 m'nin üstüne çıkınca yasal sınır uyarısı çıkar (Türkiye'de SHGM kuralı). Takip kamerası binaların içine girmez; gerekirse çatının üstüne yükselir.
 
-**Harita kaynakları** (sol paneldeki listeden seçilir):
+**Harita kaynakları** (sol paneldeki listeden seçilir; varsayılan: fotogerçekçi 3D):
 
-| Kaynak | Anahtar | Ne görürsün |
-|---|---|---|
-| Açık veri | Gerekmez | Esri uydu görüntüsü + OpenStreetMap bina tabanlarından bu uygulamanın kurduğu 3D binalar (pencereler, zemin kat dükkânları, kiremit ya da beton çatılar). Kat bilgisi girilmemiş binaların yüksekliği taban alanından tahmin edilir. |
-| 3D binalar + arazi (Cesium ion) | Ücretsiz Cesium ion anahtarı | Dağlı-yokuşlu Cesium Dünya Arazisi, Bing uydu görüntüsü, dünya çapında Cesium OSM Binaları. |
-| Fotogerçekçi 3D (Google) | Ücretsiz Cesium ion anahtarı | Google'ın gerçek fotoğraflı 3D şehir modeli: binalar, ağaçlar, arabalar. Büyük şehirlerde en iyi sonuç. |
+| Kaynak | Ne görürsün |
+|---|---|
+| Fotogerçekçi 3D (Google) | Google'ın gerçek fotoğraflı 3D şehir modeli: binalar, ağaçlar, arabalar, gerçek arazinin üstünde. Büyük şehirlerde en iyi sonuç; 3D çekimi olmayan yerlerde arazi ve uydu görüntüsü görünür. |
+| 3D binalar + arazi (Cesium) | Dağlı-yokuşlu Cesium Dünya Arazisi, Bing uydu görüntüsü, dünya çapında Cesium OSM Binaları (yer altı yapıları gizlenir). |
+| Açık veri (anahtarsız) | Esri uydu görüntüsü + OpenStreetMap bina tabanlarından bu uygulamanın kurduğu 3D binalar (pencereler, zemin kat dükkânları, kiremit ya da beton çatılar). Kat bilgisi girilmemiş binaların yüksekliği taban alanından tahmin edilir. |
 
-**Ücretsiz Cesium ion anahtarı nasıl alınır?**
+İlk iki kaynak **projenin Cesium ion anahtarıyla** hazır gelir (`js/config.js`); kimsenin anahtar girmesi gerekmez. Seçilen kaynak açılamazsa (kota dolmuş, ağ kesik) uygulama kendiliğinden bir sonrakine geçer: Google 3D → Cesium 3D → Açık veri.
+
+- 3D karolu kaynaklarda drone, çevresindeki ayrıntılı karolar gelene kadar bekler (durum yazısında “3D şehir yükleniyor · N karo”). Hızlı bilgisayarda birkaç saniye sürer.
+- Fotogrametrik 3D şehirler çok yakından bakınca “erimiş” görünür; bu yüzden takip kamerası bu kaynaklarda biraz yukarıdan ve geriden bakar. En güzel görüntü 15–40 m yükseklikte.
+- Ekran kartı zorlanırsa (kare süresi 40 ms'yi geçerse) 3D haritanın çizim çözünürlüğü kendiliğinden düşer, rahatlayınca geri çıkar.
+
+**Anahtar hakkında:** Tarayıcıda çalışan her harita uygulamasında olduğu gibi anahtar sayfayı açan herkes tarafından görülebilir; ücretsiz hesabın ayda 1.000 Google 3D açılışı bu anahtarı kullanan herkes için ortaktır. Kotayı korumak için anahtarın Cesium ion sitesinde yalnızca gereken izinlerle (assets:read, geocode) ve yalnızca kullanılan varlıklarla (1, 2, 96188, 2275207) sınırlandırılması önerilir. Çok kullanacak biri kendi ücretsiz anahtarını uygulamada **Kendi Cesium anahtarını gir** düğmesiyle ekleyebilir:
 1. [ion.cesium.com/signup](https://ion.cesium.com/signup/) adresinden ücretsiz hesap aç (ticari olmayan kullanım içindir).
 2. Üst menüden **Access Tokens** sayfasına gir, **Default Token** satırındaki anahtarı kopyala.
-3. Uygulamada **Cesium ion anahtarı ekle** düğmesine bas, anahtarı yapıştır, **Kaydet ve dene**. Anahtar yalnızca bu tarayıcıda saklanır ve yalnızca Cesium'un sunucusuna gider.
-4. Google 3D binalar açılmazsa ion sitesinde **Asset Depot → Google Photorealistic 3D Tiles → Add to my assets** adımını yap.
+3. Uygulamada **Kendi Cesium anahtarını gir** düğmesine bas, anahtarı yapıştır, **Kaydet ve dene**. Anahtar yalnızca bu tarayıcıda saklanır ve yalnızca Cesium'un sunucusuna gider; silinirse yeniden projenin anahtarı kullanılır.
+4. Kendi anahtarınla Google 3D açılmazsa ion sitesinde **Asset Depot → Google Photorealistic 3D Tiles → Add to my assets** adımını yap.
 
-Ücretsiz hesapta Google fotogerçekçi 3D ayda 1.000 açılışla sınırlıdır; uygulama bu yüzden 3D katmanı yalnızca kaynak seçildiğinde bir kez açar, yer değiştirince yeniden açmaz. Google kaynağı seçiliyken adres araması da Google'ın arama servisiyle yapılır (Google'ın kullanım koşulu).
+Kotayı korumak için uygulama 3D katmanı yalnızca kaynak seçildiğinde bir kez açar, yer değiştirince yeniden açmaz. Google kaynağı seçiliyken adres araması da Google'ın arama servisiyle yapılır (Google'ın kullanım koşulu).
 
 **Neden Cesium, neden Leaflet değil?** Leaflet hafif ve çok iyi bir **2D** harita kütüphanesidir ama üç boyut, bina yüksekliği ya da kamera eğme desteği yoktur. Sokakta binaların arasında uçmak için 3D küre, arazi ve 3D Tiles desteği gerekir; bu yüzden CesiumJS seçildi. Arama ve sokak adları için ayrıca bir 2D haritaya gerek kalmadı: radar aynı veriden çizilir.
 
