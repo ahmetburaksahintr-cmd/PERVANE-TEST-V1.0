@@ -487,6 +487,7 @@ const World = {
       if (!opts.quiet || !this._announced) log(`Gerçek dünya: ${place.name}${start.street && start.street !== place.name ? " (" + start.street + ")" : ""} · ${this.SOURCES[this.src].short}${cnt}${this.gates.length ? " · sokak boyunca " + this.gates.length + " halka" : ""}`, "ok");
       this._announced = true;
       WorldUI.sync();
+      this.fetchWeather();
     } catch (err) {
       if (job !== this.job) return;
       console.error(err);
@@ -876,6 +877,20 @@ const World = {
     const list = this.get("recent", []).filter((r) => Math.abs(r.lon - p.lon) > 1e-5 || Math.abs(r.lat - p.lat) > 1e-5);
     list.unshift({ name: p.name, sub: p.sub || "", lon: p.lon, lat: p.lat, line: p.line && JSON.stringify(p.line).length < 6000 ? p.line : null });
     this.set("recent", list.slice(0, 5));
+  },
+
+  /** Konumun o anki havası (Open-Meteo): hava yoğunluğu ve gerçek rüzgâr; 10 dakikada bir tazelenir */
+  async fetchWeather() {
+    const lat = this.lat0, lon = this.lon0, name = this.place ? this.place.name : "";
+    clearTimeout(this._wxTimer);
+    try {
+      await Env.fetchWeather(lat, lon, name);
+      if (this.on) envChanged();
+    } catch (e) {
+      Env.real = null;
+      if (this.on) { envChanged(); if (Env.windMode === "real") toast("Hava durumu alınamadı; standart atmosfer kullanılıyor", "warn"); }
+    }
+    this._wxTimer = setTimeout(() => { if (this.on && this.ready) this.fetchWeather(); }, 10 * 60 * 1000);
   },
 
   /** Sahnenin üstündeki durum yazısı */
@@ -1274,6 +1289,19 @@ const WorldUI = {
     ctx.strokeStyle = "rgba(255,255,255,.14)"; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(R, R, R * 0.5, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); ctx.arc(R, R, R - 1, 0, Math.PI * 2); ctx.stroke();
+    // Rüzgâr oku: rüzgârın estiği yön (burun yukarıdayken), yanında hız
+    const wx = Fly.wind.x / 1000, wn = -Fly.wind.z / 1000, ws = Math.hypot(wx, wn);
+    if (ws > 0.3) {
+      const sa = head - Math.PI / 2 - Math.atan2(wn, wx), r0 = R * 0.62, L = Math.min(R * 0.3, 8 + ws * 2.2);
+      const cx = R + Math.cos(sa) * r0, cy = R + Math.sin(sa) * r0;
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(sa);
+      ctx.strokeStyle = "#7fc4ff"; ctx.fillStyle = "#7fc4ff"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-L / 2, 0); ctx.lineTo(L / 2 - 4, 0); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(L / 2, 0); ctx.lineTo(L / 2 - 6, -4); ctx.lineTo(L / 2 - 6, 4); ctx.closePath(); ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = "#7fc4ff"; ctx.font = "600 9px 'IBM Plex Mono', Consolas, monospace";
+      ctx.fillText(fmt(ws, 1) + " m/s", R, 14);
+    }
     ctx.fillStyle = "rgba(255,255,255,.45)"; ctx.font = "600 9px 'IBM Plex Mono', Consolas, monospace";
     ctx.fillText("45 m", R, R + R * 0.5 - 7);
   },

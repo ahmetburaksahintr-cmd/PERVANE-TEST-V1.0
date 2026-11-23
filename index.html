@@ -115,6 +115,11 @@
               <button class="btn small" id="worldKeyBtn" type="button">Kendi Cesium anahtarını gir (isteğe bağlı)</button>
             </div>
           </div>
+          <div class="sub-h">Rüzgâr</div>
+          <div class="seg seg5" id="windSeg" role="group" aria-label="Rüzgâr">
+            <button data-wind="off" class="active">Yok</button><button data-wind="light">Hafif</button><button data-wind="moderate">Orta</button><button data-wind="strong">Sert</button><button data-wind="real">Gerçek</button>
+          </div>
+          <p class="note" id="windNote"></p>
           <div class="sub-h">Uçuş modu</div>
           <div class="seg seg4" id="flyModeSeg" role="group" aria-label="Uçuş modu">
             <button data-mode="easy" class="active">Kolay</button><button data-mode="angle">Angle</button><button data-mode="horizon">Horizon</button><button data-mode="acro">Acro</button>
@@ -173,6 +178,9 @@
         <h3 class="step-h"><span class="step">06</span>Ortam</h3>
         <label>Pervane sıcaklığı <b id="vTemp"></b><input type="range" id="temp" min="15" max="90" step="1"></label>
         <p class="note">Motor ısındıkça pervane göbeği de ısınır; PLA ~55 °C'de yumuşamaya başlar.</p>
+        <label>Hava sıcaklığı <b id="vAirT"></b><input type="range" id="airT" min="-10" max="45" step="1"></label>
+        <label>Rakım <b id="vAlt"></b><input type="range" id="alt" min="0" max="3000" step="50"></label>
+        <p class="note" id="rhoNote"></p>
       </section>
       <section>
         <h3 class="step-h"><span class="step">07</span>Görünüm</h3>
@@ -212,7 +220,10 @@
           <div><small>Yükseklik</small><b id="hFAlt">–</b></div>
           <div><small>Hız</small><b id="hFSpd">–</b></div>
           <div><small>Gaz</small><b id="hFThr">–</b></div>
+          <div><small>Batarya</small><b id="hFBat">–</b></div>
+          <p id="hFBatInfo"></p>
           <p id="hFInfo"></p>
+          <p id="hFEnv"></p>
           <p id="hFMsg"></p>
         </div>
         <div class="hud-drone" id="hDrone" hidden>
@@ -351,7 +362,7 @@
         <button class="acc-head" id="accMethodHead" aria-expanded="false" aria-controls="accMethodBody">
           <span class="acc-ico" aria-hidden="true"><svg class="ic"><use href="#i-func"/></svg></span>
           <span class="acc-titles"><b>Yöntem</b><small>Modelin dayandığı formüller ve sınırları</small></span>
-          <span class="chip on">6 formül</span>
+          <span class="chip on">15 formül</span>
           <span class="chev" aria-hidden="true"><svg class="ic"><use href="#i-chev"/></svg></span>
         </button>
         <div class="acc-body" id="accMethodBody" role="region" aria-labelledby="accMethodHead"><div class="acc-clip"><div class="acc-content">
@@ -363,6 +374,19 @@
             <div><b>Uç sehimi</b><code>δ = F·a²·(3L − a) / (6·E·I)</code></div>
             <div><b>Güvenlik katsayısı</b><code>GK = σdayanım / (σc + σb)</code></div>
           </div>
+          <h4 class="f-sub">Uçuş fiziği (Uçuş düzeneği)</h4>
+          <div class="formulas">
+            <div><b>Hava yoğunluğu</b><code>ρ = p_d/(R_d·T) + p_v/(R_v·T)</code></div>
+            <div><b>Rakımla basınç</b><code>p = 1013,25 · (1 − 2,2558·10⁻⁵·h)^5,256</code></div>
+            <div><b>Rüzgâr profili</b><code>U(z) = U₁₀ · ln(z/z₀) / ln(10/z₀)</code></div>
+            <div><b>Hamle (türbülans)</b><code>du = −u/τ·dt + σ·√(2dt/τ)·N</code></div>
+            <div><b>Hava direnci</b><code>a = (0,25 + k·|v − w|)·(v − w)</code></div>
+            <div><b>Batarya voltajı</b><code>V = n · OCV(SoC) − I · R_iç</code></div>
+            <div><b>Batarya akımı</b><code>I = (4·P / η + P_av) / V</code></div>
+            <div><b>Yer etkisi (4 rotor)</b><code>T_YE/T = 1/(1 − (R/4z)² − R²z/(d²+4z²)^1,5 − …)</code></div>
+            <div><b>Pervane girdabı</b><code>v_h = √(T / (2ρA)); 0,3 < v_iniş/v_h < 1,6</code></div>
+          </div>
+          <p class="note">Gerçek dünyada sıcaklık, basınç, nem ve rüzgâr konumun o anki havasından (Open-Meteo) gelir; parkurda Ortam bölümündeki hava sıcaklığı ve rakım kullanılır. Motorun ulaşabildiği devir batarya voltajıyla orantılıdır: dolu batarya (4,2 V/hücre) nominal 3,7 V'tan güçlü, yük altında ve boşaldıkça daha zayıftır.</p>
           <p class="note">Kanat, kökten sabitlenmiş dikdörtgen kesitli kiriş olarak modellenir; itki 0,7R noktasına etkir. Baskı katmanlarının zayıflığı ve sıcaklıkla yumuşama hesaba katılır. Titreşim, yorulma ve burkulma modele dahil değildir — bu yüzden gerçek testle karşılaştırma önemlidir.</p>
         </div></div></div>
       </article>
@@ -472,6 +496,7 @@
   <script src="js/report.js"></script>
   <script src="js/sound.js"></script>
   <script src="js/input.js"></script>
+  <script src="js/flightenv.js"></script>
   <script src="js/fly.js"></script>
   <script src="js/mvt.js"></script>
   <script src="js/world.js"></script>

@@ -3,7 +3,7 @@
    ---------------------------------------------------------
    Basitleştirilmiş mühendislik modeli (eğitim amaçlı):
 
-   İtki   : T = Ct · ρhava · n² · D⁴        (n: devir/saniye)
+   İtki   : T = Ct · ρhava · n² · D⁴        (n: devir/saniye; ρhava ortamdan: Physics.rho)
    Güç    : P = Cp · ρhava · n³ · D⁵
    Kanat  : kökten ankastre (sabitlenmiş) dikdörtgen kesitli kiriş
    Merkezkaç gerilmesi : σc = ρ · ω² · (R² − r₀²) / 2
@@ -17,9 +17,11 @@
    karşılaştırarak kalibre etmek bilim fuarı projesinin özüdür.
    ========================================================= */
 
-const AIR_RHO = 1.225; // kg/m³
+const AIR_RHO = 1.225; // kg/m³ (deniz seviyesi, 15 °C: standart atmosfer)
 
 const Physics = {
+  /** Ortamın hava yoğunluğu (kg/m³): Ortam ayarından ya da gerçek dünyada konumun havasından (js/flightenv.js) */
+  rho: AIR_RHO,
   /** Pervane geometrisi (inç cinsinden çap ve hatve) */
   geometry(p) {
     const D = p.diameterIn * 0.0254;           // m
@@ -53,7 +55,7 @@ const Physics = {
     const V = motor.cells * 3.7;
     const noLoad = motor.kv * V * 0.92;
     // P = Cp ρ n³ D⁵ = Pmax · η  →  n
-    const nPow = Math.cbrt((motor.pmax * 0.82) / (geo.Cp * AIR_RHO * geo.D ** 5));
+    const nPow = Math.cbrt((motor.pmax * 0.82) / (geo.Cp * this.rho * geo.D ** 5));
     return Math.min(noLoad, nPow * 60);
   },
 
@@ -71,8 +73,8 @@ const Physics = {
     const yieldS = strength * mat.yieldR;
 
     // Aerodinamik
-    let T = g.Ct * AIR_RHO * n * n * g.D ** 4;            // N (tüm kanatlar toplam)
-    const P = g.Cp * AIR_RHO * n ** 3 * g.D ** 5;          // W
+    let T = g.Ct * this.rho * n * n * g.D ** 4;           // N (tüm kanatlar toplam)
+    const P = g.Cp * this.rho * n ** 3 * g.D ** 5;         // W
 
     // Kanat başına yük, 0.7R noktasında tekil kuvvet varsayımı
     const F = T / g.B;

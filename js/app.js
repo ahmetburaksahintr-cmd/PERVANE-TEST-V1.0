@@ -16,7 +16,7 @@ const S = {
   tempC: 25, exag: 3, heat: true,
   throttle: 0, rpm: 0, plastic: 0, broken: false, bentLogged: false, warnLogged: false, yieldLogged: false,
   ramp: null, seq: null, history: [], measured: [], lastEval: null, t0: performance.now(),
-  sound: false, results: {}, payload: [], flyArea: "field",
+  sound: false, results: {}, payload: [], flyArea: "field", airT: 15, altM: 0,
   colorKey: "mat", customHex: "#ff6b00", simT: 0, lastRecT: -1, muteReport: false, seqRecords: [], breakShot: null, logLines: []
 };
 
@@ -73,6 +73,10 @@ function init() {
   bindRange("#chord", (v) => { S.prop.chordMm = v; newProp(); });
   bindRange("#thick", (v) => { S.prop.thickMm = v; newProp(); });
   bindRange("#temp", (v) => { S.tempC = v; refreshCompare(); });
+  bindRange("#airT", (v) => { S.airT = v; Env.lab.tC = v; envChanged(); });
+  bindRange("#alt", (v) => { S.altM = v; Env.lab.altM = v; envChanged(); });
+  $("#windSeg").onclick = (e) => { const b = e.target.closest("button"); if (b && !b.disabled) setWind(b.dataset.wind); };
+  try { const wm = localStorage.getItem(Env.KEY); if (Env.PRESETS[wm]) Env.windMode = wm; } catch (e) { /* özel pencere */ }
   bindRange("#exag", (v) => { S.exag = v; });
   bindRange("#thr", (v) => { S.throttle = v / 100; stopRamp(); });
   $("#heat").onchange = (e) => { S.heat = e.target.checked; };
@@ -156,6 +160,7 @@ function init() {
   // Kaydırıcıların dolu kısmını boya (elle değişimde)
   document.addEventListener("input", (e) => { if (e.target.type === "range") paintRange(e.target); });
   Scene3D.init($("#view3d"));
+  envChanged(true);
   selectMaterial("PLA", true);
   syncInputs();
   requestAnimationFrame(loop);
@@ -169,6 +174,8 @@ function syncInputs() {
   $("#chord").value = p.chordMm; $("#vChord").textContent = `${fmt(p.chordMm, 1)} mm`;
   $("#thick").value = p.thickMm; $("#vThick").textContent = `${fmt(p.thickMm, 1)} mm`;
   $("#temp").value = S.tempC; $("#vTemp").textContent = `${S.tempC} °C`;
+  $("#airT").value = S.airT; $("#vAirT").textContent = `${S.airT} °C`;
+  $("#alt").value = S.altM; $("#vAlt").textContent = `${fmt(S.altM)} m`;
   $("#exag").value = S.exag; $("#vExag").textContent = S.exag === 1 ? "gerçek" : `×${S.exag}`;
   $("#thr").value = Math.round(S.throttle * 100); $("#vThr").textContent = `${Math.round(S.throttle * 100)}%`;
   if (isDrone()) updateDroneInfo();
@@ -346,6 +353,7 @@ function setRig(mode) {
   Scene3D.setWorldMode(real);
   rebuildRig();
   if (real) World.enter(); else if (World.on) World.exit();
+  envChanged(true);
   updateViewBtn();
   newProp(fly ? `Uçuş bölümü: ${drone().name} · ${Fly.MODES[Fly.mode]} modu. Klavye, gamepad ya da RC kumandayla uç; tuşlar sol panelde.`
     : mode === "drone" ? `FPV drone düzeneği: ${drone().name} (4 × ${motor().name})` : "Test standına geçildi (tek motor + yük hücresi)");
@@ -356,6 +364,42 @@ function rebuildRig() {
   Scene3D.payload = S.rig === "drone" ? S.payload.slice() : [];
   Scene3D.setRig(S.rig, drone());
   if (World.on) World.reapply();                  // gerçek dünyada halkalar ve tabela yeni drone ölçüsüyle yeniden kurulur
+}
+
+/* ---------------- Ortam: hava yoğunluğu ve rüzgâr (js/flightenv.js) ---------------- */
+/** Hava değişti (Ortam kaydırıcısı, gerçek dünya havası): yoğunluk, notlar ve karşılaştırma yenilenir */
+function envChanged(silent) {
+  const c = Env.current();
+  const old = Physics.rho;
+  Physics.rho = c.rho;
+  const pct = (c.rho / 1.225 - 1) * 100;
+  const where = c.src === "real" ? `Gerçek hava (${Env.real.name || "konum"}, Open-Meteo): ${fmt(c.tC, 1)} °C · ${fmt(c.pHpa, 1)} hPa · nem %${fmt(c.rh)}`
+    : c.src === "isa" ? `Gerçek dünya, standart atmosfer (~${fmt(c.altM)} m): ${fmt(c.tC, 1)} °C · ${fmt(c.pHpa)} hPa`
+    : `${fmt(c.tC)} °C · ${fmt(c.altM)} m rakım · ${fmt(c.pHpa)} hPa`;
+  $("#rhoNote").innerHTML = `${where} → hava yoğunluğu <b>ρ = ${fmt(c.rho, 3)} kg/m³</b>${Math.abs(pct) >= 0.5 ? ` (deniz seviyesine göre <b>${pct > 0 ? "+" : "−"}%${fmt(Math.abs(pct), 1)}</b>: aynı devirde itki ve güç de bu kadar değişir)` : " (deniz seviyesi standart değeri)"}.`;
+  $("#airT").disabled = $("#alt").disabled = c.src !== "lab";
+  updateWindUi();
+  if (Math.abs(old - c.rho) > 1e-6) { refreshCompare(); syncInputs(); if (!silent) log(`Hava yoğunluğu: ${fmt(c.rho, 3)} kg/m³ (${c.src === "real" ? "gerçek hava" : c.src === "isa" ? "standart atmosfer" : "Ortam ayarı"})`, "info"); }
+}
+function setWind(m) {
+  if (!Env.PRESETS[m]) return;
+  Env.windMode = m;
+  Env.g = [0, 0, 0];
+  try { localStorage.setItem(Env.KEY, m); } catch (e) { /* özel pencere */ }
+  if (m === "real" && World.on && World.ready && !Env.real) World.fetchWeather();
+  updateWindUi();
+}
+function updateWindUi() {
+  const real = World.on && World.ready;
+  if (Env.windMode === "real" && !real && !World.on) { /* parkurda gerçek rüzgâr yok: sessizce yok sayılır */ }
+  document.querySelectorAll("#windSeg button").forEach((b) => {
+    b.classList.toggle("active", b.dataset.wind === Env.windMode);
+    if (b.dataset.wind === "real") { b.disabled = !World.on; b.title = World.on ? "Konumun o anki rüzgârı (Open-Meteo)" : "Yalnızca gerçek dünyada"; }
+  });
+  const w = Env.wind10();
+  $("#windNote").textContent = Env.windMode === "off" ? "Hava durgun."
+    : Env.windMode === "real" ? (Env.real ? `Şu an ${Env.real.name || "burada"}: 10 m'de ${fmt(Env.real.u, 1)} m/s, ${Env.dirFrom(Env.real.dirFrom)} (${fmt(Env.real.dirFrom)}°), hamleler ${fmt(Env.real.gust, 1)} m/s'ye kadar. Yere yaklaştıkça ve binaların arasında rüzgâr azalır.` : World.on ? "Hava durumu alınıyor…" : "Gerçek rüzgâr yalnızca gerçek dünyada.")
+    : `10 m'de ${fmt(w.u)} m/s, kuzeydoğudan (poyraz); hamleler ${fmt(w.gust, 1)} m/s'ye kadar. Kolay mod konumu tutmak için rüzgâra karşı eğilir.`;
 }
 
 /* ---------------- Uçuş alanı: parkur ya da gerçek dünya (js/world.js) ---------------- */
@@ -369,6 +413,8 @@ function setFlyArea(area) {
   Scene3D.setWorldMode(area === "real");
   rebuildRig();
   if (area === "real") World.enter(); else World.exit();
+  if (area !== "real" && Env.windMode === "real") Env.windMode = "off";
+  envChanged();
   newProp(area === "real" ? "Uçuş alanı: gerçek dünya" : "Uçuş alanı: parkur");
   WorldUI.sync();
 }
@@ -480,7 +526,7 @@ function loop(now) {
   if (isFly()) Fly.step(dt);                      // uçuşta gazı klavye ve gereken itki belirler
 
   // Motor ivmesi (pervanenin ataleti ve ESC tepkisi)
-  const target = S.throttle * maxRpm();
+  const target = S.throttle * maxRpm() * (isFly() ? Fly.vScale : 1);   // uçuşta batarya voltajı devri belirler
   // Uçuşta motorlar gaza hızlı cevap verir (gerçek ESC'ler gibi); testlerde yavaş rampa izlenebilirlik içindir
   const k = isFly() ? (target > S.rpm ? 16 : 10) : target > S.rpm ? 3.2 : 1.6;
   S.rpm += (target - S.rpm) * Math.min(1, k * dt);
@@ -592,12 +638,23 @@ function updateHud(ev, realDefl) {
     $("#hFAlt").textContent = `${fmt((Fly.y - (wl ? Fly.floor : 0)) / 1000, 1)} m`;
     $("#hFSpd").textContent = `${fmt(Fly.speedKmh())} km/sa`;
     $("#hFThr").textContent = `%${fmt(S.throttle * 100)}`;
+    const bat = Fly.bat, wd = Env.wind10(), wNow = Math.hypot(Fly.wind.x, Fly.wind.z) / 1000;
+    if (bat) {
+      const pct = Battery.pct(bat), vc = bat.v / bat.cells;
+      $("#hFBat").textContent = `%${pct}`;
+      $("#hFBat").style.color = bat.empty || pct < 10 ? "var(--bad)" : pct < 25 ? "var(--warn)" : "";
+      $("#hFBatInfo").textContent = `${fmt(bat.v, 1)} V (${fmt(vc, 2)}/hücre) · ${fmt(bat.i, bat.i < 10 ? 1 : 0)} A · ${fmt(bat.used)}/${fmt(bat.mah)} mAh · ${Math.floor(bat.t / 60)}:${String(Math.floor(bat.t % 60)).padStart(2, "0")}`;
+    }
+    $("#hFEnv").textContent = (wd.u > 0.05 ? `Rüzgâr ${Env.dirName(wd.dirFrom)} ${fmt(wd.u, 1)} m/s (burada ${fmt(wNow, 1)}, hamle ${fmt(wd.gust, 1)}) · ` : "Rüzgâr yok · ")
+      + `ρ = ${fmt(Physics.rho * Fly.rhoK, 3)} kg/m³` + (Fly.kGE > 1.01 ? ` · yer etkisi +%${fmt((Fly.kGE - 1) * 100)}` : "");
     const course = total ? `Halka ${Fly.passed}/${total}${Fly.timing || Fly.done ? " · " + fmt(Fly.time, 1) + " sn" : ""}` : "Serbest uçuş";
     $("#hFInfo").textContent = `${Fly.MODES[Fly.mode]} · ${!inp || inp.src === "klavye" ? "Klavye" : inp.name} · ${course}${wl ? " · Kalkış noktasına " + fmt(Math.hypot(Fly.x, Fly.z) / 1000) + " m" : ""}`;
     $("#hFMsg").textContent = World.on && !World.ready ? (World.picking ? "Haritada başlangıç noktasını seç ya da sol panelden bir yer ara." : "Harita hazırlanıyor…")
       : S.broken ? "Pervane kırıldı. Yeniden başlamak için R tuşuna bas."
       : Fly.crashed ? "Çakıldı. Yeniden başlamak için R tuşuna bas."
-      : Fly.noLift ? "Bu pervane drone'u kaldıramıyor: itki ağırlıktan az."
+      : Fly.bat && Fly.bat.empty ? "Batarya bitti. R tuşu yeni batarya takar."
+      : Fly.vrs > 0.3 ? "Pervane girdabı (VRS)! İleri uç ya da gazı artır."
+      : Fly.noLift ? (Fly.vScale < 0.97 ? "Batarya voltajı düştü: itki ağırlığı karşılamıyor." : "Bu pervane drone'u kaldıramıyor: itki ağırlıktan az.")
       : Fly.mode !== "easy" && !Fly.armed && Fly.needLow ? "Motorları çalıştırmak için gazı en alta indir."
       : Fly.y <= Fly.floor ? (Fly.mode === "easy" ? "Kalkmak için E tuşuna bas ya da gazı yukarı it." : `Kalkmak için gazı artır (askı gazı ≈ %${fmt(Fly.hover * 100)}).`)
       : Fly.done ? "Parkur tamamlandı!" : "";

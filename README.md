@@ -1,12 +1,12 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 2.0.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 2.1.0
 
-> **Güncel sürüm: v2.0.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v2.1.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v2.0.0** | 2026-11-23 | Sürüm 2.0: Gerçek dünya varsayılan olarak fotogerçekçi 3D (Google), anahtar girmeye gerek yok |
+| **v2.1.0** | 2026-11-23 | Uçuş fiziği: gerçek hava yoğunluğu, gerçek rüzgâr ve hamleler, batarya, yer etkisi, pervane girdabı |
 | v1.31.0 | 2026-11-23 | Arayüz baştan tasarlandı: ölçüm cihazı estetiği, emoji yerine çizgi ikonlar |
 | v1.30.0 | 2026-11-23 | Uçuş bölümünde gerçek dünya: kendi sokağında, gerçek binaların arasında uç (CesiumJS) |
 | v1.29.1 | 2026-11-21 | Otomatik sürüm: css/style.css güncellendi, index.html güncellendi, js/app.js güncellendi, js/fly.js güncellendi |
@@ -157,6 +157,15 @@ Kotayı korumak için uygulama 3D katmanı yalnızca kaynak seçildiğinde bir k
 
 **Sınırlar:** Anahtarsız kaynakta zemin düzdür (yokuşlar yoktur) ve binalar gerçek dokusu olmayan, düz çatılı basitleştirilmiş bloklardır (pencereler temsilîdir); uydu görüntüsü çok alçaktan bakınca bulanıklaşır. Bina tabanları OpenStreetMap'te çizildiği kadardır; bazı mahallelerde eksik olabilir. Drone her zaman binaların önünde çizilir (iki ayrı 3D sahne üst üste çizildiği için bir binanın arkasına geçse de görünür kalır).
 
+## Uçuş fiziği (sürüm 2.1)
+Uçuş düzeneğinde drone'u etkileyen gerçek ortam koşulları hesaba katılır. Formüller **Nasıl hesaplanıyor?** sayfasında da var.
+
+- **Hava yoğunluğu:** Pervane itkisi ve gücü havanın yoğunluğuyla (ρ) doğru orantılıdır. ρ nemli hava denkleminden hesaplanır: ρ = p_d/(R_d·T) + p_v/(R_v·T). Gerçek dünyada konumun o anki sıcaklık, basınç ve nemi kullanılır; parkurda ve test standında **Ortam** bölümündeki *Hava sıcaklığı* ve *Rakım* ayarları. Örnek: 900 m'de (Ankara) aynı devirde itki deniz seviyesine göre yaklaşık %10 azdır; bu, fiziksel testlerin modelle karşılaştırılmasında önemlidir. Drone tırmandıkça yoğunluk standart atmosfere göre azalır.
+- **Rüzgâr ve hamleler:** *Rüzgâr* seçimi: Yok · Hafif (3 m/s) · Orta (7 m/s) · Sert (12 m/s) · **Gerçek** (konumun o anki rüzgârı). Rüzgâr 10 m'de verilir ve yere yaklaştıkça logaritmik yasayla azalır (şehirde binalar arasında daha çok). Ani hamleler Dryden türü rastgele süreçle üretilir. Hava direnci drone'un **havaya göre** hızından hesaplanır: kolay mod konumunu tutmak için rüzgâra karşı eğilir (göstergede gaz artar); angle/horizon/acro modunda pilot düzeltmezse drone sürüklenir. Radarda mavi ok rüzgârın estiği yönü gösterir.
+- **Batarya:** Her drone kendi bataryasıyla uçar (hücre sayısı ve mAh). Voltaj şarj durumuna ve yüke bağlıdır: V = n·OCV(SoC) − I·R_iç. Motor devri voltajla orantılı olduğundan dolu batarya (4,2 V/hücre) güçlü, boşalmış ya da yük altında voltajı düşmüş batarya zayıftır. Göstergede yüzde, voltaj, akım, harcanan mAh ve uçuş süresi görünür; %20'de uyarı verilir, bitince ESC motorları keser. **R** tuşu (ya da *Yeni pervane tak*) dolu batarya takar.
+- **Yer etkisi:** Pervaneler yere yakınken yerden yansıyan akış itkiyi artırır. Dört rotorlu drone için yayımlanmış model kullanılır (Sanchez-Cuevas vd., 2017): tek pervane terimi (Cheeseman–Bennett) + komşu ve çapraz pervaneler + gövde. 5" drone'da yerden 10 cm'de itki ~%9 artar.
+- **Pervane girdabı (VRS):** Drone kendi aşağı akışının içine hızla ve dikey inerse (askı indüklenmiş hızının 0,3–1,6 katı; 5" drone için ~2–11 m/s) itki düşer, gövde sarsılır. Göstergede uyarı çıkar; ileri uçarak ya da gaz vererek çıkılır. Gerçek FPV pilotlarının "propwash" dediği durumun temeli budur.
+
 ## Arayüz
 Arayüz bir ölçüm cihazı yazılımı gibi tasarlandı: amaç, verinin öne çıkması ve göz yormaması.
 - **Renkler:** Nötr grafit yüzeyler ve tek vurgu rengi olarak havacılık turuncusu (drone halkalarıyla aynı). Yeşil / sarı / kırmızı yalnızca durum bildirir (güvenli / sınırda / kırıldı).
@@ -276,6 +285,7 @@ Gerçek dünya uçuşu için internetten yüklenenler (yalnızca o bölüm açı
 | [OpenFreeMap](https://openfreemap.org) vektör karoları ([OpenMapTiles](https://openmaptiles.org) şeması) | Bina tabanları ve yükseklikleri, yollar, sokak adları | Veri: © OpenStreetMap katkıcıları, ODbL |
 | [Nominatim](https://nominatim.org) (OpenStreetMap) | Adres ve sokak arama (saniyede en çok 1 istek) | ODbL, kullanım politikasına uygun |
 | [Esri World Imagery](https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9) | Anahtarsız kaynakta uydu görüntüsü | Esri koşulları, kaynak gösterilerek |
+| [Open-Meteo](https://open-meteo.com) | Gerçek dünyada o anki sıcaklık, basınç, nem ve rüzgâr (anahtarsız) | Açık kaynak, ticari olmayan kullanımda ücretsiz; CC BY 4.0 |
 | [Cesium ion](https://cesium.com/platform/cesium-ion/) | Arazi, Bing uydu, Cesium OSM Binaları, Google Fotogerçekçi 3D | Ücretsiz hesap, ticari olmayan kullanım |
 
 Vektör karolar `js/mvt.js` içindeki küçük bir okuyucuyla çözülür (ek kütüphane yok).

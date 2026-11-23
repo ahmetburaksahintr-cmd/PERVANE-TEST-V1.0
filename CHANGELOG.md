@@ -1,5 +1,17 @@
 # Sürüm geçmişi
 
+## 2.1.0 — 2026-11-23
+Uçuş fiziği: gerçek hava yoğunluğu, gerçek rüzgâr ve hamleler, batarya, yer etkisi, pervane girdabı
+- Hava yoğunluğu nemli hava denkleminden hesaplanır; itki ve güç ona göre değişir (900 m'de aynı devirde ~%10 az itki). Gerçek dünyada konumun o anki sıcaklık, basınç ve nemi Open-Meteo'dan (anahtarsız) gelir; tırmandıkça yoğunluk standart atmosfere göre azalır
+- Ortam bölümüne Hava sıcaklığı ve Rakım ayarları eklendi (test standı, grafikler, karşılaştırma ve parkur uçuşu bunları kullanır); hesaplanan ρ ve etkisi yazılır
+- Rüzgâr seçimi: Yok, Hafif 3, Orta 7, Sert 12 m/s, Gerçek (konumun o anki rüzgârı); yükseklikle logaritmik profil, Dryden türü hamleler; hava direnci havaya göre hızdan
+- Kolay mod konumunu tutmak için rüzgâra karşı eğilir; itki yetmezse sürüklenir. Diğer modlarda pilot düzeltmezse drone rüzgârla gider. Radarda rüzgâr oku
+- Batarya: her drone kendi hücre sayısı ve kapasitesiyle; voltaj şarja ve yüke göre düşer (V = n·OCV − I·R), motor devri voltajla orantılı; göstergede yüzde, voltaj, akım, mAh ve süre; %20 uyarısı, bitince ESC keser; R yeni batarya takar
+- Yer etkisi: dört rotorlu model (Sanchez-Cuevas 2017), yere yakın askıda daha az gaz gerekir
+- Pervane girdabı (VRS): kendi aşağı akışına hızlı dikey inişte itki kaybı ve sarsıntı, göstergede uyarı
+- Nasıl hesaplanıyor? sayfasına 9 uçuş fiziği formülü; README'ye Uçuş fiziği bölümü
+- Göstergenin uçuş bölümü 4 sütun: yükseklik, hız, gaz, batarya; altta batarya ayrıntısı, rüzgâr ve ρ
+
 ## 2.0.0 — 2026-11-23
 Sürüm 2.0: Gerçek dünya varsayılan olarak fotogerçekçi 3D (Google), anahtar girmeye gerek yok
 - Projenin Cesium ion anahtarı js/config.js içine gömüldü: Google fotogerçekçi 3D şehirler ve Cesium arazisi hiçbir şey girmeden açılır; isteyen kendi anahtarını girebilir (önceliklidir), silince proje anahtarına dönülür

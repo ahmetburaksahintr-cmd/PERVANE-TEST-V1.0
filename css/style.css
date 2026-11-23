@@ -177,6 +177,12 @@ select:disabled { opacity: .45; cursor: not-allowed; }
 #rigSeg button.active .ic, #flyAreaSeg button.active .ic { color: var(--accent); }
 .seg4 button { font-size: 12px; }
 .seg3 button { gap: 5px; padding: 0 4px; font-size: 12px; }
+.seg5 button { font-size: 11.5px; padding: 0 2px; }
+.seg button:disabled { opacity: .35; cursor: not-allowed; }
+.hud-drone.hud-fly { grid-template-columns: repeat(4, 1fr); }
+.side .note + label { margin-top: 12px; }
+#hFBatInfo, #hFEnv { color: var(--muted); font-family: var(--mono); font-size: 10.5px; }
+.f-sub { margin: 18px 0 10px; font-size: 13px; font-weight: 600; color: var(--text-2); }
 .seg3 button .ic { width: 15px; height: 15px; }
 
 /* Malzemeler */
@@ -309,7 +315,7 @@ kbd.mini { min-width: 18px; height: 18px; font-size: 10.5px; padding: 0 4px; bor
 .hud-drone p { grid-column: 1 / -1; font-size: 11.5px; line-height: 1.45; color: var(--text-2); }
 .hud-drone p:empty { display: none; }
 .hud-fly { order: -2; background: rgba(255, 106, 26, .05); }
-.hud-fly b { font-size: 17px; }
+.hud-fly b { font-size: 15px; white-space: nowrap; }
 #hFMsg { color: var(--accent-hi); }
 .limit { padding: 10px 12px; border-top: 1px solid var(--line); }
 .limit-head { display: flex; justify-content: space-between; align-items: baseline; }
