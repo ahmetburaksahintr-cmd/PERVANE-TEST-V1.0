@@ -26,6 +26,10 @@
            yüksel/alçal) · Boşluk gazı kes · H askı gazı · R baştan
            1–4 mod seç · V bakışı değiştir
    Birimler: milimetre, saniye (sahneyle aynı).
+
+   Gerçek dünya (js/world.js): zemin sabit 0 değildir; drone'un altındaki
+   çatı ya da arazi yüksekliği "floor" olarak gelir. Binaya yandan hızlı
+   çarpan drone çakılır, yavaş değerse geri seker.
    ========================================================= */
 
 const Fly = {
@@ -44,6 +48,8 @@ const Fly = {
   yaw: 0, pitch: 0, roll: 0, thr: 0, hover: 0, auw: 0, inp: null,
   armed: false, crashed: false, needLow: false, noLift: false, hardLanded: false, air: false,
   time: 0, timing: false, done: false, passed: 0,
+  hold: false, floor: 0,        // hold: gerçek dünya yüklenirken drone bekler · floor: altındaki zemin/çatı (mm)
+  WORLD_FIELD: 2500000, WORLD_CEILING: 400000, LEGAL_ALT: 120000,
 
   // Eski adlarla erişim (gösterge ve testler)
   get x() { return this.p.x; }, set x(n) { this.p.x = n; },
@@ -55,8 +61,13 @@ const Fly = {
 
   /** Drone'u pede geri koyar, halkaları ve süreyi sıfırlar */
   reset() {
-    this.p.set(0, 0, 0); this.v.set(0, 0, 0); this.w.set(0, 0, 0); this.q.identity();
-    this.yaw = this.pitch = this.roll = this.thr = 0;
+    const world = this.inWorld();
+    this.floor = world ? Math.max(0, World.floorAt(0, 0)) : 0;
+    this.p.set(0, this.floor, 0); this.v.set(0, 0, 0); this.w.set(0, 0, 0);
+    this.yaw = world ? World.startYaw || 0 : 0;
+    this.q.setFromEuler(Fly._e.set(0, this.yaw, 0, "YXZ"));
+    this.pitch = this.roll = this.thr = 0;
+    this.wallWarned = 0; this.altWarned = false;
     this.armed = this.crashed = this.timing = this.done = this.noLift = this.needLow = this.air = this.boundsWarned = false;
     this.time = 0; this.passed = 0;
     Input.kbThr = 0;
@@ -70,7 +81,7 @@ const Fly = {
     const was = this.mode;
     this.mode = m;
     try { localStorage.setItem(this.MODE_KEY, m); } catch (e) { /* özel pencere: hatırlanmaz */ }
-    if (was === "easy" && this.p.y > 0 && !S.broken && !this.crashed) {
+    if (was === "easy" && this.p.y > this.floor && !S.broken && !this.crashed) {
       // Havadayken yardımlı moddan çıkılıyor: motorlar çalışıyor sayılır, klavye gazı askı gazından başlar
       this.armed = true;
       Input.kbThr = this.hover || 0.3;
@@ -79,8 +90,14 @@ const Fly = {
   },
 
   /** Her karede çağrılır; S.throttle'ı ayarlar, konumu ve tutumu ilerletir */
+  /** Gerçek dünya açık ve hazır mı */
+  inWorld() { return typeof World !== "undefined" && World.on && World.ready; },
+
   step(dt) {
     const inp = (this.inp = Input.read(dt, this.mode));
+    if (this.hold) { S.throttle = 0; this.v.set(0, 0, 0); this.push(); return; }
+    const world = this.inWorld();
+    this.floor = world ? World.floorAt(this.p.x, this.p.z) : 0;
     const curve = this.curve(), auw = drone().massG + 4 * curve.mass;
     this.auw = auw;
     this.hover = curve.cap >= auw ? this.throttleFor(auw, curve) : 1;
@@ -89,15 +106,26 @@ const Fly = {
     if (S.broken || this.crashed) this.stepFall(dt);
     else if (this.mode === "easy") this.stepEasy(dt, inp, curve, auw);
     else this.stepRate(dt, inp, curve, auw);
+    // Gerçek dünya: binaya çarpma ve çatıya çıkma
+    const p = this.p, v = this.v;
+    if (world && !this.crashed && !S.broken) this.worldContact(px, py, pz);
     // Alan sınırı ve tavan
-    const p = this.p, v = this.v, r = Math.hypot(p.x, p.z);
-    if (r > this.FIELD) {
+    const FIELD = world ? this.WORLD_FIELD : this.FIELD, CEIL = world ? this.WORLD_CEILING : this.CEILING, r = Math.hypot(p.x, p.z);
+    if (r > FIELD) {
       const nx = p.x / r, nz = p.z / r, vn = v.x * nx + v.z * nz;
-      p.x = nx * this.FIELD; p.z = nz * this.FIELD;
+      p.x = nx * FIELD; p.z = nz * FIELD;
       if (vn > 0) { v.x -= 1.6 * vn * nx; v.z -= 1.6 * vn * nz; }
-      if (!this.boundsWarned) { this.boundsWarned = true; log(`↩️ Alan sınırına ulaşıldı (${fmt(this.FIELD / 1000)} m); drone geri çevrildi.`, "warn"); }
+      if (!this.boundsWarned) { this.boundsWarned = true; log(`Alan sınırına ulaşıldı (${fmt(FIELD / 1000)} m); drone geri çevrildi.`, "warn"); }
     }
-    if (p.y > this.CEILING) { p.y = this.CEILING; if (v.y > 0) v.y = 0; }
+    if (p.y > CEIL) { p.y = CEIL; if (v.y > 0) v.y = 0; }
+    if (world) {
+      const agl = p.y - this.floor;
+      if (agl > this.LEGAL_ALT && !this.altWarned) {
+        this.altWarned = true;
+        log("Yerden 120 m'nin üstündesin. Türkiye'de (SHGM) ve AB'de drone'lar yerden en çok 120 m yükseğe çıkabilir.", "warn");
+        toast("120 m yasal yükseklik sınırı aşıldı", "warn");
+      } else if (agl < this.LEGAL_ALT * 0.9) this.altWarned = false;
+    }
     this.course(px, py, pz, dt);
     this.push();
   },
@@ -111,9 +139,10 @@ const Fly = {
     const fx = Math.cos(this.yaw), fz = -Math.sin(this.yaw);     // burun yönü
     const rx = Math.sin(this.yaw), rz = Math.cos(this.yaw);      // sağ taraf
     const level = () => this.q.setFromEuler(Fly._e.set(this.roll, this.yaw, this.pitch, "YXZ"));
+    const fl = this.floor;
     // Yerde ve kalkış istenmiyorsa: motorlar rölantide
-    if (p.y <= 0 && inp.climb <= 0.05) {
-      v.set(0, 0, 0); p.y = 0;
+    if (p.y <= fl && inp.climb <= 0.05) {
+      v.set(0, 0, 0); p.y = fl;
       this.pitch += (0 - this.pitch) * Math.min(1, dt * 8); this.roll += (0 - this.roll) * Math.min(1, dt * 8);
       S.throttle = 0.1;
       this.air = false;
@@ -133,23 +162,41 @@ const Fly = {
     v.x += dvx; v.z += dvz; v.y += dvy;
     const py = p.y;
     p.addScaledVector(v, dt);
-    if (p.y <= 0) {                                      // yere değdi
-      if (v.y < -2600 && !this.hardLanded) { this.hardLanded = true; log("🛬 Sert iniş! Daha yavaş alçal.", "warn"); }
-      p.y = 0; v.y = Math.max(0, v.y);
-    } else if (p.y > 30) { this.hardLanded = false; this.air = true; }
+    if (p.y <= fl) {                                     // yere (ya da çatıya) değdi
+      if (v.y < -2600 && !this.hardLanded) { this.hardLanded = true; log("Sert iniş! Daha yavaş alçal.", "warn"); }
+      p.y = fl; v.y = Math.max(0, v.y);
+    } else if (p.y > fl + 30) { this.hardLanded = false; this.air = true; }
     // Görsel eğilme: gidilen yöne doğru yatar
     const vf = v.x * fx + v.z * fz, vr = v.x * rx + v.z * rz, kt = Math.min(1, dt * 6);
     this.pitch += (-0.5 * (vf / maxSpeed) - this.pitch) * kt;
     this.roll += (0.5 * (vr / maxSpeed) - inp.yaw * 0.06 - this.roll) * kt;
-    if (py <= 0 && p.y > 0) this.armed = true;
+    if (py <= fl && p.y > fl) this.armed = true;
     level();
+  },
+
+  /**
+   * Gerçek dünya teması: yeni konumun altındaki zemin, eski yükseklikten 1,5 m'den fazla yüksekse orası bir duvardır.
+   * Yatay hız 6 m/sn'yi (kolay modda 10 m/sn'yi) geçiyorsa drone çakılır; geçmiyorsa geri seker.
+   */
+  worldContact(px, py, pz) {
+    const p = this.p, v = this.v, f2 = World.floorAt(p.x, p.z);
+    if (f2 > Math.max(py, this.floor) + 1500 && f2 > p.y) {
+      const hs = Math.hypot(v.x, v.z);
+      p.x = px; p.z = pz;
+      if (hs > (this.mode === "easy" ? 10000 : 6000)) { this.crash(0, hs, "binaya"); return; }
+      v.x *= -0.3; v.z *= -0.3;
+      if (performance.now() - (this.wallWarned || 0) > 2500) { this.wallWarned = performance.now(); toast("Binaya değdin", "warn"); }
+      return;
+    }
+    if (f2 > p.y) { p.y = f2; if (v.y < 0) v.y = 0; }              // kaldırım, yokuş, çatı kenarı: drone zemine oturur
+    this.floor = f2;
   },
 
   /* ---------------- Angle / Horizon / Acro: gerçek uçuş dinamiği ---------------- */
   stepRate(dt, inp, curve, auw) {
     // Gaz: yaysız kolda 0..1; yaylı çubukta orta = askı gazı (yerde ve çubuk ortada/aşağıdaysa rölanti)
     let thr = inp.centered ? (inp.thrRaw >= 0 ? this.hover + inp.thrRaw * (1 - this.hover) : this.hover * (1 + inp.thrRaw)) : inp.thr;
-    if (inp.centered && this.p.y <= 0 && inp.thrRaw <= 0.05) thr = 0;
+    if (inp.centered && this.p.y <= this.floor && inp.thrRaw <= 0.05) thr = 0;
     thr = Math.max(0, Math.min(1, thr));
     this.thr = thr;
     if (!this.armed) {
@@ -208,12 +255,13 @@ const Fly = {
     v.y += (up.y * acc - this.G - v.y * drag) * h;
     v.z += (up.z * acc - v.z * drag) * h;
     p.addScaledVector(v, h);
-    if (p.y > 0) { if (p.y > 30) { this.air = true; this.hardLanded = false; } return false; }
+    const fl = this.floor;
+    if (p.y > fl) { if (p.y > fl + 30) { this.air = true; this.hardLanded = false; } return false; }
     // Yer teması
     const tilt = Math.acos(Math.max(-1, Math.min(1, up.y))), vy = v.y, hs = Math.hypot(v.x, v.z);
     if (this.air && (vy < -4500 || hs > 9000 || (tilt > 1.1 && (hs > 1500 || vy < -1500)))) { this.crash(vy, hs); return true; }
-    if (this.air && vy < -2600 && !this.hardLanded) { this.hardLanded = true; log("🛬 Sert iniş! Gazı daha yavaş kıs.", "warn"); }
-    p.y = 0;
+    if (this.air && vy < -2600 && !this.hardLanded) { this.hardLanded = true; log("Sert iniş! Gazı daha yavaş kıs.", "warn"); }
+    p.y = fl;
     if (v.y < 0) v.y = 0;
     const f = Math.pow(0.02, h);                          // yerde sürtünme
     v.x *= f; v.z *= f;
@@ -223,12 +271,13 @@ const Fly = {
   },
 
   /** Yere sert ya da yan çarpma */
-  crash(vy, hs) {
+  crash(vy, hs, what) {
     this.crashed = true; this.armed = false; this.timing = false;
-    this.p.y = 0; this.v.set(0, 0, 0); this.w.set(0, 0, 0);
+    if (!what) this.p.y = this.floor;
+    this.v.set(0, 0, 0); this.w.set(0, 0, 0);
     S.throttle = 0;
-    log(`💥 Çakıldı: yere ${fmt(Math.hypot(vy, hs) * 0.0036)} km/sa hızla çarptı. R tuşu ya da “Yeni pervane tak” ile yeniden başla.`, "bad");
-    toast("💥 Çakıldı. Yeniden başlamak için R tuşuna bas.", "bad");
+    log(`Çakıldı: ${what || "yere"} ${fmt(Math.hypot(vy, hs) * 0.0036)} km/sa hızla çarptı. R tuşu ya da “Yeni pervane tak” ile yeniden başla.`, "bad");
+    toast("Çakıldı. Yeniden başlamak için R tuşuna bas.", "bad");
     if (typeof Sound !== "undefined") Sound.crack();
   },
 
@@ -237,12 +286,13 @@ const Fly = {
     const p = this.p, v = this.v, Q = Fly._q, Dv = Fly._d;
     S.throttle = 0;
     this.armed = false;
-    if (p.y > 0) {
+    const fl = this.floor;
+    if (p.y > fl) {
       v.y -= this.G * dt;
       v.x *= Math.pow(0.5, dt); v.z *= Math.pow(0.5, dt);
       p.addScaledVector(v, dt);
       this.q.multiply(Q.setFromAxisAngle(Dv.set(0.83, 0.36, 0.43), 8 * dt)).normalize();
-      if (p.y <= 0) { p.y = 0; v.set(0, 0, 0); }
+      if (p.y <= fl) { p.y = fl; v.set(0, 0, 0); }
     } else {
       v.set(0, 0, 0);
       if (S.broken) this.q.slerp(Q.setFromEuler(Fly._e.set(0.22, this.yaw, 0, "YXZ")), Math.min(1, dt * 8));   // yan yatmış durur
@@ -254,7 +304,7 @@ const Fly = {
   /** Süre ve halkalar */
   course(px, py, pz, dt) {
     const p = this.p;
-    if (!this.timing && !this.done && !this.crashed && py <= 0 && p.y > 0) { this.timing = true; this.time = 0; }
+    if (!this.timing && !this.done && !this.crashed && py <= this.floor && p.y > this.floor) { this.timing = true; this.time = 0; }
     if (this.timing) this.time += dt;
     const by = Scene3D.droneBaseY || 0;
     for (const g of Scene3D.flyGates || []) {
@@ -267,9 +317,9 @@ const Fly = {
       const total = Scene3D.flyGates.length;
       if (this.passed === total) {
         this.timing = false; this.done = true;
-        log(`🏁 Tüm halkalar geçildi: ${fmt(this.time, 1)} saniye (${drone().short}, ${mat().name} pervane, ${this.MODES[this.mode]} modu)`, "ok");
-        toast(`🏁 Parkur tamam: ${fmt(this.time, 1)} sn`, "ok");
-      } else toast(`✅ Halka ${this.passed}/${total}`, "ok");
+        log(`Tüm halkalar geçildi: ${fmt(this.time, 1)} saniye (${drone().short}, ${mat().name} pervane, ${this.MODES[this.mode]} modu${this.inWorld() && World.place ? ", " + World.place.name : ""})`, "ok");
+        toast(`Parkur tamam: ${fmt(this.time, 1)} sn`, "ok");
+      } else toast(`Halka ${this.passed}/${total}`, "ok");
     }
   },
 
@@ -351,7 +401,7 @@ function flyKey(e, down) {
   e.preventDefault();
   if (hold.includes(e.code)) { if (down) Fly.keys.add(e.code); else Fly.keys.delete(e.code); return; }
   if (!down || e.repeat) return;
-  if (e.code === "KeyR") newProp("🔄 Drone pede döndü");
+  if (e.code === "KeyR") newProp("Drone kalkış noktasına döndü");
   else if (e.code === "Space") Input.kbThr = 0;                       // gazı kes
   else if (e.code === "KeyH") Input.kbThr = Fly.hover || 0.3;         // askı gazı
   else if (e.code === "KeyV") document.querySelector("#viewBtn").click();

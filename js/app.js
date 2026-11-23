@@ -12,7 +12,7 @@ const S = {
   tempC: 25, exag: 3, heat: true,
   throttle: 0, rpm: 0, plastic: 0, broken: false, bentLogged: false, warnLogged: false, yieldLogged: false,
   ramp: null, seq: null, history: [], measured: [], lastEval: null, t0: performance.now(),
-  sound: false, results: {}, payload: [],
+  sound: false, results: {}, payload: [], flyArea: "field",
   colorKey: "mat", customHex: "#ff6b00", simT: 0, lastRecT: -1, muteReport: false, seqRecords: [], breakShot: null, logLines: []
 };
 
@@ -114,6 +114,8 @@ function init() {
   Fly.mode = Fly.MODES[savedMode] ? savedMode : "easy";
   updateFlyModeUi();
   initPadUi();
+  S.flyArea = World.get("area", "field") === "real" ? "real" : "field";
+  WorldUI.init();
   $("#csvIn").onchange = importCsv;
   $("#serialBtn").onclick = connectSerial;
   $("#calBtn").onclick = calibrate;
@@ -321,7 +323,10 @@ function setRig(mode) {
   $("#payloadBox").hidden = mode !== "drone";
   Fly.keys.clear();
   Scene3D.viewName = "free";
+  const real = fly && S.flyArea === "real";
+  Scene3D.setWorldMode(real);
   rebuildRig();
+  if (real) World.enter(); else if (World.on) World.exit();
   updateViewBtn();
   newProp(fly ? `🎮 Uçuş bölümü: ${drone().name} · ${Fly.MODES[Fly.mode]} modu. Klavye, gamepad ya da RC kumandayla uç; tuşlar sol panelde.`
     : mode === "drone" ? `🛸 FPV drone düzeneği: ${drone().name} (4 × ${motor().name})` : "🔧 Test standına geçildi (tek motor + yük hücresi)");
@@ -331,6 +336,22 @@ function setRig(mode) {
 function rebuildRig() {
   Scene3D.payload = S.rig === "drone" ? S.payload.slice() : [];
   Scene3D.setRig(S.rig, drone());
+  if (World.on) World.reapply();                  // gerçek dünyada halkalar ve tabela yeni drone ölçüsüyle yeniden kurulur
+}
+
+/* ---------------- Uçuş alanı: parkur ya da gerçek dünya (js/world.js) ---------------- */
+function setFlyArea(area) {
+  area = area === "real" ? "real" : "field";
+  if (S.flyArea === area && (area === "field" || World.on || !isFly())) { WorldUI.sync(); return; }
+  S.flyArea = area;
+  World.set("area", area);
+  if (!isFly()) { WorldUI.sync(); return; }
+  Fly.keys.clear();
+  Scene3D.setWorldMode(area === "real");
+  rebuildRig();
+  if (area === "real") World.enter(); else World.exit();
+  newProp(area === "real" ? "Uçuş alanı: gerçek dünya" : "Uçuş alanı: parkur");
+  WorldUI.sync();
 }
 const payloadSum = () => (S.rig === "drone" ? S.payload.reduce((a, b) => a + b, 0) : 0);
 /** Ağırlık listesi değişti: özet yazılır, düzenek ve pervane yenilenir */
@@ -461,6 +482,7 @@ function loop(now) {
   S.droneEval = isDrone() ? droneEval(ev) : null;
   Scene3D.throttle = S.throttle;                  // kontrol kartındaki potansiyometre ve ekran için
   Scene3D.frame(dt, S.rpm, ev.thrustG / 1500, S.droneEval ? { tw: S.droneEval.tw, twLoad: S.droneEval.twLoad, total: S.droneEval.total, scaleText: S.droneEval.scaleText } : null);
+  if (World.on) World.frame(dt);                  // gerçek dünya: aynı kamerayla, aynı karede
   // Asılı yük ilk kez kalktığında günlüğe yazılır
   if (S.droneEval && S.droneEval.lifts && !S.payloadLifted) {
     S.payloadLifted = true;
@@ -546,16 +568,18 @@ function updateHud(ev, realDefl) {
   // Başlık: (drone) + malzeme + renk
   $("#hTitle").innerHTML = `<i style="background:${legendStart()}"></i>${isDrone() ? "🛸 " + drone().short + " · " : ""}${mat().name} · ${colorName()}`;
   if (isFly()) {
-    const total = (Scene3D.flyGates || []).length, inp = Fly.inp;
-    $("#hFAlt").textContent = `${fmt(Fly.y / 1000, 1)} m`;
+    const total = (Scene3D.flyGates || []).length, inp = Fly.inp, wl = Fly.inWorld();
+    $("#hFAlt").textContent = `${fmt((Fly.y - (wl ? Fly.floor : 0)) / 1000, 1)} m`;
     $("#hFSpd").textContent = `${fmt(Fly.speedKmh())} km/sa`;
     $("#hFThr").textContent = `%${fmt(S.throttle * 100)}`;
-    $("#hFInfo").textContent = `${Fly.MODES[Fly.mode]} · ${!inp || inp.src === "klavye" ? "⌨️ Klavye" : (inp.src === "rc" ? "📻 " : "🎮 ") + inp.name} · Halka ${Fly.passed}/${total}${Fly.timing || Fly.done ? " · " + fmt(Fly.time, 1) + " sn" : ""}`;
-    $("#hFMsg").textContent = S.broken ? "Pervane kırıldı. Yeniden başlamak için R tuşuna bas."
+    const course = total ? `Halka ${Fly.passed}/${total}${Fly.timing || Fly.done ? " · " + fmt(Fly.time, 1) + " sn" : ""}` : "Serbest uçuş";
+    $("#hFInfo").textContent = `${Fly.MODES[Fly.mode]} · ${!inp || inp.src === "klavye" ? "⌨️ Klavye" : (inp.src === "rc" ? "📻 " : "🎮 ") + inp.name} · ${course}${wl ? " · Kalkış noktasına " + fmt(Math.hypot(Fly.x, Fly.z) / 1000) + " m" : ""}`;
+    $("#hFMsg").textContent = World.on && !World.ready ? (World.picking ? "Haritada başlangıç noktasını seç ya da sol panelden bir yer ara." : "Harita hazırlanıyor…")
+      : S.broken ? "Pervane kırıldı. Yeniden başlamak için R tuşuna bas."
       : Fly.crashed ? "Çakıldı. Yeniden başlamak için R tuşuna bas."
       : Fly.noLift ? "Bu pervane drone'u kaldıramıyor: itki ağırlıktan az."
       : Fly.mode !== "easy" && !Fly.armed && Fly.needLow ? "Motorları çalıştırmak için gazı en alta indir."
-      : Fly.y <= 0 ? (Fly.mode === "easy" ? "Kalkmak için E tuşuna bas ya da gazı yukarı it." : `Kalkmak için gazı artır (askı gazı ≈ %${fmt(Fly.hover * 100)}).`)
+      : Fly.y <= Fly.floor ? (Fly.mode === "easy" ? "Kalkmak için E tuşuna bas ya da gazı yukarı it." : `Kalkmak için gazı artır (askı gazı ≈ %${fmt(Fly.hover * 100)}).`)
       : Fly.done ? "Parkur tamamlandı!" : "";
   }
   if (S.droneEval) {

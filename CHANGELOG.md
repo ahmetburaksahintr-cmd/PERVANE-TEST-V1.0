@@ -1,5 +1,18 @@
 # Sürüm geçmişi
 
+## 1.30.0 — 2026-11-23
+Uçuş bölümünde gerçek dünya: kendi sokağında, gerçek binaların arasında uç (CesiumJS)
+- Uçuş düzeneğine "Uçuş alanı" seçimi: Parkur ya da Gerçek dünya
+- Sokak, adres ya da yer arama (OpenStreetMap Nominatim); "Konumum", "Haritada seç" ve son 5 yer kısayolları
+- Drone, aranan sokağın ortasına sokak boyunca bakacak şekilde konur; başlangıçta mavi sokak tabelası (ör. BARAN SK.)
+- Sokak boyunca 3-6 m yükseklikte en çok 6 halka; ekranın altında o an üstünde olunan sokağın adı, sağ altta radar
+- Anahtarsız kaynak: Esri uydu görüntüsü + OpenFreeMap karolarındaki OpenStreetMap bina tabanlarından kurulan 3D binalar (pencereler, zemin kat dükkanları, kiremit/beton çatılar)
+- Ücretsiz Cesium ion anahtarıyla iki kaynak daha: 3D binalar + arazi (Cesium OSM Binaları) ve Google Fotogerçekçi 3D; anahtar penceresi adım adım anlatır ve anahtarı dener
+- Zemin artık binanın çatısı ya da arazidir: çatıya inilir, binaya hızlı çarpan drone çakılır, yavaş değen geri seker; 120 m yasal sınır uyarısı
+- Takip kamerası binaların içine girmez, gerekirse çatının üstüne yükselir; drone'un gölgesi sokağa ve çatılara düşer
+- Kırılma raporundaki 3D görüntüye harita da girer
+- 3D harita kütüphanesi yalnızca bu bölüm açılınca internetten yüklenir; uygulamanın geri kalanı internetsiz çalışmaya devam eder
+
 ## 1.29.1 — 2026-11-21
 Otomatik sürüm.
 - `css/style.css` güncellendi

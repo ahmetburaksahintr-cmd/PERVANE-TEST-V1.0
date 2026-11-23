@@ -631,3 +631,65 @@ kbd.mini { min-width: 20px; height: 20px; font-size: .7rem; border-radius: 5px; 
 .pad-raw summary { cursor: pointer; margin-bottom: 8px; }
 .pad-raw > div { display: grid; gap: 6px; }
 @media (max-width: 620px) { .pad-row { grid-template-columns: 1fr 86px 54px; } .pad-row .pad-bar { grid-column: 1 / 3; } }
+
+/* ---------------- Gerçek dünya (CesiumJS): uçuş alanı seçimi, arama, sahne katmanları ---------------- */
+.sub-h { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 2px 0 -2px; }
+.fly-area { display: grid; gap: 8px; padding-bottom: 10px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+.fly-area .seg { margin-bottom: 0; }
+.world-box { display: grid; gap: 8px; }
+.world-search { display: flex; gap: 6px; }
+.world-search input { flex: 1; min-width: 0; height: 36px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font: inherit; font-size: .84rem; }
+.world-search input:focus { outline: none; border-color: var(--accent); box-shadow: var(--ring); }
+.world-results { list-style: none; margin: 0; padding: 4px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); max-height: 240px; overflow-y: auto; }
+.world-results li { display: grid; gap: 1px; padding: 7px 9px; border-radius: 7px; cursor: pointer; font-size: .8rem; }
+.world-results li span { color: var(--muted); font-size: .72rem; }
+.world-results li:hover, .world-results li:focus-visible { background: rgba(255, 255, 255, .06); outline: none; }
+.world-results li.muted, .world-results li.bad { cursor: default; color: var(--muted); }
+.world-results li.bad { color: var(--bad); }
+.world-place { display: grid; gap: 1px; padding: 8px 10px; border-radius: 10px; border: 1px dashed var(--border); font-size: .8rem; }
+.world-place span { color: var(--muted); font-size: .72rem; }
+.world-quick { display: flex; flex-wrap: wrap; gap: 6px; }
+.chipbtn { font: inherit; font-size: .72rem; font-weight: 600; color: var(--text); background: rgba(255, 255, 255, .05); border: 1px solid var(--line); border-radius: 99px; padding: 4px 10px; cursor: pointer; }
+.chipbtn:hover { border-color: var(--accent); }
+.chipbtn.on { border-color: var(--accent); background: rgba(123, 140, 255, .18); }
+.chipbtn.recent { border-style: dashed; }
+.world-src { margin: 2px 0 0; display: grid; gap: 6px; }
+#worldKeyBtn.ok { color: var(--good); }
+
+/* Sahne: Cesium altta, three.js (drone) üstte */
+#view3d { position: relative; }
+#view3d > canvas { position: relative; z-index: 1; }
+.world3d { position: absolute; inset: 0; z-index: 0; }
+.world3d .cesium-widget, .world3d .cesium-widget canvas { width: 100%; height: 100%; }
+.world3d .cesium-viewer-bottom, .world3d .cesium-widget-credits { display: none; }
+body.world-on:not(.world-ready) #view3d > canvas, body.world-picking #view3d > canvas { visibility: hidden; pointer-events: none; }
+body.world-picking #view3d { cursor: crosshair; }
+body.world-on .legend-heat, body.world-on .hint { display: none; }
+body.world-on .hud-grid { display: none; }
+.world-status { position: absolute; z-index: 3; top: 16px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; max-width: min(520px, 60%);
+  padding: 7px 14px; border-radius: 99px; background: rgba(9, 12, 23, .8); border: 1px solid rgba(255, 255, 255, .12); font-size: .78rem; font-weight: 600; white-space: nowrap; }
+.world-status span { overflow: hidden; text-overflow: ellipsis; }
+.world-status.bad { color: var(--bad); border-color: rgba(251, 113, 133, .5); white-space: normal; }
+.world-status .spin { flex: none; width: 12px; height: 12px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .25); border-top-color: #fff; animation: wspin .8s linear infinite; }
+@keyframes wspin { to { transform: rotate(360deg); } }
+.world-street { position: absolute; z-index: 3; left: 50%; bottom: 84px; transform: translateX(-50%); padding: 5px 12px; border-radius: 6px; background: #0b4ea2; color: #fff; border: 2px solid #fff; font-size: .8rem; font-weight: 700; letter-spacing: .02em; box-shadow: 0 6px 18px rgba(0, 0, 0, .35); }
+.world-radar { position: absolute; z-index: 3; right: 16px; bottom: 84px; width: 168px; height: 168px; border-radius: 50%; box-shadow: 0 10px 30px rgba(0, 0, 0, .45); }
+.world-credits { position: absolute; z-index: 3; left: 16px; bottom: 76px; width: min(440px, 32%); font-size: 10px; line-height: 1.3; color: rgba(255, 255, 255, .8); text-shadow: 0 1px 2px rgba(0, 0, 0, .8); pointer-events: auto; }
+body:not(.world-on) .world-credits { display: none; }
+.world-credits a { color: inherit; }
+.world-credits img { vertical-align: middle; max-height: 18px; }
+.world-credits .cesium-credit-expand-link { color: #fff; text-decoration: underline; cursor: pointer; }
+.world-pickbar { position: absolute; z-index: 3; left: 50%; bottom: 84px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 12px;
+  background: rgba(9, 12, 23, .86); border: 1px solid rgba(255, 255, 255, .14); font-size: .78rem; font-weight: 600; white-space: nowrap; }
+.key-modal { width: min(560px, 100%); }
+.key-modal footer { gap: 8px; }
+.key-modal .grow { flex: 1; }
+.wk-lead { margin: 0; line-height: 1.55; }
+.wk-steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; line-height: 1.5; }
+.wk-steps a { color: var(--accent); }
+.wk-field { display: grid; gap: 6px; margin: 0; }
+.wk-field input { height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font: 500 .8rem Consolas, monospace; }
+.wk-field input:focus { outline: none; border-color: var(--accent); box-shadow: var(--ring); }
+.wk-note { margin: 0; min-height: 1.2em; font-size: .8rem; }
+.wk-note.bad { color: var(--bad); } .wk-note.good { color: var(--good); }
+@media (max-width: 760px) { .world-radar { width: 120px; height: 120px; right: 12px; bottom: 12px; } .world-status { top: 12px; max-width: 80%; } .world-street, .world-pickbar { bottom: 12px; } .world-credits { bottom: 8px; } }

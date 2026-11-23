@@ -49,6 +49,28 @@
           <button data-rig="fly">🎮 Uçuş</button>
         </div>
         <div id="flyHelp" class="fly-help" hidden>
+          <!-- Uçuş alanı: yapay parkur ya da gerçek dünya (CesiumJS, js/world.js) -->
+          <div class="fly-area">
+            <div class="sub-h">Uçuş alanı</div>
+            <div class="seg" id="flyAreaSeg" role="group" aria-label="Uçuş alanı">
+              <button data-area="field" class="active" type="button">Parkur</button><button data-area="real" type="button">Gerçek dünya</button>
+            </div>
+            <div id="worldBox" class="world-box" hidden>
+              <form id="worldSearch" class="world-search" role="search">
+                <input id="worldQ" type="search" placeholder="Sokak, adres ya da yer ara" autocomplete="off" spellcheck="false" aria-label="Sokak, adres ya da yer ara">
+                <button class="btn small primary" type="submit">Ara</button>
+              </form>
+              <ul id="worldResults" class="world-results" hidden></ul>
+              <div id="worldPlace" class="world-place"></div>
+              <div id="worldQuick" class="world-quick"></div>
+              <label class="world-src">Harita kaynağı
+                <select id="worldSrc"></select>
+              </label>
+              <p class="note" id="worldSrcNote"></p>
+              <button class="btn small" id="worldKeyBtn" type="button">Cesium ion anahtarı ekle (ücretsiz)</button>
+            </div>
+          </div>
+          <div class="sub-h">Uçuş modu</div>
           <div class="seg seg4" id="flyModeSeg" role="group" aria-label="Uçuş modu">
             <button data-mode="easy" class="active">Kolay</button><button data-mode="angle">Angle</button><button data-mode="horizon">Horizon</button><button data-mode="acro">Acro</button>
           </div>
@@ -57,7 +79,7 @@
           <div class="keys"><span><kbd>W</kbd> <i id="keyW">ileri</i></span><span><kbd>S</kbd> <i id="keyS">geri</i></span><span><kbd>A</kbd> <i id="keyA">sola</i></span><span><kbd>D</kbd> <i id="keyD">sağa</i></span></div>
           <div class="keys"><span><kbd>E</kbd> <i id="keyE">yüksel</i></span><span><kbd>Q</kbd> <i id="keyQ">alçal</i></span><span><kbd>Z</kbd> <i>sola dön</i></span><span><kbd>X</kbd> <i>sağa dön</i></span></div>
           <div class="keys"><span><kbd>R</kbd> <i>baştan</i></span><span><kbd>V</kbd> <i>bakış</i></span><span><kbd>H</kbd> <i>askı gazı</i></span><span><kbd>␣</kbd> <i>gazı kes</i></span></div>
-          <p class="note">Modlar <kbd class="mini">1</kbd>–<kbd class="mini">4</kbd> tuşlarıyla da seçilir. Turuncu halkaların içinden geç; hepsi yeşil olunca süren yazılır. İtki seçtiğin pervane ve malzemeden gelir: zayıf pervane drone'u kaldıramaz ya da havada kırılır.</p>
+          <p class="note">Modlar <kbd class="mini">1</kbd>–<kbd class="mini">4</kbd> tuşlarıyla da seçilir. Turuncu halkaların içinden geç; hepsi yeşil olunca süren yazılır. Gerçek dünyada halkalar seçtiğin sokak boyunca dizilir. İtki seçtiğin pervane ve malzemeden gelir: zayıf pervane drone'u kaldıramaz ya da havada kırılır.</p>
         </div>
         <div id="dronePick" hidden>
           <select id="droneSel"></select>
@@ -116,6 +138,12 @@
     <!-- ORTA: 3D sahne -->
     <section class="stage panel">
       <div id="view3d"></div>
+      <!-- Gerçek dünya katmanları -->
+      <div class="world-status" id="worldStatus" hidden></div>
+      <div class="world-street" id="worldStreet" hidden></div>
+      <canvas class="world-radar" id="worldRadar" hidden aria-label="Radar: üstten görünüş"></canvas>
+      <div class="world-credits" id="worldCredits"></div>
+      <div class="world-pickbar" id="worldPickBar" hidden><span>Sürükle: kaydır · Sağ tık ya da tekerlek: yakınlaş · Başlangıç noktasına tıkla</span><button class="btn small" id="worldPickCancel" type="button">Vazgeç</button></div>
       <div class="hud">
         <div class="hud-title" id="hTitle"></div>
         <div class="hud-main">
@@ -357,6 +385,27 @@
     </div>
   </div>
 
+  <!-- Cesium ion anahtarı penceresi -->
+  <div class="modal-bg" id="worldKeyModal" hidden>
+    <div class="modal key-modal" role="dialog" aria-modal="true" aria-labelledby="wkTitle">
+      <header><h2 id="wkTitle">Cesium ion anahtarı</h2><button class="icon" id="wkClose" aria-label="Kapat">✕</button></header>
+      <div class="rm-body">
+        <p class="wk-lead">Gerçek fotoğraflı Google 3D binalar ve dağlı-yokuşlu arazi için ücretsiz bir <b>Cesium ion</b> hesabı gerekir (ticari olmayan kullanım için ücretsizdir). Anahtarsız “Açık veri” kaynağı da çalışır; binaları OpenStreetMap'ten kurar.</p>
+        <ol class="wk-steps">
+          <li><a href="https://ion.cesium.com/signup/" target="_blank" rel="noopener">ion.cesium.com/signup</a> adresinden ücretsiz hesap aç.</li>
+          <li>Üst menüden <b>Access Tokens</b> sayfasına gir ve <b>Default Token</b> satırındaki anahtarı kopyala.</li>
+          <li>Anahtarı aşağıya yapıştırıp <b>Kaydet ve dene</b>'ye bas.</li>
+        </ol>
+        <label class="wk-field">Anahtar
+          <input id="wkInput" type="text" autocomplete="off" spellcheck="false" placeholder="eyJhbGciOi…">
+        </label>
+        <p id="wkNote" class="wk-note" role="status"></p>
+        <p class="note">Anahtar yalnızca bu tarayıcıda saklanır ve yalnızca Cesium'un sunucusuna gider. Google 3D binalar açılmazsa ion sitesinde <b>Asset Depot</b> → “Google Photorealistic 3D Tiles” → <b>Add to my assets</b> adımını yap.</p>
+      </div>
+      <footer><button class="btn ghost" id="wkRemove" hidden>Anahtarı sil</button><span class="grow"></span><button class="btn ghost" id="wkCancel">Vazgeç</button><button class="btn primary" id="wkSave">Kaydet ve dene</button></footer>
+    </div>
+  </div>
+
   <div id="toasts"></div>
 
   <script src="vendor/three.min.js"></script>
@@ -371,6 +420,8 @@
   <script src="js/sound.js"></script>
   <script src="js/input.js"></script>
   <script src="js/fly.js"></script>
+  <script src="js/mvt.js"></script>
+  <script src="js/world.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

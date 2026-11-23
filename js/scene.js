@@ -70,9 +70,9 @@ const Scene3D = {
     if (mode !== "stand") this.buildDrone(drone, mode === "fly");
     else this.buildStand();
     // Uçuş bölümü: masa yerine açık alan, gökyüzü, drone'u izleyen ışık ve kamera
-    const fly = mode === "fly";
+    const fly = mode === "fly", world = fly && !!this.worldMode;
     for (const m of this.deskParts || []) m.visible = !fly;
-    this.scene.fog = fly ? new THREE.Fog(0x9fd3f7, 380000, 1300000) : null;
+    this.scene.fog = fly && !world ? new THREE.Fog(0x9fd3f7, 380000, 1300000) : null;
     this.camera.near = fly ? 120 : 1;                   // uçuşta uzaklar da görünür; yakın düzlem geri alınır (derinlik hassasiyeti)
     this.camera.far = fly ? 1800000 : 5000;
     this.camera.fov = 40;
@@ -84,7 +84,9 @@ const Scene3D = {
     this.keyLight.target.position.set(0, 0, 0);
     this.flyPose = null;
     this.flyGates = [];
-    if (fly) this.buildFlyWorld();
+    this.worldGroup = this.shadowCatcher = this.streetSign = null;
+    if (world) this.buildWorldExtras();
+    else if (fly) this.buildFlyWorld();
     // Kamera ön ayarları: "free" (serbest, çapraz) ve "side" (yandan, motor hizasından)
     if (mode === "stand") this.padTop = 2;
     const dd = mode !== "stand" ? Math.max(110, this.droneSpan * 2.7) + (this.padTop - 2) * 1.3 : 0;
@@ -96,8 +98,9 @@ const Scene3D = {
       : { free: { theta: 0.75, phi: 1.05, dist: 410, target: [22, 46, 12] },
           side: { theta: 0, phi: 1.3, dist: 340, target: [25, 52, 20] } };
     if (fly) {                                          // "free" = takip, "fpv" = drone kamerası, "side" = serbest (elle döndürülür)
-      const cd = Math.min(3200, Math.max(900, this.droneSpan * 9)), tg = [0, this.droneTargetY, 0];
-      this.views = { free: { theta: -Math.PI / 2, phi: 1.25, dist: cd, target: tg }, fpv: { theta: -Math.PI / 2, phi: 1.25, dist: cd, target: tg },
+      const cd = world ? Math.min(6500, Math.max(2600, this.droneSpan * 18)) : Math.min(3200, Math.max(900, this.droneSpan * 9)), tg = [0, this.droneTargetY, 0];
+      const ph = world ? 1.1 : 1.25;
+      this.views = { free: { theta: -Math.PI / 2, phi: ph, dist: cd, target: tg }, fpv: { theta: -Math.PI / 2, phi: ph, dist: cd, target: tg },
                      side: { theta: 0.6, phi: 1.1, dist: cd * 1.3, target: tg } };
     }
     this.setView(this.viewName || "free", true);
@@ -1779,7 +1782,14 @@ const Scene3D = {
   /** Rapor için 3D görüntünün anlık PNG'si */
   snapshot() {
     this.renderer.render(this.scene, this.camera);
-    return this.renderer.domElement.toDataURL("image/png");
+    const under = this.worldMode && typeof World !== "undefined" ? World.snapshotCanvas() : null;
+    if (!under) return this.renderer.domElement.toDataURL("image/png");
+    const top = this.renderer.domElement, c = document.createElement("canvas");
+    c.width = top.width; c.height = top.height;
+    const x = c.getContext("2d");
+    x.drawImage(under, 0, 0, c.width, c.height);
+    x.drawImage(top, 0, 0);
+    return c.toDataURL("image/png");
   },
 
   /**
@@ -1984,9 +1994,112 @@ const Scene3D = {
     if (this.flash > 0) {
       this.flash = Math.max(0, this.flash - dt * 2);
       this.renderer.setClearColor(0xff3b3b, this.flash * 0.35);
-    } else this.renderer.setClearColor(this.mode === "fly" ? 0x9fd3f7 : 0x000000, this.mode === "fly" ? 1 : 0);
+    } else this.renderer.setClearColor(this.mode === "fly" && !this.worldMode ? 0x9fd3f7 : 0x000000, this.mode === "fly" && !this.worldMode ? 1 : 0);
 
     this.renderer.render(this.scene, this.camera);
+  },
+
+  /* ---------- Gerçek dünya (js/world.js) ----------
+     Dünyayı Cesium çizer; burada yalnızca drone'un gölgesini alan saydam zemin, sokak boyunca halkalar
+     ve başlangıçtaki sokak tabelası kurulur. three.js arka planı saydamdır. */
+  setWorldMode(on) {
+    if (!!this.worldMode === !!on) return;
+    this.worldMode = !!on;
+  },
+  buildWorldExtras() {
+    const g = new THREE.Group();
+    this.rig.add(g);
+    this.worldGroup = g;
+    // Gölge yakalayıcı: yalnızca gölgeyi çizer, gerisi saydam (drone'un sokağa / çatıya düşen gölgesi)
+    const sc = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShadowMaterial({ opacity: 0.42 }));
+    sc.rotation.x = -Math.PI / 2;
+    sc.scale.setScalar(Math.max(4000, this.droneSpan * 16));
+    sc.receiveShadow = true;
+    sc.renderOrder = -1;
+    this.rig.add(sc);
+    this.shadowCatcher = sc;
+  },
+  /** Takip kamerasını hemen drone'un arkasına alır (başlangıçta kamera bir binanın içinde kalmasın) */
+  snapFollow() {
+    const f = this.flyPose || { x: 0, y: 0, z: 0, yaw: 0 };
+    this.orbit.theta = (f.yaw || 0) - Math.PI / 2;
+    this.orbit.target.set(f.x, this.droneBaseY + f.y + 20, f.z);
+    this.updateCamera();
+  },
+  /** Halkalar: gates = [{ x, y, z, ground, yaw }] (mm, yaw: sokak doğrultusu, doğudan saat yönünün tersine) */
+  setWorldGates(gates) {
+    const g = this.worldGroup;
+    if (!g) return;
+    for (const old of this.worldGateObjs || []) { g.remove(old); old.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); }
+    this.worldGateObjs = [];
+    this.flyGates = [];
+    const C = (h) => new THREE.Color(h).convertSRGBToLinear();
+    const gr = Math.max(900, Math.min(1500, this.droneSpan * 6));
+    gates.forEach((gt, i) => {
+      const grp = new THREE.Group();
+      const ringMat = new THREE.MeshStandardMaterial({ color: C(0xff7a1a), emissive: C(0x7a2e08), roughness: 0.45 });
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(gr, gr * 0.06, 14, 56), ringMat);
+      const cy = gt.y + this.droneBaseY;
+      ring.position.set(gt.x, cy, gt.z);
+      ring.rotation.y = gt.yaw + Math.PI / 2;          // halka düzlemi sokağa dik
+      ring.castShadow = true;
+      grp.add(ring);
+      // Direkler: halkanın iki yanından zemine
+      const nx = -Math.sin(gt.yaw), nz = -Math.cos(gt.yaw);
+      for (const sgn of [-1, 1]) {
+        const h = Math.max(200, cy - gr * 0.2 - gt.ground);
+        const post = new THREE.Mesh(new THREE.CylinderGeometry(gr * 0.035, gr * 0.045, h, 10), new THREE.MeshStandardMaterial({ color: C(0x3d4450), metalness: 0.5, roughness: 0.4 }));
+        post.position.set(gt.x + nx * gr * sgn, gt.ground + h / 2, gt.z + nz * gr * sgn);
+        post.castShadow = true;
+        grp.add(post);
+      }
+      const label = makeLabel(String(i + 1), "#ff7a1a");
+      label.scale.multiplyScalar(gr / 55);
+      label.position.set(gt.x, cy + gr * 1.3, gt.z);
+      grp.add(label);
+      g.add(grp);
+      this.worldGateObjs.push(grp);
+      const dir = new THREE.Vector3(Math.cos(gt.yaw), 0, -Math.sin(gt.yaw));
+      this.flyGates.push({ mesh: ring, c: new THREE.Vector3(gt.x, cy, gt.z), n: dir, r: gr * 0.94, passed: false, base: ringMat.color.clone(), baseE: ringMat.emissive.clone() });
+    });
+  },
+  /** Başlangıçta, sokağın sağ kenarında mavi sokak tabelası (ör. "BARAN SK.") */
+  setStreetSign(text, yaw) {
+    const g = this.worldGroup;
+    if (!g) return;
+    if (this.streetSign) { g.remove(this.streetSign); this.streetSign.traverse((o) => { if (o.geometry) o.geometry.dispose(); for (const m of [].concat(o.material || [])) if (m.map) m.map.dispose(); }); this.streetSign = null; }
+    if (!text) return;
+    const grp = new THREE.Group();
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(30, 30, 2600, 12), this.metal(0x9aa3ad, 0.45, 0.8));
+    pole.position.y = 1300;
+    pole.castShadow = true;
+    grp.add(pole);
+    const c = document.createElement("canvas");
+    c.width = 1024; c.height = 256;
+    const x = c.getContext("2d");
+    x.fillStyle = "#0b4ea2"; x.fillRect(0, 0, 1024, 256);
+    x.strokeStyle = "#ffffff"; x.lineWidth = 14; x.strokeRect(16, 16, 992, 224);
+    x.fillStyle = "#ffffff"; x.textAlign = "center"; x.textBaseline = "middle";
+    let fs = 150;
+    do { x.font = "700 " + fs + 'px "Segoe UI", Arial, sans-serif'; fs -= 6; } while (x.measureText(text).width > 920 && fs > 40);
+    x.fillText(text, 512, 134);
+    const tex = new THREE.CanvasTexture(c);
+    tex.encoding = THREE.sRGBEncoding;
+    tex.anisotropy = 4;
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(1100, 275, 24), [
+      new THREE.MeshStandardMaterial({ color: 0x0b4ea2 }), new THREE.MeshStandardMaterial({ color: 0x0b4ea2 }),
+      new THREE.MeshStandardMaterial({ color: 0x0b4ea2 }), new THREE.MeshStandardMaterial({ color: 0x0b4ea2 }),
+      new THREE.MeshStandardMaterial({ map: tex, roughness: 0.5 }), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.5 })
+    ]);
+    plate.position.set(0, 2450, 0);
+    plate.castShadow = true;
+    grp.add(plate);
+    // Sokağın sağ kenarında, 3,5 m önde; levha sokağa paralel (iki yüzü okunur)
+    const fx = Math.cos(yaw), fz = -Math.sin(yaw), rx = Math.sin(yaw), rz = Math.cos(yaw);
+    grp.position.set(fx * 3500 + rx * 3200, 0, fz * 3500 + rz * 3200);
+    grp.rotation.y = yaw;
+    g.add(grp);
+    this.streetSign = grp;
   },
 
   /* ---------- Uçuş bölümü: gerçek hızlara uygun geniş açık alan ----------
@@ -2094,7 +2207,8 @@ const Scene3D = {
     for (const led of this.droneLeds || []) led.material.opacity = blink;
     this.keyLight.position.set(f.x + 800, y + 1300, f.z + 700);
     this.keyLight.target.position.set(f.x, y, f.z);
-    const o = this.orbit;
+    if (this.shadowCatcher) this.shadowCatcher.position.set(f.x, (typeof Fly !== "undefined" ? Fly.floor : 0) + 3, f.z);
+    const o = this.orbit, fovC = this.worldMode ? 55 : 40;
     if (this.viewName === "fpv") {
       // FPV: drone'un kamerasından; gövdeyle birlikte döner, 20° yukarı eğik, geniş açılı mercek
       if (cam.fov !== 105) { cam.fov = 105; cam.updateProjectionMatrix(); }
@@ -2104,7 +2218,7 @@ const Scene3D = {
       o.target.set(f.x, y + 20, f.z);
       return;
     }
-    if (cam.fov !== 40) { cam.fov = 40; cam.updateProjectionMatrix(); }
+    if (cam.fov !== fovC) { cam.fov = fovC; cam.updateProjectionMatrix(); }
     // Takip: hedef drone, kamera drone'un arkasına döner. Serbest: açı kullanıcıda.
     o.target.lerp(new THREE.Vector3(f.x, y + 20, f.z), Math.min(1, dt * 14));
     if (this.viewName !== "side") {
@@ -2112,6 +2226,7 @@ const Scene3D = {
       o.theta += Math.atan2(Math.sin(want - o.theta), Math.cos(want - o.theta)) * Math.min(1, dt * 3.5);
     }
     this.updateCamera();
+    if (this.worldMode && typeof World !== "undefined" && World.on) World.guardCamera(cam, o.target);
   },
 
   /** Drone gövdesi: itki/ağırlık > 1 olunca kalkar, ip gerilir; pervane kırılınca yatıp düşer */

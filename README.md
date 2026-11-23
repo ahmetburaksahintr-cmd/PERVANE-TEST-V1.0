@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 1.29.1
+# 🌀 Pervane Test Laboratuvarı — Sürüm 1.30.0
 
-> **Güncel sürüm: v1.29.1** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v1.30.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v1.29.1** | 2026-11-21 | Otomatik sürüm: css/style.css güncellendi, index.html güncellendi, js/app.js güncellendi, js/fly.js güncellendi |
+| **v1.30.0** | 2026-11-23 | Uçuş bölümünde gerçek dünya: kendi sokağında, gerçek binaların arasında uç (CesiumJS) |
+| v1.29.1 | 2026-11-21 | Otomatik sürüm: css/style.css güncellendi, index.html güncellendi, js/app.js güncellendi, js/fly.js güncellendi |
 | v1.29.0 | 2026-11-21 | Bağlı drone testine ekranlı tartı ve asılabilir ağırlıklar |
 | v1.28.0 | 2026-11-21 | Gerçekçi motor sesi: yayımlanmış ölçümlere göre, gerçek devire bağlı |
 | v1.27.0 | 2026-11-21 | Test standı gerçek bir itki standı gibi baştan tasarlandı |
@@ -51,6 +52,7 @@ Proje iki parçadan oluşur:
 
 ## Nasıl açılır?
 `index.html` dosyasına çift tıkla. İnternet gerekmez; 3D kütüphanesi `vendor/` klasöründe.
+Yalnızca **Uçuş → Gerçek dünya** internet ister: 3D harita kütüphanesi (CesiumJS), uydu görüntüsü ve bina verisi o an internetten gelir.
 
 **Not:** "USB'den canlı oku" özelliği yalnızca Chrome ve Edge'de çalışır.
 
@@ -61,7 +63,7 @@ Proje iki parçadan oluşur:
   - 🔧 **Test standı:** Tek motor, yük hücresiyle itki ölçümü (gerçek Arduino düzeneğinin dijital ikizi). Stant gerçek bir itki standı gibi çizilir: lastik ayaklı alüminyum taban, köşebentli sigma profil direk, çubuk tip yük hücresi (ortasında gözlük deliği), HX711 kartı ve optik devir sensörü. İtki arttıkça yük hücresinin ucu hafifçe yukarı esner. Motorun üç faz kablosu ESC'ye, ESC de bataryaya ve kontrol kartına bağlı görünür (fırçasız motorda üç, fırçalı motorda iki kablo olur). Sahnenin sağ üstündeki **🎥 Bakış** düğmesi serbest bakış ile yandan (motor hizasından) bakış arasında geçiş yapar.
   - 🛸 **FPV drone:** Seçilen drone pede iplerle bağlıdır (tether). Gaz açılıp itki ağırlığı geçince kalkar ve ipler gerilir. Dört pervanenin ikisi saat yönünde, ikisi ters döner. Gösterge, 4 pervanenin toplam itkisini, itki/ağırlık oranını ve toplam akımı gösterir. Bir pervane kırılınca hangi motorun pervanesinin koptuğu yazılır; drone o köşeye yatar, savrulur ve pede düşer. Raporlara drone bilgileri de eklenir.
   - ⚖️ **Tartı ve ağırlıklar (FPV drone düzeneğinde):** Drone ekranlı bir platform tartının üstünde durur. Tartının darası alınmıştır; ekranda dört pervanenin toplam **kaldırma kuvveti** gram olarak canlı görünür. **🏋️ Ağırlık ekle** düğmesiyle drone'a 50 g, 100 g, 200 g, 500 g, 1 kg, 2 kg ve 5 kg'lık ağırlıklar asılabilir (en fazla 6 adet; üzerlerinde kütleleri yazar). Ağırlık seçilince drone şeffaf bir sehpanın üstüne çıkar, ağırlıklar altında tablada bekler. İtki drone'un ağırlığını geçince drone kalkıp ipi gerer; itki "drone + yük"ü geçince yük de tabladan kalkar. Göstergedeki **taşıma payı**, drone'un kendi ağırlığından sonra kaldırabildiği ek yüktür. Yük bilgisi Excel raporuna da yazılır.
-  - 🎮 **Uçuş:** Seçilen drone'u açık alanda klavyeyle uçurursun. `W` ileri, `S` geri, `A` sola, `D` sağa, `E` yüksel, `Q` alçal, `Z` sola dön, `X` sağa dön. Tuşu bırakınca drone havada asılı kalır. Altı turuncu halkanın içinden geçince süren yazılır. Gereken itki, drone'un ağırlığından ve yaptığın manevradan hesaplanır: seçtiğin pervane bu itkiyi veremiyorsa drone kalkamaz, dayanamıyorsa havada kırılır ve drone düşer. **🎥 Bakış** düğmesi takip kamerası ile serbest bakış arasında geçiş yapar.
+  - 🎮 **Uçuş:** Seçilen drone'u açık alanda klavyeyle uçurursun. `W` ileri, `S` geri, `A` sola, `D` sağa, `E` yüksel, `Q` alçal, `Z` sola dön, `X` sağa dön. Tuşu bırakınca drone havada asılı kalır. Altı turuncu halkanın içinden geçince süren yazılır. **Uçuş alanı** olarak *Parkur* (yapay açık alan) ya da *Gerçek dünya* seçilir; gerçek dünyada istediğin sokağı arayıp o sokakta, gerçek binaların arasında uçarsın (aşağıda ayrıntılı anlatılıyor). Gereken itki, drone'un ağırlığından ve yaptığın manevradan hesaplanır: seçtiğin pervane bu itkiyi veremiyorsa drone kalkamaz, dayanamıyorsa havada kırılır ve drone düşer. **🎥 Bakış** düğmesi takip kamerası ile serbest bakış arasında geçiş yapar.
 - **Drone modelleri (gerçek parçalarla):** Motorların çanında gerçekteki gibi model ve KV yazar; motor boyutu stator çapına göre ölçeklenir.
 
   | Model | Tip | Motor | Pervane | Batarya | Ağırlık |
@@ -113,6 +115,39 @@ Proje iki parçadan oluşur:
   - Arduino'dan gelen ölçümler itki grafiğinde **beyaz noktalar** olarak görünür.
   - "Modeli kalibre et" düğmesi, en küçük kareler yöntemiyle modeli ölçümüne uydurur.
   - Denemek için `ornek_olcum.csv` dosyasını yükleyebilirsin.
+
+## Gerçek dünyada uçuş (3D harita)
+Uçuş düzeneğinde **Uçuş alanı → Gerçek dünya** seçilince drone, aradığın gerçek bir yerin üstünde uçar: kendi sokağın, okulun ya da şehrin meydanı.
+
+**Nasıl kullanılır?**
+1. Sol panelde arama kutusuna sokağı yaz, ilçeyi de ekle (ör. *Baran Sokak, Keçiören*) ve **Ara**'ya bas. Sonuçlardan doğru olanı seç.
+2. Drone sokağın ortasına, sokak boyunca bakacak şekilde konur. Başlangıçta mavi bir sokak tabelası (ör. **BARAN SK.**) durur; sokak boyunca 3–6 m yükseklikte en çok 6 turuncu halka dizilir.
+3. Her zamanki tuşlarla uç. Ekranın altında o an üstünde olduğun sokağın adı, sağ altta radar (binalar, yollar, halkalar, kalkış noktası; burun hep yukarıda) görünür.
+- **Haritada seç:** Haritayı fareyle kaydırıp yakınlaştırır, başlangıç noktasına tıklarsın. Yüksekten tıklanırsa önce oraya yaklaşılır.
+- **Konumum:** Tarayıcının konum iznini kullanır.
+- Son gidilen 5 yer kısayol olarak saklanır; uygulama açılınca son yerden devam edilir.
+
+**Fizik:** Zemin artık düz değildir: drone'un altında bina varsa zemin o binanın çatısıdır, çatıya inilebilir. Binaya yandan 6 m/sn'den (kolay modda 10 m/sn'den) hızlı çarpan drone çakılır; daha yavaşsa geri seker. Yerden 120 m'nin üstüne çıkınca yasal sınır uyarısı çıkar (Türkiye'de SHGM kuralı). Takip kamerası binaların içine girmez; gerekirse çatının üstüne yükselir.
+
+**Harita kaynakları** (sol paneldeki listeden seçilir):
+
+| Kaynak | Anahtar | Ne görürsün |
+|---|---|---|
+| Açık veri | Gerekmez | Esri uydu görüntüsü + OpenStreetMap bina tabanlarından bu uygulamanın kurduğu 3D binalar (pencereler, zemin kat dükkânları, kiremit ya da beton çatılar). Kat bilgisi girilmemiş binaların yüksekliği taban alanından tahmin edilir. |
+| 3D binalar + arazi (Cesium ion) | Ücretsiz Cesium ion anahtarı | Dağlı-yokuşlu Cesium Dünya Arazisi, Bing uydu görüntüsü, dünya çapında Cesium OSM Binaları. |
+| Fotogerçekçi 3D (Google) | Ücretsiz Cesium ion anahtarı | Google'ın gerçek fotoğraflı 3D şehir modeli: binalar, ağaçlar, arabalar. Büyük şehirlerde en iyi sonuç. |
+
+**Ücretsiz Cesium ion anahtarı nasıl alınır?**
+1. [ion.cesium.com/signup](https://ion.cesium.com/signup/) adresinden ücretsiz hesap aç (ticari olmayan kullanım içindir).
+2. Üst menüden **Access Tokens** sayfasına gir, **Default Token** satırındaki anahtarı kopyala.
+3. Uygulamada **Cesium ion anahtarı ekle** düğmesine bas, anahtarı yapıştır, **Kaydet ve dene**. Anahtar yalnızca bu tarayıcıda saklanır ve yalnızca Cesium'un sunucusuna gider.
+4. Google 3D binalar açılmazsa ion sitesinde **Asset Depot → Google Photorealistic 3D Tiles → Add to my assets** adımını yap.
+
+Ücretsiz hesapta Google fotogerçekçi 3D ayda 1.000 açılışla sınırlıdır; uygulama bu yüzden 3D katmanı yalnızca kaynak seçildiğinde bir kez açar, yer değiştirince yeniden açmaz. Google kaynağı seçiliyken adres araması da Google'ın arama servisiyle yapılır (Google'ın kullanım koşulu).
+
+**Neden Cesium, neden Leaflet değil?** Leaflet hafif ve çok iyi bir **2D** harita kütüphanesidir ama üç boyut, bina yüksekliği ya da kamera eğme desteği yoktur. Sokakta binaların arasında uçmak için 3D küre, arazi ve 3D Tiles desteği gerekir; bu yüzden CesiumJS seçildi. Arama ve sokak adları için ayrıca bir 2D haritaya gerek kalmadı: radar aynı veriden çizilir.
+
+**Sınırlar:** Anahtarsız kaynakta zemin düzdür (yokuşlar yoktur) ve binalar tek renkli kutulardır; uydu görüntüsü çok alçaktan bakınca bulanıklaşır. Bina tabanları OpenStreetMap'te çizildiği kadardır; bazı mahallelerde eksik olabilir. Drone her zaman binaların önünde çizilir (iki ayrı 3D sahne üst üste çizildiği için bir binanın arkasına geçse de görünür kalır).
 
 ## Motor sesi
 Sağ üstteki 🔇 düğmesi motor sesini açar. Ses bir kayıt değildir; yayımlanmış ölçümlerde tarif edilen bileşenlerden üretilir ve hepsi **gerçek devire** bağlıdır (frekanslar ölçeklenmez):
@@ -216,3 +251,15 @@ Hepsi `vendor/` klasöründedir; sayfa internetsiz çalışır.
 | [three.js](https://threejs.org) | r149 | 3D sahne | MIT |
 | [SheetJS](https://sheetjs.com) | 0.20.3 | Excel (.xlsx) üretimi | Apache 2.0 |
 | [docx](https://docx.js.org) | 9.5.1 | Word (.docx) üretimi | MIT |
+
+Gerçek dünya uçuşu için internetten yüklenenler (yalnızca o bölüm açılınca):
+
+| Kütüphane / veri | Görevi | Lisans / koşul |
+|---|---|---|
+| [CesiumJS](https://cesium.com/platform/cesiumjs/) 1.147.0 (jsDelivr) | 3D küre, kamera, uydu görüntüsü ve 3D Tiles | Apache 2.0 |
+| [OpenFreeMap](https://openfreemap.org) vektör karoları ([OpenMapTiles](https://openmaptiles.org) şeması) | Bina tabanları ve yükseklikleri, yollar, sokak adları | Veri: © OpenStreetMap katkıcıları, ODbL |
+| [Nominatim](https://nominatim.org) (OpenStreetMap) | Adres ve sokak arama (saniyede en çok 1 istek) | ODbL, kullanım politikasına uygun |
+| [Esri World Imagery](https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9) | Anahtarsız kaynakta uydu görüntüsü | Esri koşulları, kaynak gösterilerek |
+| [Cesium ion](https://cesium.com/platform/cesium-ion/) | Arazi, Bing uydu, Cesium OSM Binaları, Google Fotogerçekçi 3D | Ücretsiz hesap, ticari olmayan kullanım |
+
+Vektör karolar `js/mvt.js` içindeki küçük bir okuyucuyla çözülür (ek kütüphane yok).
