@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 2.1.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 2.1.1
 
-> **Güncel sürüm: v2.1.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v2.1.1** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v2.1.0** | 2026-11-23 | Uçuş fiziği: gerçek hava yoğunluğu, gerçek rüzgâr ve hamleler, batarya, yer etkisi, pervane girdabı |
+| **v2.1.1** | 2026-11-23 | Düzeltme: index.html çift tıklanarak açıldığında zemin siyah görünüyor, Google 3D çizilmiyordu |
+| v2.1.0 | 2026-11-23 | Uçuş fiziği: gerçek hava yoğunluğu, gerçek rüzgâr ve hamleler, batarya, yer etkisi, pervane girdabı |
 | v1.31.0 | 2026-11-23 | Arayüz baştan tasarlandı: ölçüm cihazı estetiği, emoji yerine çizgi ikonlar |
 | v1.30.0 | 2026-11-23 | Uçuş bölümünde gerçek dünya: kendi sokağında, gerçek binaların arasında uç (CesiumJS) |
 | v1.29.1 | 2026-11-21 | Otomatik sürüm: css/style.css güncellendi, index.html güncellendi, js/app.js güncellendi, js/fly.js güncellendi |

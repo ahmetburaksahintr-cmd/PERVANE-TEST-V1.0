@@ -61,6 +61,7 @@ const World = {
     if (window.Cesium && window.Cesium.Viewer) return Promise.resolve();
     if (this._loading) return this._loading;
     window.CESIUM_BASE_URL = this.BASE;
+    fileWorkerShim();
     if (!document.querySelector("link[data-cesium]")) {
       const css = document.createElement("link");
       css.rel = "stylesheet"; css.href = this.BASE + "Widgets/widgets.css"; css.dataset.cesium = "1";
@@ -900,6 +901,43 @@ const World = {
   }
 };
 World._c3 = undefined;
+
+/* ---------------- file:// için worker düzeltmesi ----------------
+   Cesium, CDN'deki worker dosyalarını sayfadan farklı bir kaynaktan geldiği için şöyle başlatır:
+     new Worker(URL.createObjectURL(new Blob(['import "https://…/Workers/x.js";'])), { type: "module" })
+   Chrome, index.html çift tıklanarak (file://) açıldığında blob adresli MODÜL worker'ı reddeder; sonuç:
+   zemin (arazi ağı, uydu görüntüsü) ve Google 3D karoları hiç çizilmez, yalnızca siyah yıldız alanı görünür.
+   Aynı içerikli data: adresli modül worker'a ise izin verir. Bu ara katman yalnızca file:// sayfada ve
+   yalnızca bu tür blob'lar için adresi data: adresine çevirir; başka hiçbir şeye dokunmaz
+   (Blob bir Proxy ile sarılır, "x instanceof Blob" ve diğer kütüphaneler eskisi gibi çalışır). */
+function fileWorkerShim() {
+  if (location.protocol !== "file:" || window.__pervaneWorkerShim) return;
+  window.__pervaneWorkerShim = true;
+  const srcOfBlob = new WeakMap(), srcOfUrl = new Map();
+  const isImport = (t) => typeof t === "string" && /^import\s+"https?:\/\/[^"]+";$/.test(t.trim());
+  const OB = window.Blob, OW = window.Worker, U = window.URL, oc = U.createObjectURL.bind(U);
+  window.Blob = new Proxy(OB, {
+    construct(target, args, nt) {
+      const b = Reflect.construct(target, args, nt === window.Blob ? target : nt);
+      const parts = args[0];
+      if (Array.isArray(parts) && parts.length === 1 && isImport(parts[0])) srcOfBlob.set(b, parts[0]);
+      return b;
+    }
+  });
+  U.createObjectURL = function (obj) {
+    const u = oc(obj);
+    if (obj && srcOfBlob.has(obj)) srcOfUrl.set(u, srcOfBlob.get(obj));
+    return u;
+  };
+  window.Worker = new Proxy(OW, {
+    construct(target, args, nt) {
+      let [url, opts] = args;
+      const src = typeof url === "string" ? srcOfUrl.get(url) : undefined;
+      if (src && opts && opts.type === "module") url = "data:text/javascript;charset=utf-8," + encodeURIComponent(src);
+      return Reflect.construct(target, [url, opts], nt === window.Worker ? target : nt);
+    }
+  });
+}
 
 /* Sokak ve cadde sınıfları (OpenMapTiles "transportation" katmanı) */
 const ROAD_CLASSES = new Set(["motorway", "trunk", "primary", "secondary", "tertiary", "minor", "service", "track", "raceway", "busway"]);

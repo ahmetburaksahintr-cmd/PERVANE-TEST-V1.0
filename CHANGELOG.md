@@ -1,5 +1,11 @@
 # Sürüm geçmişi
 
+## 2.1.1 — 2026-11-23
+Düzeltme: index.html çift tıklanarak açıldığında zemin siyah görünüyor, Google 3D çizilmiyordu
+- Sebep: Chrome, file:// ile açılan sayfada Cesium'un blob adresli modül worker'larını reddediyor; arazi ağı, uydu görüntüsü ve Google 3D karoları worker'da hazırlandığı için hiç çizilmiyordu (yalnızca siyah yıldız alanı)
+- Çözüm: yalnızca file:// sayfada, Cesium'un "import" blob'ları aynı içerikli data: adresli worker'a çevriliyor; başka hiçbir şeye dokunulmuyor
+- Gerçek ekran kartıyla, bayraksız Chrome'da denendi: açık veri kaynağında uydu zemini, Google 3D'de fotogerçekçi şehir (Kızılay) yeniden görünüyor
+
 ## 2.1.0 — 2026-11-23
 Uçuş fiziği: gerçek hava yoğunluğu, gerçek rüzgâr ve hamleler, batarya, yer etkisi, pervane girdabı
 - Hava yoğunluğu nemli hava denkleminden hesaplanır; itki ve güç ona göre değişir (900 m'de aynı devirde ~%10 az itki). Gerçek dünyada konumun o anki sıcaklık, basınç ve nemi Open-Meteo'dan (anahtarsız) gelir; tırmandıkça yoğunluk standart atmosfere göre azalır
