@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 2.1.1
+# 🌀 Pervane Test Laboratuvarı — Sürüm 2.2.0
 
-> **Güncel sürüm: v2.1.1** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v2.2.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v2.1.1** | 2026-11-23 | Düzeltme: index.html çift tıklanarak açıldığında zemin siyah görünüyor, Google 3D çizilmiyordu |
+| **v2.2.0** | 2026-11-24 | Gerçek dünya: ayrıntılı 3D şehir, yol haritalı zemin, daha hızlı yükleme |
+| v2.1.1 | 2026-11-23 | Düzeltme: index.html çift tıklanarak açıldığında zemin siyah görünüyor, Google 3D çizilmiyordu |
 | v2.1.0 | 2026-11-23 | Uçuş fiziği: gerçek hava yoğunluğu, gerçek rüzgâr ve hamleler, batarya, yer etkisi, pervane girdabı |
 | v1.31.0 | 2026-11-23 | Arayüz baştan tasarlandı: ölçüm cihazı estetiği, emoji yerine çizgi ikonlar |
 | v1.30.0 | 2026-11-23 | Uçuş bölümünde gerçek dünya: kendi sokağında, gerçek binaların arasında uç (CesiumJS) |
@@ -137,16 +138,20 @@ Uçuş düzeneğinde **Uçuş alanı → Gerçek dünya** seçilince drone, arad
 | Kaynak | Ne görürsün |
 |---|---|
 | Fotogerçekçi 3D (Google) | Google'ın gerçek fotoğraflı 3D şehir modeli: binalar, ağaçlar, arabalar, gerçek arazinin üstünde. Büyük şehirlerde en iyi sonuç; 3D çekimi olmayan yerlerde arazi ve uydu görüntüsü görünür. |
-| 3D binalar + arazi (Cesium) | Dağlı-yokuşlu Cesium Dünya Arazisi, Bing uydu görüntüsü, dünya çapında Cesium OSM Binaları (yer altı yapıları gizlenir). |
-| Açık veri (anahtarsız) | Esri uydu görüntüsü + OpenStreetMap bina tabanlarından bu uygulamanın kurduğu 3D binalar (pencereler, zemin kat dükkânları, kiremit ya da beton çatılar). Kat bilgisi girilmemiş binaların yüksekliği taban alanından tahmin edilir. |
+| 3D şehir + gerçek arazi (Cesium) | Dağlı-yokuşlu Cesium Dünya Arazisi ve Bing uydu görüntüsü; üstünde bu uygulamanın OpenStreetMap'ten kurduğu ayrıntılı binalar ve ağaçlar, her biri yokuştaki yerine oturtulmuş. Google 3D çekimi olmayan yerler için. |
+| 3D şehir (anahtarsız) | Aynı ayrıntılı 3D şehir, düz zeminde: OpenStreetMap bina tabanlarından kurulan binalar (kırma ya da düz çatı, pencereler, balkonlar, zemin kat dükkânları ve tabelaları, apartman kapıları, çatıda güneş kolektörü ve su deposu) ve ağaçlar. Kat bilgisi girilmemiş binaların yüksekliği taban alanından tahmin edilir. Hiçbir anahtar gerekmez. |
 
-İlk iki kaynak **projenin Cesium ion anahtarıyla** hazır gelir (`js/config.js`); kimsenin anahtar girmesi gerekmez. Seçilen kaynak açılamazsa (kota dolmuş, ağ kesik) uygulama kendiliğinden bir sonrakine geçer: Google 3D → Cesium 3D → Açık veri.
+İlk iki kaynak **projenin Cesium ion anahtarıyla** hazır gelir (`js/config.js`); kimsenin anahtar girmesi gerekmez. Seçilen kaynak açılamazsa (kota dolmuş, ağ kesik) uygulama kendiliğinden bir sonrakine geçer: Google 3D → 3D şehir + gerçek arazi → 3D şehir (anahtarsız).
+
+**Zemin** (Google dışındaki kaynaklarda, sol panelde): *Harita*, OpenFreeMap verisinden bu uygulamanın çizdiği keskin zemin haritasıdır: gerçek genişliğinde yollar, kaldırımlar, şerit çizgileri, yaya geçitleri, parklar, su ve bina gölgeleri. *Uydu + yollar*, uydu görüntüsünün üstüne yolları ve kaldırımları çizer. *Uydu* yalnız uydu görüntüsüdür.
+
+**Hız:** Uçuş seçilir seçilmez 3D harita kütüphanesi arka planda yüklenmeye başlar. Yer seçilince arazi, harita verisi ve kamera uçuşu aynı anda yürür; şehir parça parça kurulur, ekran donmaz.
 
 - 3D karolu kaynaklarda drone, çevresindeki ayrıntılı karolar gelene kadar bekler (durum yazısında “3D şehir yükleniyor · N karo”). Hızlı bilgisayarda birkaç saniye sürer.
 - Fotogrametrik 3D şehirler çok yakından bakınca “erimiş” görünür; bu yüzden takip kamerası bu kaynaklarda biraz yukarıdan ve geriden bakar. En güzel görüntü 15–40 m yükseklikte.
 - Ekran kartı zorlanırsa (kare süresi 40 ms'yi geçerse) 3D haritanın çizim çözünürlüğü kendiliğinden düşer, rahatlayınca geri çıkar.
 
-**Anahtar hakkında:** Tarayıcıda çalışan her harita uygulamasında olduğu gibi anahtar sayfayı açan herkes tarafından görülebilir; ücretsiz hesabın ayda 1.000 Google 3D açılışı bu anahtarı kullanan herkes için ortaktır. Kotayı korumak için anahtarın Cesium ion sitesinde yalnızca gereken izinlerle (assets:read, geocode) ve yalnızca kullanılan varlıklarla (1, 2, 96188, 2275207) sınırlandırılması önerilir. Çok kullanacak biri kendi ücretsiz anahtarını uygulamada **Kendi Cesium anahtarını gir** düğmesiyle ekleyebilir:
+**Anahtar hakkında:** Tarayıcıda çalışan her harita uygulamasında olduğu gibi anahtar sayfayı açan herkes tarafından görülebilir; ücretsiz hesabın ayda 1.000 Google 3D açılışı bu anahtarı kullanan herkes için ortaktır. Kotayı korumak için anahtarın Cesium ion sitesinde yalnızca gereken izinlerle (assets:read, geocode) ve yalnızca kullanılan varlıklarla (1, 2, 2275207) sınırlandırılması önerilir. Çok kullanacak biri kendi ücretsiz anahtarını uygulamada **Kendi Cesium anahtarını gir** düğmesiyle ekleyebilir:
 1. [ion.cesium.com/signup](https://ion.cesium.com/signup/) adresinden ücretsiz hesap aç (ticari olmayan kullanım içindir).
 2. Üst menüden **Access Tokens** sayfasına gir, **Default Token** satırındaki anahtarı kopyala.
 3. Uygulamada **Kendi Cesium anahtarını gir** düğmesine bas, anahtarı yapıştır, **Kaydet ve dene**. Anahtar yalnızca bu tarayıcıda saklanır ve yalnızca Cesium'un sunucusuna gider; silinirse yeniden projenin anahtarı kullanılır.
@@ -287,6 +292,6 @@ Gerçek dünya uçuşu için internetten yüklenenler (yalnızca o bölüm açı
 | [Nominatim](https://nominatim.org) (OpenStreetMap) | Adres ve sokak arama (saniyede en çok 1 istek) | ODbL, kullanım politikasına uygun |
 | [Esri World Imagery](https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9) | Anahtarsız kaynakta uydu görüntüsü | Esri koşulları, kaynak gösterilerek |
 | [Open-Meteo](https://open-meteo.com) | Gerçek dünyada o anki sıcaklık, basınç, nem ve rüzgâr (anahtarsız) | Açık kaynak, ticari olmayan kullanımda ücretsiz; CC BY 4.0 |
-| [Cesium ion](https://cesium.com/platform/cesium-ion/) | Arazi, Bing uydu, Cesium OSM Binaları, Google Fotogerçekçi 3D | Ücretsiz hesap, ticari olmayan kullanım |
+| [Cesium ion](https://cesium.com/platform/cesium-ion/) | Arazi, Bing uydu, Google Fotogerçekçi 3D | Ücretsiz hesap, ticari olmayan kullanım |
 
-Vektör karolar `js/mvt.js` içindeki küçük bir okuyucuyla çözülür (ek kütüphane yok).
+Vektör karolar `js/mvt.js` içindeki küçük bir okuyucuyla çözülür (ek kütüphane yok). Zemin haritası bu karolardan `js/groundmap.js` ile çizilir.

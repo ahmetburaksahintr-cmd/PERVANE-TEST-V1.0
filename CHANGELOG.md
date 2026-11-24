@@ -1,5 +1,15 @@
 # Sürüm geçmişi
 
+## 2.2.0 — 2026-11-24
+Gerçek dünya: ayrıntılı 3D şehir, yol haritalı zemin, daha hızlı yükleme
+- Siyah zemin sorunu giderildi; yer artık yollar, kaldırımlar, şerit çizgileri, yaya geçitleri, parklar ve sularla çiziliyor (OpenFreeMap verisinden, js/groundmap.js)
+- Yeni Zemin seçimi: Harita, Uydu + yollar, Uydu
+- Binalar baştan yapıldı: kırma kiremit çatılar, düz çatılarda korkuluk, güneş kolektörü ve su deposu; pencereler, balkonlar, apartman kapıları, zemin kat dükkânları ve tabelaları
+- Sokaklara ağaçlar dikildi (parklar, sokak ağaçları, palmiyeler)
+- "3D şehir + gerçek arazi" kaynağı artık Cesium OSM binaları yerine bu ayrıntılı şehri kullanıyor; binalar ve ağaçlar yokuştaki gerçek yerine oturtuluyor, çarpışma da araziye göre
+- Hız: Uçuş seçilince 3D kütüphane önceden yükleniyor; arazi, harita verisi ve kamera uçuşu aynı anda; şehir parça parça kuruluyor; bina gölgelendiricisi kamera uçarken önceden derleniyor (ilk açılıştaki donmalar azaldı); paralel istek sınırı yükseltildi
+- README: harita kaynakları ve Zemin seçimi güncellendi
+
 ## 2.1.1 — 2026-11-23
 Düzeltme: index.html çift tıklanarak açıldığında zemin siyah görünüyor, Google 3D çizilmiyordu
 - Sebep: Chrome, file:// ile açılan sayfada Cesium'un blob adresli modül worker'larını reddediyor; arazi ağı, uydu görüntüsü ve Google 3D karoları worker'da hazırlandığı için hiç çizilmiyordu (yalnızca siyah yıldız alanı)
