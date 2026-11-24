@@ -51,6 +51,8 @@
       <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15.5" r="4"/><path d="m10.9 12.6 8.6-8.6M16.5 7l2.5 2.5M14.5 9l1.8 1.8"/></symbol>
       <symbol id="i-wand" viewBox="0 0 24 24"><path d="M4.5 19.5 15 9M13.5 7.5 16 5l3 3-2.5 2.5zM19.5 13v3M18 14.5h3M8.5 3.5v3M7 5h3"/></symbol>
       <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8h.01"/></symbol>
+      <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+      <symbol id="i-shrink" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></symbol>
     </defs>
   </svg>
 
@@ -66,36 +68,60 @@
           </g>
         </svg>
       </span>
-      <div class="brand-text"><b>Pervane Test Laboratuvarı</b><span>3D baskı pervanelerde itki · gerilme · bükülme</span></div>
+      <b class="brand-name">Pervane Test Laboratuvarı</b>
+      <span class="brand-sub">3D baskı pervanelerde itki, gerilme ve bükülme</span>
     </div>
-    <!-- Sayfa sekmeleri -->
-    <nav class="tabs" id="pageTabs" role="tablist" aria-label="Sayfa bölümleri">
-      <button class="tab active" role="tab" aria-selected="true" data-page="lab"><svg class="ic" aria-hidden="true"><use href="#i-lab"/></svg>Laboratuvar</button>
-      <button class="tab" role="tab" aria-selected="false" data-page="results"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg>Grafikler ve karşılaştırma<i class="tab-chip" id="tabResults"></i></button>
-      <button class="tab" role="tab" aria-selected="false" data-page="data"><svg class="ic" aria-hidden="true"><use href="#i-data"/></svg>Ölçümler ve kayıtlar<i class="tab-chip" id="tabData"></i></button>
-      <button class="tab" role="tab" aria-selected="false" data-page="model"><svg class="ic" aria-hidden="true"><use href="#i-func"/></svg>Nasıl hesaplanıyor?</button>
-    </nav>
     <div class="top-actions">
       <span class="badge tubitak" title="TÜBİTAK 4006 Bilim Fuarları · araştırma projesi">TÜBİTAK 4006<span class="sfx"> · Araştırma projesi</span></span>
-      <span class="badge ver" id="appVersion"></span>
-      <button class="icon" id="soundBtn" title="Motor sesi (gerçek devire göre)" aria-label="Motor sesini aç ya da kapat"><svg class="ic" aria-hidden="true"><use href="#i-mute"/></svg></button>
+      <span class="ver" id="appVersion"></span>
+      <i class="vsep" aria-hidden="true"></i>
+      <button class="icon" id="soundBtn" type="button" title="Motor sesi (gerçek devire göre)" aria-label="Motor sesini aç ya da kapat"><svg class="ic" aria-hidden="true"><use href="#i-mute"/></svg></button>
+      <button class="icon" id="fullBtn" type="button" title="Tam ekran (F)" aria-label="Tam ekran" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-expand"/></svg></button>
     </div>
   </header>
 
-  <main class="layout page active" data-page="lab">
-    <!-- SOL: Ayarlar -->
-    <aside class="panel side">
-      <section>
-        <h3 class="step-h"><span class="step">01</span>Test düzeneği</h3>
-        <div class="seg seg3" id="rigSeg">
-          <button data-rig="stand" class="active"><svg class="ic" aria-hidden="true"><use href="#i-stand"/></svg>Test standı</button>
-          <button data-rig="drone"><svg class="ic" aria-hidden="true"><use href="#i-drone"/></svg>FPV drone</button>
-          <button data-rig="fly"><svg class="ic" aria-hidden="true"><use href="#i-fly"/></svg>Uçuş</button>
+  <!-- Laboratuvar ayarları: üstte araç çubuğu. Düzenek seçimi doğrudan; diğer bölümler küçük açılır pencereler (app.js initTools).
+       Düğmede bölümün adı ve o anki değeri yazar; kimlikler app.js ve world.js'in kullandıklarıdır. -->
+  <nav class="toolbar" id="toolbar" aria-label="Laboratuvar ayarları">
+    <div class="seg seg3 rig-seg" id="rigSeg" role="group" aria-label="Test düzeneği">
+      <button data-rig="stand" class="active" type="button"><svg class="ic" aria-hidden="true"><use href="#i-stand"/></svg>Test standı</button>
+      <button data-rig="drone" type="button"><svg class="ic" aria-hidden="true"><use href="#i-drone"/></svg>FPV drone</button>
+      <button data-rig="fly" type="button"><svg class="ic" aria-hidden="true"><use href="#i-fly"/></svg>Uçuş</button>
+    </div>
+
+    <div class="tool-group" data-group="rig">
+      <div class="tool" data-tool="drone" hidden>
+        <button class="tool-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="popDrone"><span class="tool-l">Drone</span><span class="tool-v" id="tvDrone">–</span></button>
+        <div class="pop" id="popDrone" role="dialog" aria-label="Drone modeli" tabindex="-1" hidden>
+          <div class="pop-h"><b>Drone modeli</b><span>Gerçek modellerin motoru, pervanesi ve ağırlığıyla</span></div>
+          <div id="dronePick" hidden>
+            <select id="droneSel" aria-label="Drone modeli"></select>
+            <!-- Donanım ayrıntıları: isteyen açar -->
+            <details class="more" id="droneMore">
+              <summary><span class="more-t">Donanım ve özellikler</span><span class="more-v" id="droneSum"></span></summary>
+              <div id="droneInfo" class="kv small"></div>
+              <p id="droneNote" class="note"></p>
+            </details>
+            <!-- Asılı yük: bağlı drone testinde isteğe bağlı ağırlıklar -->
+            <div id="payloadBox" class="payload" hidden>
+              <button class="btn small" id="payloadBtn" type="button" aria-expanded="false" aria-controls="payloadPanel"><svg class="ic" aria-hidden="true"><use href="#i-weight"/></svg>Ağırlık ekle</button>
+              <div id="payloadPanel" hidden>
+                <div class="wchips" id="payloadChips"></div>
+                <div class="wchips" id="payloadList"></div>
+                <div class="payload-sum"><span id="payloadSum">Yük yok</span><button class="link" id="payloadClear" type="button" hidden>Hepsini kaldır</button></div>
+                <details class="tip"><summary><span class="note">Ağırlıklar drone'a iple asılır. Tartı ekranı dört pervanenin toplam kaldırma kuvvetini gösterir; itki "drone + yük"ü geçince yük tabladan kalkar.</span></summary></details>
+              </div>
+            </div>
+          </div>
         </div>
-        <div id="flyHelp" class="fly-help" hidden>
+      </div>
+
+      <div class="tool" data-tool="area" hidden>
+        <button class="tool-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="popArea"><span class="tool-l">Uçuş alanı</span><span class="tool-v" id="tvArea">Parkur</span></button>
+        <div class="pop pop-wide" id="popArea" role="dialog" aria-label="Uçuş alanı" tabindex="-1" hidden>
+          <div class="pop-h"><b>Uçuş alanı</b><span>Yapay parkur ya da gerçek dünyada istediğin yer</span></div>
           <!-- Uçuş alanı: yapay parkur ya da gerçek dünya (CesiumJS, js/world.js) -->
           <div class="fly-area">
-            <div class="sub-h">Uçuş alanı</div>
             <div class="seg" id="flyAreaSeg" role="group" aria-label="Uçuş alanı">
               <button data-area="field" class="active" type="button">Parkur</button><button data-area="real" type="button"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>Gerçek dünya</button>
             </div>
@@ -108,93 +134,123 @@
               <ul id="worldResults" class="world-results" hidden></ul>
               <div id="worldPlace" class="world-place"></div>
               <div id="worldQuick" class="world-quick"></div>
-              <label class="world-src">Harita kaynağı
-                <select id="worldSrc"></select>
-              </label>
-              <label class="world-src">Zemin
-                <select id="worldGround"></select>
-              </label>
-              <p class="note" id="worldSrcNote"></p>
+              <div class="world-opts">
+                <label class="world-src">Harita kaynağı
+                  <select id="worldSrc"></select>
+                </label>
+                <label class="world-src">Zemin
+                  <select id="worldGround"></select>
+                </label>
+              </div>
+              <details class="tip"><summary><span class="note" id="worldSrcNote"></span></summary></details>
               <button class="btn small" id="worldKeyBtn" type="button">Kendi Cesium anahtarını gir (isteğe bağlı)</button>
             </div>
           </div>
-          <div class="sub-h">Rüzgâr</div>
-          <div class="seg seg5" id="windSeg" role="group" aria-label="Rüzgâr">
-            <button data-wind="off" class="active">Yok</button><button data-wind="light">Hafif</button><button data-wind="moderate">Orta</button><button data-wind="strong">Sert</button><button data-wind="real">Gerçek</button>
-          </div>
-          <p class="note" id="windNote"></p>
-          <div class="sub-h">Uçuş modu</div>
-          <div class="seg seg4" id="flyModeSeg" role="group" aria-label="Uçuş modu">
-            <button data-mode="easy" class="active">Kolay</button><button data-mode="angle">Angle</button><button data-mode="horizon">Horizon</button><button data-mode="acro">Acro</button>
-          </div>
-          <p class="note" id="flyModeNote"></p>
-          <div class="pad-line"><span id="padStatus">Klavye</span><button class="btn small" id="padBtn"><svg class="ic" aria-hidden="true"><use href="#i-gamepad"/></svg>Kumanda ayarı</button></div>
-          <div class="keys"><span><kbd>W</kbd> <i id="keyW">ileri</i></span><span><kbd>S</kbd> <i id="keyS">geri</i></span><span><kbd>A</kbd> <i id="keyA">sola</i></span><span><kbd>D</kbd> <i id="keyD">sağa</i></span></div>
-          <div class="keys"><span><kbd>E</kbd> <i id="keyE">yüksel</i></span><span><kbd>Q</kbd> <i id="keyQ">alçal</i></span><span><kbd>Z</kbd> <i>sola dön</i></span><span><kbd>X</kbd> <i>sağa dön</i></span></div>
-          <div class="keys"><span><kbd>R</kbd> <i>baştan</i></span><span><kbd>V</kbd> <i>bakış</i></span><span><kbd>H</kbd> <i>askı gazı</i></span><span><kbd class="wide">Boşluk</kbd> <i>gazı kes</i></span></div>
-          <p class="note">Modlar <kbd class="mini">1</kbd>–<kbd class="mini">4</kbd> tuşlarıyla da seçilir. Turuncu halkaların içinden geç; hepsi yeşil olunca süren yazılır. Gerçek dünyada halkalar seçtiğin sokak boyunca dizilir. İtki seçtiğin pervane ve malzemeden gelir: zayıf pervane drone'u kaldıramaz ya da havada kırılır.</p>
         </div>
-        <div id="dronePick" hidden>
-          <div class="sub-h">Drone modeli</div>
-          <select id="droneSel"></select>
-          <div id="droneInfo" class="kv small"></div>
-          <p id="droneNote" class="note"></p>
-          <!-- Asılı yük: bağlı drone testinde isteğe bağlı ağırlıklar -->
-          <div id="payloadBox" class="payload" hidden>
-            <button class="btn small" id="payloadBtn" aria-expanded="false" aria-controls="payloadPanel"><svg class="ic" aria-hidden="true"><use href="#i-weight"/></svg>Ağırlık ekle</button>
-            <div id="payloadPanel" hidden>
-              <div class="wchips" id="payloadChips"></div>
-              <div class="wchips" id="payloadList"></div>
-              <div class="payload-sum"><span id="payloadSum">Yük yok</span><button class="link" id="payloadClear" hidden>Hepsini kaldır</button></div>
-              <p class="note">Ağırlıklar drone'a iple asılır. Tartı ekranı dört pervanenin toplam kaldırma kuvvetini gösterir; itki "drone + yük"ü geçince yük tabladan kalkar.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section>
-        <h3 class="step-h"><span class="step">02</span>Filament</h3>
-        <div id="matList" class="mat-list"></div>
-        <p id="matNote" class="note"></p>
-      </section>
-      <section>
-        <h3 class="step-h"><span class="step">03</span>Pervane rengi</h3>
-        <div id="colorList" class="color-list"></div>
-        <label class="custom-color">Özel renk <input type="color" id="customColor" value="#ff6b00"></label>
-        <p class="note">Pervane sıfırken seçtiğin renkte görünür; zorlandıkça kırılacağı bölge <b class="warn">sarı</b> → <b class="bad">kırmızı</b> olur ve kökte uyarı halkası yanıp söner.</p>
-      </section>
-      <section>
-        <h3 class="step-h"><span class="step">04</span>Fırçasız motor</h3>
-        <select id="motorSel"></select>
-        <div id="motorInfo" class="kv small"></div>
-        <p id="motorEst" class="note" hidden></p>
-        <p id="motorLock" class="note lock" hidden>Drone modunda motor, pervane çapı ve kanat sayısı drone modeline göre sabittir.</p>
-      </section>
-      <section>
-        <h3 class="step-h"><span class="step">05</span>Pervane geometrisi</h3>
-        <label>Çap <b id="vDia"></b><input type="range" id="dia" min="1.5" max="10" step="0.1"></label>
-        <label>Kanat sayısı <b id="vBlades"></b><input type="range" id="blades" min="2" max="5" step="1"></label>
-        <label>Hatve (pitch) <b id="vPitch"></b><input type="range" id="pitch" min="2" max="7" step="0.1"></label>
-        <label>Kök veter genişliği <b id="vChord"></b><input type="range" id="chord" min="4" max="22" step="0.5"></label>
-        <label>Kök kalınlığı <b id="vThick"></b><input type="range" id="thick" min="0.4" max="5" step="0.1"></label>
-      </section>
-      <section>
-        <h3 class="step-h"><span class="step">06</span>Ortam</h3>
-        <label>Pervane sıcaklığı <b id="vTemp"></b><input type="range" id="temp" min="15" max="90" step="1"></label>
-        <p class="note">Motor ısındıkça pervane göbeği de ısınır; PLA ~55 °C'de yumuşamaya başlar.</p>
-        <label>Hava sıcaklığı <b id="vAirT"></b><input type="range" id="airT" min="-10" max="45" step="1"></label>
-        <label>Rakım <b id="vAlt"></b><input type="range" id="alt" min="0" max="3000" step="50"></label>
-        <p class="note" id="rhoNote"></p>
-      </section>
-      <section>
-        <h3 class="step-h"><span class="step">07</span>Görünüm</h3>
-        <label>Bükülme abartma <b id="vExag"></b><input type="range" id="exag" min="1" max="10" step="1"></label>
-        <label class="check"><input type="checkbox" id="heat" checked> Gerilme renk haritası</label>
-      </section>
-    </aside>
+      </div>
 
-    <!-- ORTA: 3D sahne -->
-    <section class="stage panel">
+      <div class="tool" data-tool="flight" hidden>
+        <button class="tool-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="popFlight"><span class="tool-l">Uçuş</span><span class="tool-v" id="tvFlight">Kolay</span></button>
+        <div class="pop" id="popFlight" role="dialog" aria-label="Uçuş ayarları" tabindex="-1" hidden>
+          <div class="pop-h"><b>Uçuş</b><span>Rüzgâr, uçuş modu ve kumanda</span></div>
+          <div id="flyHelp" class="fly-help" hidden>
+            <div class="sub-h">Rüzgâr</div>
+            <div class="seg seg5" id="windSeg" role="group" aria-label="Rüzgâr">
+              <button data-wind="off" class="active" type="button">Yok</button><button data-wind="light" type="button">Hafif</button><button data-wind="moderate" type="button">Orta</button><button data-wind="strong" type="button">Sert</button><button data-wind="real" type="button">Gerçek</button>
+            </div>
+            <details class="tip"><summary><span class="note" id="windNote"></span></summary></details>
+            <div class="sub-h">Uçuş modu</div>
+            <div class="seg seg4" id="flyModeSeg" role="group" aria-label="Uçuş modu">
+              <button data-mode="easy" class="active" type="button">Kolay</button><button data-mode="angle" type="button">Angle</button><button data-mode="horizon" type="button">Horizon</button><button data-mode="acro" type="button">Acro</button>
+            </div>
+            <details class="tip"><summary><span class="note" id="flyModeNote"></span></summary></details>
+            <div class="sub-h">Kumanda ve tuşlar</div>
+            <div class="pad-line"><span id="padStatus">Klavye</span><button class="btn small" id="padBtn" type="button"><svg class="ic" aria-hidden="true"><use href="#i-gamepad"/></svg>Kumanda ayarı</button></div>
+            <div class="keys"><span><kbd>W</kbd> <i id="keyW">ileri</i></span><span><kbd>S</kbd> <i id="keyS">geri</i></span><span><kbd>A</kbd> <i id="keyA">sola</i></span><span><kbd>D</kbd> <i id="keyD">sağa</i></span></div>
+            <div class="keys"><span><kbd>E</kbd> <i id="keyE">yüksel</i></span><span><kbd>Q</kbd> <i id="keyQ">alçal</i></span><span><kbd>Z</kbd> <i>sola dön</i></span><span><kbd>X</kbd> <i>sağa dön</i></span></div>
+            <div class="keys"><span><kbd>R</kbd> <i>baştan</i></span><span><kbd>V</kbd> <i>bakış</i></span><span><kbd>H</kbd> <i>askı gazı</i></span><span><kbd class="wide">Boşluk</kbd> <i>gazı kes</i></span></div>
+            <details class="tip"><summary><span class="note">Modlar <kbd class="mini">1</kbd>–<kbd class="mini">4</kbd> tuşlarıyla da seçilir. Turuncu halkaların içinden geç; hepsi yeşil olunca süren yazılır. Gerçek dünyada halkalar seçtiğin sokak boyunca dizilir. İtki seçtiğin pervane ve malzemeden gelir: zayıf pervane drone'u kaldıramaz ya da havada kırılır.</span></summary></details>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-group" data-group="prop">
+      <div class="tool" data-tool="mat">
+        <button class="tool-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="popMat"><span class="tool-l">Filament</span><span class="tool-v" id="tvMat">PLA</span></button>
+        <div class="pop pop-wide" id="popMat" role="dialog" aria-label="Filament" tabindex="-1" hidden>
+          <div class="pop-h"><b>Filament</b><span>Pervanenin basılacağı malzeme · E: esneklik modülü, σ: çekme dayanımı</span></div>
+          <div id="matList" class="mat-list"></div>
+          <details class="tip"><summary><span id="matNote" class="note"></span></summary></details>
+        </div>
+      </div>
+      <div class="tool" data-tool="color">
+        <button class="tool-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="popColor"><span class="tool-l">Renk</span><span class="tool-v" id="tvColor">Malzeme rengi</span></button>
+        <div class="pop" id="popColor" role="dialog" aria-label="Pervane rengi" tabindex="-1" hidden>
+          <div class="pop-h"><b>Pervane rengi</b><span>Yalnızca görünüş; hesaba etkisi yoktur</span></div>
+          <div id="colorList" class="color-list"></div>
+          <label class="custom-color">Özel renk <input type="color" id="customColor" value="#ff6b00"></label>
+          <details class="tip"><summary><span class="note">Pervane sıfırken seçtiğin renkte görünür; zorlandıkça kırılacağı bölge <b class="warn">sarı</b> → <b class="bad">kırmızı</b> olur ve kökte uyarı halkası yanıp söner.</span></summary></details>
+        </div>
+      </div>
+      <div class="tool" data-tool="motor">
+        <button class="tool-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="popMotor"><span class="tool-l">Motor</span><span class="tool-v" id="tvMotor">–</span></button>
+        <div class="pop" id="popMotor" role="dialog" aria-label="Fırçasız motor" tabindex="-1" hidden>
+          <div class="pop-h"><b>Fırçasız motor</b><span>Devri ve gücü belirler</span></div>
+          <select id="motorSel" aria-label="Fırçasız motor"></select>
+          <div id="motorInfo" class="kv small"></div>
+          <details class="tip"><summary><span id="motorEst" class="note" hidden></span></summary></details>
+          <p id="motorLock" class="note lock" hidden>Drone modunda motor, pervane çapı ve kanat sayısı drone modeline göre sabittir.</p>
+        </div>
+      </div>
+      <div class="tool" data-tool="prop">
+        <button class="tool-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="popProp"><span class="tool-l">Pervane</span><span class="tool-v" id="tvProp">–</span></button>
+        <div class="pop" id="popProp" role="dialog" aria-label="Pervane geometrisi" tabindex="-1" hidden>
+          <div class="pop-h"><b>Pervane geometrisi</b><span>Ölçüler kanadın kökünde ölçülür</span></div>
+          <div class="form">
+            <label>Çap <b id="vDia"></b><input type="range" id="dia" min="1.5" max="10" step="0.1"></label>
+            <label>Kanat sayısı <b id="vBlades"></b><input type="range" id="blades" min="2" max="5" step="1"></label>
+            <label>Hatve (pitch) <b id="vPitch"></b><input type="range" id="pitch" min="2" max="7" step="0.1"></label>
+            <label>Kök veter genişliği <b id="vChord"></b><input type="range" id="chord" min="4" max="22" step="0.5"></label>
+            <label>Kök kalınlığı <b id="vThick"></b><input type="range" id="thick" min="0.4" max="5" step="0.1"></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-group" data-group="env">
+      <div class="tool" data-tool="env">
+        <button class="tool-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="popEnv"><span class="tool-l">Ortam</span><span class="tool-v" id="tvEnv">–</span></button>
+        <div class="pop" id="popEnv" role="dialog" aria-label="Ortam" tabindex="-1" hidden>
+          <div class="pop-h"><b>Ortam</b><span>Sıcaklık ve hava yoğunluğu</span></div>
+          <div class="form">
+            <label>Pervane sıcaklığı <b id="vTemp"></b><input type="range" id="temp" min="15" max="90" step="1"></label>
+            <details class="tip"><summary><span class="note">Motor ısındıkça pervane göbeği de ısınır; PLA ~55 °C'de yumuşamaya başlar.</span></summary></details>
+            <label>Hava sıcaklığı <b id="vAirT"></b><input type="range" id="airT" min="-10" max="45" step="1"></label>
+            <label>Rakım <b id="vAlt"></b><input type="range" id="alt" min="0" max="3000" step="50"></label>
+            <details class="tip"><summary><span class="note" id="rhoNote"></span></summary></details>
+          </div>
+        </div>
+      </div>
+      <div class="tool" data-tool="view">
+        <button class="tool-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="popView"><span class="tool-l">Görünüm</span><span class="tool-v" id="tvView">–</span></button>
+        <div class="pop" id="popView" role="dialog" aria-label="Görünüm" tabindex="-1" hidden>
+          <div class="pop-h"><b>Görünüm</b><span>Yalnızca ekrandaki çizim</span></div>
+          <div class="form">
+            <label>Bükülme abartma <b id="vExag"></b><input type="range" id="exag" min="1" max="10" step="1"></label>
+            <label class="check"><input type="checkbox" id="heat" checked> Gerilme renk haritası</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="lab" id="lab">
+
+    <!-- 3D sahne: kenardan kenara -->
+    <section class="stage">
       <div id="view3d"></div>
+      <button class="icon full-exit" id="fullExit" type="button" title="Tam ekrandan çık (F ya da Esc)" aria-label="Tam ekrandan çık"><svg class="ic" aria-hidden="true"><use href="#i-shrink"/></svg></button>
       <!-- Gerçek dünya katmanları -->
       <div class="world-status" id="worldStatus" hidden></div>
       <div class="world-street" id="worldStreet" hidden></div>
@@ -253,15 +309,17 @@
     </section>
   </main>
 
-  <!-- ALT: Grafikler, karşılaştırma, gerçek veri -->
-  <section class="bottom">
+  <!-- Alttan açılan paneller: alt şeritteki sekmelerle açılır, laboratuvar arkada çalışmaya devam eder -->
+  <section class="sheets" id="sheets">
     <!-- SONUÇLAR -->
-    <div class="group page" id="grpResults" data-page="results">
+    <div class="group sheet" id="grpResults" data-page="results" role="region" aria-labelledby="shResults" tabindex="-1">
       <div class="group-head">
-        <div class="group-title"><span class="eyebrow">Sonuçlar</span><h2>Grafikler ve karşılaştırma</h2></div>
+        <i class="grab" aria-hidden="true"></i>
+        <div class="group-title"><h2 id="shResults">Grafikler ve karşılaştırma</h2><p>Canlı grafikler ve aynı pervaneyle tüm filamentlerin karşılaştırması</p></div>
         <div class="group-actions">
-          <button class="link" data-acc-all="open">Tümünü aç</button>
-          <button class="link" data-acc-all="close">Tümünü kapat</button>
+          <button class="link" type="button" data-acc-all="open">Tümünü aç</button>
+          <button class="link" type="button" data-acc-all="close">Tümünü kapat</button>
+          <button class="icon sheet-x" type="button" data-sheet-close title="Kapat (Esc)" aria-label="Paneli kapat"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
         </div>
       </div>
       <div class="acc-stack">
@@ -302,16 +360,18 @@
     </div>
 
     <!-- VERİLER -->
-    <div class="group page" id="grpData" data-page="data">
+    <div class="group sheet" id="grpData" data-page="data" role="region" aria-labelledby="shData" tabindex="-1">
       <div class="group-head">
-        <div class="group-title"><span class="eyebrow">Veriler</span><h2>Ölçümler ve kayıtlar</h2></div>
+        <i class="grab" aria-hidden="true"></i>
+        <div class="group-title"><h2 id="shData">Ölçümler ve kayıtlar</h2><p>Gerçek düzenekten ölçümler ve test günlüğü</p></div>
         <div class="group-actions">
-          <button class="link" data-acc-all="open">Tümünü aç</button>
-          <button class="link" data-acc-all="close">Tümünü kapat</button>
+          <button class="link" type="button" data-acc-all="open">Tümünü aç</button>
+          <button class="link" type="button" data-acc-all="close">Tümünü kapat</button>
+          <button class="icon sheet-x" type="button" data-sheet-close title="Kapat (Esc)" aria-label="Paneli kapat"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
         </div>
       </div>
       <div class="acc-grid">
-        <article class="panel acc" data-acc="meas">
+        <article class="panel acc" data-acc="meas" data-open>
           <button class="acc-head" id="accMeasHead" aria-expanded="false" aria-controls="accMeasBody">
             <span class="acc-ico" aria-hidden="true"><svg class="ic"><use href="#i-plug"/></svg></span>
             <span class="acc-titles"><b>Fiziksel test verisi</b><small>Gerçek düzenekten ölçüm yükle, canlı oku, modeli kalibre et</small></span>
@@ -333,7 +393,7 @@
           </div></div></div>
         </article>
 
-        <article class="panel acc" data-acc="log">
+        <article class="panel acc" data-acc="log" data-open>
           <button class="acc-head" id="accLogHead" aria-expanded="false" aria-controls="accLogBody">
             <span class="acc-ico" aria-hidden="true"><svg class="ic"><use href="#i-list"/></svg></span>
             <span class="acc-titles"><b>Test günlüğü</b><small id="logLast" class="log-last">Henüz kayıt yok</small></span>
@@ -357,11 +417,15 @@
     </div>
 
     <!-- MODEL: yöntem -->
-    <div class="group page" id="grpModel" data-page="model">
+    <div class="group sheet" id="grpModel" data-page="model" role="region" aria-labelledby="shModel" tabindex="-1">
       <div class="group-head">
-        <div class="group-title"><span class="eyebrow">Model</span><h2>Nasıl hesaplanıyor?</h2></div>
+        <i class="grab" aria-hidden="true"></i>
+        <div class="group-title"><h2 id="shModel">Nasıl hesaplanıyor?</h2><p>Modelin dayandığı formüller ve sınırları</p></div>
+        <div class="group-actions">
+          <button class="icon sheet-x" type="button" data-sheet-close title="Kapat (Esc)" aria-label="Paneli kapat"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+        </div>
       </div>
-      <article class="panel acc" data-acc="method">
+      <article class="panel acc" data-acc="method" data-open>
         <button class="acc-head" id="accMethodHead" aria-expanded="false" aria-controls="accMethodBody">
           <span class="acc-ico" aria-hidden="true"><svg class="ic"><use href="#i-func"/></svg></span>
           <span class="acc-titles"><b>Yöntem</b><small>Modelin dayandığı formüller ve sınırları</small></span>
@@ -416,9 +480,14 @@
       <footer><button class="btn ghost" id="rmNo">Hayır, teşekkürler</button></footer>
     </div>
   </div>
-  <footer class="foot">
-    <span>Pervane Test Laboratuvarı <b id="footVer"></b> · Eğitim amaçlı basitleştirilmiş model; sonuçları gerçek testle doğrula.</span>
-    <span>Kaynak kod: <a href="https://github.com/ahmetburaksahintr-cmd/PERVANE-TEST-V1.0" target="_blank" rel="noopener">GitHub</a></span>
+  <!-- Alt şerit: panel sekmeleri (paneller alttan açılır) ve durum satırı -->
+  <footer class="statusbar">
+    <nav class="tabs" id="pageTabs" aria-label="Paneller">
+      <button class="tab" type="button" data-page="results" aria-expanded="false" aria-controls="grpResults"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg><span class="tab-l">Grafikler ve karşılaştırma</span><span class="tab-s">Grafikler</span><i class="tab-chip" id="tabResults"></i></button>
+      <button class="tab" type="button" data-page="data" aria-expanded="false" aria-controls="grpData"><svg class="ic" aria-hidden="true"><use href="#i-data"/></svg><span class="tab-l">Ölçümler ve kayıtlar</span><span class="tab-s">Ölçümler</span><i class="tab-chip" id="tabData"></i></button>
+      <button class="tab" type="button" data-page="model" aria-expanded="false" aria-controls="grpModel"><svg class="ic" aria-hidden="true"><use href="#i-func"/></svg><span class="tab-l">Nasıl hesaplanıyor?</span><span class="tab-s">Yöntem</span></button>
+    </nav>
+    <p class="status-note"><span class="status-l">Eğitim amaçlı basitleştirilmiş model; sonuçları gerçek testle doğrula.</span><a href="https://github.com/ahmetburaksahintr-cmd/PERVANE-TEST-V1.0" target="_blank" rel="noopener">Kaynak kod</a><b id="footVer"></b></p>
   </footer>
 
   <!-- Kumanda ayarı penceresi -->

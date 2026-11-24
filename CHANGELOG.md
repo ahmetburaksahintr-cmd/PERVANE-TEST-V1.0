@@ -1,5 +1,16 @@
 # Sürüm geçmişi
 
+## 2.3.0 — 2026-11-24
+Arayüz yenilendi: üstte araç çubuğu, kenardan kenara sahne, alttan açılan paneller, tam ekran
+- Sol panel kaldırıldı; laboratuvarın bütün ayarları üstteki araç çubuğunda: solda düzenek seçimi (Test standı, FPV drone, Uçuş), yanında Drone, Uçuş alanı, Uçuş, Filament, Renk, Motor, Pervane, Ortam, Görünüm. Her biri küçük bir açılır pencere; düğmede bölümün o anki değeri yazar
+- 3D sahne artık ekranın tamamını kullanıyor (kenardan kenara)
+- Grafikler ve karşılaştırma, Ölçümler ve kayıtlar, Nasıl hesaplanıyor? en alttaki şeritte; tıklayınca panel alttan açılır, laboratuvar arkada çalışmaya devam eder. Esc, kapat düğmesi, sekmeye yeniden basma ya da aşağı sürükleme ile kapanır
+- Tam ekran: sağ üstteki düğme ya da F tuşu; yalnız sahne kalır
+- Ayarların altındaki açıklamalar ince bir kenar çizgisiyle tek satır; tıklayınca açılır. Drone donanım ayrıntıları "Donanım ve özellikler" satırında, isteyen açar
+- Tasarım: tümü büyük harfli etiketler ve numaralı başlıklar kaldırıldı, etiketler cümle düzeninde; eş aralıklı yazı yalnızca sayılarda; daha az çerçeve, 4 px aralık düzeni
+- Dar ekranda araç çubuğu kenarda solar ve fare tekerleğiyle kaydırılır; telefonda sayfa kayar
+- README: yeni ekran düzeni anlatıldı
+
 ## 2.2.0 — 2026-11-24
 Gerçek dünya: ayrıntılı 3D şehir, yol haritalı zemin, daha hızlı yükleme
 - Siyah zemin sorunu giderildi; yer artık yollar, kaldırımlar, şerit çizgileri, yaya geçitleri, parklar ve sularla çiziliyor (OpenFreeMap verisinden, js/groundmap.js)

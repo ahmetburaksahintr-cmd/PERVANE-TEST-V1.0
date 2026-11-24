@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 2.2.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 2.3.0
 
-> **Güncel sürüm: v2.2.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v2.3.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v2.2.0** | 2026-11-24 | Gerçek dünya: ayrıntılı 3D şehir, yol haritalı zemin, daha hızlı yükleme |
+| **v2.3.0** | 2026-11-24 | Arayüz yenilendi: üstte araç çubuğu, kenardan kenara sahne, alttan açılan paneller, tam ekran |
+| v2.2.0 | 2026-11-24 | Gerçek dünya: ayrıntılı 3D şehir, yol haritalı zemin, daha hızlı yükleme |
 | v2.1.1 | 2026-11-23 | Düzeltme: index.html çift tıklanarak açıldığında zemin siyah görünüyor, Google 3D çizilmiyordu |
 | v2.1.0 | 2026-11-23 | Uçuş fiziği: gerçek hava yoğunluğu, gerçek rüzgâr ve hamleler, batarya, yer etkisi, pervane girdabı |
 | v1.31.0 | 2026-11-23 | Arayüz baştan tasarlandı: ölçüm cihazı estetiği, emoji yerine çizgi ikonlar |
@@ -61,9 +62,11 @@ Yalnızca **Uçuş → Gerçek dünya** internet ister: 3D harita kütüphanesi 
 **Not:** "USB'den canlı oku" özelliği yalnızca Chrome ve Edge'de çalışır.
 
 ## Neler yapabilirsin?
-- **Sayfa sekmeleri:** Üst çubukta dört sekme var: Laboratuvar (3D sahne ve ayarlar), Grafikler ve karşılaştırma, Ölçümler ve kayıtlar, Nasıl hesaplanıyor? Başka bir sekmedeyken de test arka planda sürer; sekmelerdeki küçük işaretler canlı testi, uyarıları ve kayıt sayısını gösterir.
+- **Ekran düzeni:** Üstte araç çubuğu: solda düzenek seçimi (Test standı, FPV drone, Uçuş), yanında laboratuvarın bütün ayarları küçük açılır pencerelerde: Drone, Uçuş alanı, Uçuş, Filament, Renk, Motor, Pervane, Ortam, Görünüm. Her düğmede bölümün o anki değeri yazar (ör. *Filament: PLA*, *Motor: 2207 · 1950KV*). Ortada kenardan kenara 3D sahne. En alttaki şeritte **Grafikler ve karşılaştırma**, **Ölçümler ve kayıtlar**, **Nasıl hesaplanıyor?** sekmeleri var: tıklayınca panel alttan açılır, laboratuvar arkada çalışmaya devam eder. Panel Esc, kapat düğmesi, sekmeye yeniden basma ya da başlığından aşağı sürükleme ile kapanır. Sekmelerdeki küçük işaretler canlı testi, uyarıları ve kayıt sayısını gösterir.
+- **Tam ekran:** Sağ üstteki düğme ya da `F` tuşu; başlık, araç çubuğu ve alt şerit gizlenir, yalnız sahne kalır. `F` ya da Esc ile çıkılır.
+- **Açılır notlar:** Ayarların altındaki açıklamalar ince bir kenar çizgisiyle tek satır görünür; tıklayınca tamamı açılır. Drone'un donanım ayrıntıları da **Donanım ve özellikler** satırına tıklayınca açılır.
 - **6 malzeme:** PLA, PETG, ABS, ASA, Karbon fiber naylon (PA-CF) ve TPU 95A.
-- **Üç test düzeneği:** Sol menünün en üstünden seçilir.
+- **Üç test düzeneği:** Araç çubuğunun en solundan seçilir.
   - **Test standı:** Tek motor, yük hücresiyle itki ölçümü (gerçek Arduino düzeneğinin dijital ikizi). Stant gerçek bir itki standı gibi çizilir: lastik ayaklı alüminyum taban, köşebentli sigma profil direk, çubuk tip yük hücresi (ortasında gözlük deliği), HX711 kartı ve optik devir sensörü. İtki arttıkça yük hücresinin ucu hafifçe yukarı esner. Motorun üç faz kablosu ESC'ye, ESC de bataryaya ve kontrol kartına bağlı görünür (fırçasız motorda üç, fırçalı motorda iki kablo olur). Sahnenin sağ üstündeki **Bakış** düğmesi serbest bakış ile yandan (motor hizasından) bakış arasında geçiş yapar.
   - **FPV drone:** Seçilen drone pede iplerle bağlıdır (tether). Gaz açılıp itki ağırlığı geçince kalkar ve ipler gerilir. Dört pervanenin ikisi saat yönünde, ikisi ters döner. Gösterge, 4 pervanenin toplam itkisini, itki/ağırlık oranını ve toplam akımı gösterir. Bir pervane kırılınca hangi motorun pervanesinin koptuğu yazılır; drone o köşeye yatar, savrulur ve pede düşer. Raporlara drone bilgileri de eklenir.
   - **Tartı ve ağırlıklar (FPV drone düzeneğinde):** Drone ekranlı bir platform tartının üstünde durur. Tartının darası alınmıştır; ekranda dört pervanenin toplam **kaldırma kuvveti** gram olarak canlı görünür. **Ağırlık ekle** düğmesiyle drone'a 50 g, 100 g, 200 g, 500 g, 1 kg, 2 kg ve 5 kg'lık ağırlıklar asılabilir (en fazla 6 adet; üzerlerinde kütleleri yazar). Ağırlık seçilince drone şeffaf bir sehpanın üstüne çıkar, ağırlıklar altında tablada bekler. İtki drone'un ağırlığını geçince drone kalkıp ipi gerer; itki "drone + yük"ü geçince yük de tabladan kalkar. Göstergedeki **taşıma payı**, drone'un kendi ağırlığından sonra kaldırabildiği ek yüktür. Yük bilgisi Excel raporuna da yazılır.
@@ -124,7 +127,7 @@ Yalnızca **Uçuş → Gerçek dünya** internet ister: 3D harita kütüphanesi 
 Uçuş düzeneğinde **Uçuş alanı → Gerçek dünya** seçilince drone, aradığın gerçek bir yerin üstünde uçar: kendi sokağın, okulun ya da şehrin meydanı.
 
 **Nasıl kullanılır?**
-1. Sol panelde arama kutusuna sokağı yaz, ilçeyi de ekle (ör. *Baran Sokak, Keçiören*) ve **Ara**'ya bas. Sonuçlardan doğru olanı seç.
+1. Üstteki **Uçuş alanı** penceresinde arama kutusuna sokağı yaz, ilçeyi de ekle (ör. *Baran Sokak, Keçiören*) ve **Ara**'ya bas. Sonuçlardan doğru olanı seç.
 2. Drone sokağın ortasına, sokak boyunca bakacak şekilde konur. Başlangıçta mavi bir sokak tabelası (ör. **BARAN SK.**) durur; sokak boyunca 3–6 m yükseklikte en çok 6 turuncu halka dizilir.
 3. Her zamanki tuşlarla uç. Ekranın altında o an üstünde olduğun sokağın adı, sağ altta radar (binalar, yollar, halkalar, kalkış noktası; burun hep yukarıda) görünür.
 - **Haritada seç:** Haritayı fareyle kaydırıp yakınlaştırır, başlangıç noktasına tıklarsın. Yüksekten tıklanırsa önce oraya yaklaşılır.
@@ -133,7 +136,7 @@ Uçuş düzeneğinde **Uçuş alanı → Gerçek dünya** seçilince drone, arad
 
 **Fizik:** Zemin artık düz değildir: drone'un altında bina varsa zemin o binanın çatısıdır, çatıya inilebilir. Binaya yandan 6 m/sn'den (kolay modda 10 m/sn'den) hızlı çarpan drone çakılır; daha yavaşsa geri seker. Yerden 120 m'nin üstüne çıkınca yasal sınır uyarısı çıkar (Türkiye'de SHGM kuralı). Takip kamerası binaların içine girmez; gerekirse çatının üstüne yükselir.
 
-**Harita kaynakları** (sol paneldeki listeden seçilir; varsayılan: fotogerçekçi 3D):
+**Harita kaynakları** (Uçuş alanı penceresindeki listeden seçilir; varsayılan: fotogerçekçi 3D):
 
 | Kaynak | Ne görürsün |
 |---|---|
@@ -143,7 +146,7 @@ Uçuş düzeneğinde **Uçuş alanı → Gerçek dünya** seçilince drone, arad
 
 İlk iki kaynak **projenin Cesium ion anahtarıyla** hazır gelir (`js/config.js`); kimsenin anahtar girmesi gerekmez. Seçilen kaynak açılamazsa (kota dolmuş, ağ kesik) uygulama kendiliğinden bir sonrakine geçer: Google 3D → 3D şehir + gerçek arazi → 3D şehir (anahtarsız).
 
-**Zemin** (Google dışındaki kaynaklarda, sol panelde): *Harita*, OpenFreeMap verisinden bu uygulamanın çizdiği keskin zemin haritasıdır: gerçek genişliğinde yollar, kaldırımlar, şerit çizgileri, yaya geçitleri, parklar, su ve bina gölgeleri. *Uydu + yollar*, uydu görüntüsünün üstüne yolları ve kaldırımları çizer. *Uydu* yalnız uydu görüntüsüdür.
+**Zemin** (Google dışındaki kaynaklarda, Uçuş alanı penceresinde): *Harita*, OpenFreeMap verisinden bu uygulamanın çizdiği keskin zemin haritasıdır: gerçek genişliğinde yollar, kaldırımlar, şerit çizgileri, yaya geçitleri, parklar, su ve bina gölgeleri. *Uydu + yollar*, uydu görüntüsünün üstüne yolları ve kaldırımları çizer. *Uydu* yalnız uydu görüntüsüdür.
 
 **Hız:** Uçuş seçilir seçilmez 3D harita kütüphanesi arka planda yüklenmeye başlar. Yer seçilince arazi, harita verisi ve kamera uçuşu aynı anda yürür; şehir parça parça kurulur, ekran donmaz.
 

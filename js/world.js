@@ -933,7 +933,7 @@ const World = {
   /** three.js kamerasını Cesium kamerasına aktarır ve dünyayı çizer */
   frame(dt) {
     const v = this.viewer;
-    if (!this.on || !v || (S.page && S.page !== "lab")) return;
+    if (!this.on || !v) return;
     this._budget = 2;                                   // kare başına en çok 2 yükseklik örneği
     v.resize();
     this.adaptQuality(dt);
@@ -2189,7 +2189,7 @@ void main() {
 }`;
 
 /* =========================================================
-   ARAYÜZ – sol paneldeki "Uçuş alanı" bölümü, sahne üstü yazılar,
+   ARAYÜZ – araç çubuğundaki "Uçuş alanı" penceresi, sahne üstü yazılar,
    radar ve Cesium ion anahtarı penceresi
    ========================================================= */
 const WorldUI = {
@@ -2269,6 +2269,7 @@ const WorldUI = {
     $("#worldPickBar").hidden = !World.picking;
     $("#worldPickCancel").hidden = !World.place;
     $("#worldRadar").hidden = !World.on || World.picking || !World.ready;
+    if (typeof syncTools === "function") syncTools();      // araç çubuğundaki "Uçuş alanı" değeri
   },
 
   status(text, busy, kind) {

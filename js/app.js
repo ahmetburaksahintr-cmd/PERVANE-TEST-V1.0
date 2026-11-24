@@ -130,11 +130,13 @@ function init() {
   $("#clearMeas").onclick = () => { S.measured = []; S.prop.ctScale = 1; updateMeasInfo(); refreshCompare(); };
 
   initAccordions();
-  // Sayfa sekmeleri (başlığın altındaki şerit)
-  $("#pageTabs").onclick = (e) => { const b = e.target.closest(".tab"); if (b) showPage(b.dataset.page); };
-  let savedPage = "lab";
-  try { savedPage = localStorage.getItem(PAGE_KEY) || "lab"; } catch (e) { /* özel pencere */ }
-  showPage(document.querySelector(`.page[data-page="${savedPage}"]`) ? savedPage : "lab", false);
+  initTips();
+  initTools();
+  initSheets();
+  initFull();
+  // Panel sekmeleri (alt şerit): paneller alttan açılır; açık panelin sekmesine yeniden basınca kapanır
+  $("#pageTabs").onclick = (e) => { const b = e.target.closest(".tab"); if (b) showPage(S.page === b.dataset.page ? "lab" : b.dataset.page); };
+  showPage("lab", false);
   $("#logFilters").onclick = (e) => {
     const b = e.target.closest(".pill");
     if (!b) return;
@@ -160,6 +162,8 @@ function init() {
   // Kaydırıcıların dolu kısmını boya (elle değişimde)
   document.addEventListener("input", (e) => { if (e.target.type === "range") paintRange(e.target); });
   Scene3D.init($("#view3d"));
+  // Sahnenin boyu pencere dışında da değişir (tam ekran, alt şerit): çizim boyutu kabı izler
+  if (window.ResizeObserver) new ResizeObserver(() => { if ($("#view3d").clientHeight > 0) Scene3D.resize(); }).observe($("#view3d"));
   envChanged(true);
   selectMaterial("PLA", true);
   syncInputs();
@@ -185,6 +189,7 @@ function syncInputs() {
   document.querySelectorAll("input[type=range]").forEach(paintRange);
   $("#motorEst").hidden = !m.estimated;
   $("#motorEst").textContent = m.estimated ? "* " + m.estimated : "";
+  syncTools();
 }
 
 function selectMaterial(k, silent) {
@@ -241,6 +246,7 @@ function updateFlyModeUi() {
   $("#keyS").textContent = easy ? "geri" : "burun yukarı";
   $("#keyA").textContent = easy ? "sola" : "sola yat";
   $("#keyD").textContent = easy ? "sağa" : "sağa yat";
+  syncTools();
 }
 
 /* ---------------- Kumanda (gamepad / RC) ayarı ---------------- */
@@ -355,7 +361,7 @@ function setRig(mode) {
   if (real) World.enter(); else if (World.on) World.exit();
   envChanged(true);
   updateViewBtn();
-  newProp(fly ? `Uçuş bölümü: ${drone().name} · ${Fly.MODES[Fly.mode]} modu. Klavye, gamepad ya da RC kumandayla uç; tuşlar sol panelde.`
+  newProp(fly ? `Uçuş bölümü: ${drone().name} · ${Fly.MODES[Fly.mode]} modu. Klavye, gamepad ya da RC kumandayla uç; tuşlar üstteki Uçuş menüsünde.`
     : mode === "drone" ? `FPV drone düzeneği: ${drone().name} (4 × ${motor().name})` : "Test standına geçildi (tek motor + yük hücresi)");
 }
 
@@ -390,6 +396,7 @@ function setWind(m) {
   updateWindUi();
 }
 function updateWindUi() {
+  syncTools();
   const real = World.on && World.ready;
   if (Env.windMode === "real" && !real && !World.on) { /* parkurda gerçek rüzgâr yok: sessizce yok sayılır */ }
   document.querySelectorAll("#windSeg button").forEach((b) => {
@@ -445,6 +452,8 @@ function updateDroneInfo() {
   $("#droneInfo").innerHTML = `<span>Şase</span><b>${fmt(d.wheelbaseMm, d.wheelbaseMm % 1 ? 1 : 0)} mm X</b><span>Motorlar</span><b>4 × ${m.name}</b>
     <span>Pervane</span><b>4 × ${d.propName || d.prop.diameterIn + '"'}</b><span>Dönüş</span><b>2 CW + 2 CCW</b><span>Batarya</span><b>${d.battery}</b>
     <span>Kalkış ağırlığı</span><b>${fmt(d.massG + 4 * propMass)} g</b>`;
+  // Kapalı "Donanım ve özellikler" satırında kısa özet
+  $("#droneSum").textContent = `${fmt(d.wheelbaseMm, d.wheelbaseMm % 1 ? 1 : 0)} mm · ${fmt(d.massG + 4 * propMass)} g`;
 }
 
 /** Drone için 4 pervanenin toplamı (kırık pervane %25 itki verir) */
@@ -649,7 +658,7 @@ function updateHud(ev, realDefl) {
       + `ρ = ${fmt(Physics.rho * Fly.rhoK, 3)} kg/m³` + (Fly.kGE > 1.01 ? ` · yer etkisi +%${fmt((Fly.kGE - 1) * 100)}` : "");
     const course = total ? `Halka ${Fly.passed}/${total}${Fly.timing || Fly.done ? " · " + fmt(Fly.time, 1) + " sn" : ""}` : "Serbest uçuş";
     $("#hFInfo").textContent = `${Fly.MODES[Fly.mode]} · ${!inp || inp.src === "klavye" ? "Klavye" : inp.name} · ${course}${wl ? " · Kalkış noktasına " + fmt(Math.hypot(Fly.x, Fly.z) / 1000) + " m" : ""}`;
-    $("#hFMsg").textContent = World.on && !World.ready ? (World.picking ? "Haritada başlangıç noktasını seç ya da sol panelden bir yer ara." : "Harita hazırlanıyor…")
+    $("#hFMsg").textContent = World.on && !World.ready ? (World.picking ? "Haritada başlangıç noktasını seç ya da üstteki Uçuş alanı menüsünden bir yer ara." : "Harita hazırlanıyor…")
       : S.broken ? "Pervane kırıldı. Yeniden başlamak için R tuşuna bas."
       : Fly.crashed ? "Çakıldı. Yeniden başlamak için R tuşuna bas."
       : Fly.bat && Fly.bat.empty ? "Batarya bitti. R tuşu yeni batarya takar."
@@ -957,19 +966,238 @@ function paintRange(el) {
   el.style.setProperty("--p", `${((Number(el.value) - min) / (max - min || 1)) * 100}%`);
 }
 
-/* ---------------- Sayfa sekmeleri ----------------
-   Laboratuvar (3D sahne + ayarlar) ile sonuç/veri/yöntem bölümleri arasında geçiş.
-   Gizli sayfalar genişliğini korur (display:none değil); böylece grafikler ve 3D sahne
-   arka planda çizilmeye devam eder ve rapor görselleri etkilenmez. */
-const PAGE_KEY = "pervane.sayfa";
+/* ---------------- Alttan açılan paneller ----------------
+   "lab": panel yok, laboratuvar tam görünür. "results" / "data" / "model": o panel alttan açılır;
+   laboratuvar arkada çalışmaya devam eder ve araç çubuğu kullanılabilir kalır.
+   Kapalı paneller genişliğini korur (display:none değil); grafikler ve rapor görselleri arka planda çizilir. */
 function showPage(name, save = true) {
+  if (name !== "lab" && !document.querySelector(`.sheet[data-page="${name}"]`)) name = "lab";
+  const prev = S.page;
   S.page = name;
-  document.querySelectorAll(".page").forEach((el) => { const on = el.dataset.page === name; el.classList.toggle("active", on); el.inert = !on; });
-  document.querySelectorAll("#pageTabs .tab").forEach((b) => { const on = b.dataset.page === name; b.classList.toggle("active", on); b.setAttribute("aria-selected", String(on)); });
+  const hadFocus = !!(document.activeElement && document.activeElement.closest && document.activeElement.closest(".sheet"));
+  document.querySelectorAll(".sheet").forEach((el) => { const on = el.dataset.page === name; el.classList.toggle("open", on); el.inert = !on; });
+  document.querySelectorAll("#pageTabs .tab").forEach((b) => { const on = b.dataset.page === name; b.classList.toggle("active", on); b.setAttribute("aria-expanded", String(on)); });
   document.body.dataset.page = name;
-  if (typeof Fly !== "undefined") Fly.keys.clear();            // başka sekmedeyken drone kendi kendine gitmesin
-  if (save) { try { localStorage.setItem(PAGE_KEY, name); } catch (e) { /* özel pencere: hatırlanmaz */ } window.scrollTo(0, 0); }
-  if (name === "lab" && Scene3D.renderer) Scene3D.resize();
+  if (typeof Fly !== "undefined") Fly.keys.clear();            // panel açıkken drone kendi kendine gitmesin
+  if (!save) return;
+  if (name !== "lab") {
+    closeTool(false);
+    const el = document.querySelector(`.sheet[data-page="${name}"]`);
+    el.scrollTop = 0;
+    el.focus({ preventScroll: true });
+  } else if (hadFocus && prev && prev !== "lab") {
+    const t = document.querySelector(`#pageTabs .tab[data-page="${prev}"]`);
+    if (t) t.focus({ preventScroll: true });
+  }
+}
+/** Panel kapatma: kapat düğmesi, Esc, sekmeye yeniden basma ya da başlıktan aşağı sürükleme */
+function initSheets() {
+  document.querySelectorAll("[data-sheet-close]").forEach((b) => (b.onclick = () => showPage("lab")));
+  window.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || !S.page || S.page === "lab" || Tools.open) return;
+    if ([...document.querySelectorAll(".modal-bg")].some((m) => !m.hidden)) return;
+    showPage("lab");
+  });
+  document.querySelectorAll(".sheet").forEach((sheet) => {
+    const head = sheet.querySelector(".group-head");
+    let y0 = null, dy = 0, t0 = 0;
+    head.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || e.target.closest("button, a, input, select, label")) return;
+      y0 = e.clientY; dy = 0; t0 = performance.now();
+      head.setPointerCapture(e.pointerId);
+      sheet.classList.add("dragging");
+    });
+    head.addEventListener("pointermove", (e) => {
+      if (y0 === null) return;
+      dy = Math.max(0, e.clientY - y0);
+      sheet.style.transform = dy ? `translateY(${dy}px)` : "";
+    });
+    const end = () => {
+      if (y0 === null) return;
+      const flick = dy > 30 && dy / Math.max(1, performance.now() - t0) > 0.5;   // hızlı aşağı fırlatma
+      y0 = null;
+      sheet.classList.remove("dragging");
+      sheet.style.transform = "";
+      if (dy > 90 || flick) showPage("lab");
+    };
+    head.addEventListener("pointerup", end);
+    head.addEventListener("pointercancel", end);
+  });
+}
+
+/* ---------------- Araç çubuğu: laboratuvar ayarları ----------------
+   Her bölüm bir düğme + küçük pencere. Pencere düğmenin altında açılır; dışarı tıklayınca, Esc'ye
+   ya da düğmeye yeniden basınca kapanır. Bir pencere açıkken başka düğmenin üstüne gelince ona geçilir (menü çubuğu gibi). */
+const Tools = { open: null, hoverAt: 0 };
+function placePop(tool) {
+  const btn = tool.querySelector(".tool-btn"), pop = tool.querySelector(".pop");
+  const r = btn.getBoundingClientRect(), bar = $("#toolbar").getBoundingClientRect();
+  const vw = document.documentElement.clientWidth, w = Math.min(pop.offsetWidth, vw - 16);
+  pop.style.left = Math.round(Math.max(8, Math.min(r.left, vw - w - 8))) + "px";
+  pop.style.top = Math.round(bar.bottom + 6) + "px";
+  pop.style.maxHeight = Math.round(window.innerHeight - bar.bottom - 16) + "px";
+}
+function openTool(tool, focus) {
+  if (Tools.open === tool || tool.hidden) return;
+  closeTool(false);
+  const btn = tool.querySelector(".tool-btn"), pop = tool.querySelector(".pop");
+  pop.hidden = false;
+  btn.setAttribute("aria-expanded", "true");
+  Tools.open = tool;
+  placePop(tool);
+  // Düğme kaydırılmış araç çubuğunda yarım görünüyorsa görünür yere getir
+  btn.scrollIntoView({ block: "nearest", inline: "nearest" });
+  placePop(tool);
+  if (focus) pop.focus({ preventScroll: true });
+}
+function closeTool(returnFocus) {
+  const tool = Tools.open;
+  if (!tool) return;
+  const btn = tool.querySelector(".tool-btn"), pop = tool.querySelector(".pop");
+  const had = pop.contains(document.activeElement);
+  pop.hidden = true;
+  btn.setAttribute("aria-expanded", "false");
+  Tools.open = null;
+  if (returnFocus || had) btn.focus({ preventScroll: true });
+}
+function initTools() {
+  document.querySelectorAll(".tool").forEach((tool) => {
+    const btn = tool.querySelector(".tool-btn");
+    btn.addEventListener("click", () => {
+      // Üstüne gelince açılmış pencere hemen ardından gelen tıklamayla kapanmasın
+      if (Tools.open === tool) { if (performance.now() - Tools.hoverAt > 600) closeTool(false); }
+      else openTool(tool, false);
+    });
+    btn.addEventListener("keydown", (e) => { if (e.key === "ArrowDown") { e.preventDefault(); openTool(tool, true); } });
+    btn.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse" && Tools.open && Tools.open !== tool) { openTool(tool, false); Tools.hoverAt = performance.now(); } });
+  });
+  // Dışarı tıklama (yakalama evresinde: sahneyi sürüklemeye başlamadan pencere kapanır)
+  document.addEventListener("pointerdown", (e) => {
+    if (!Tools.open || Tools.open.contains(e.target)) return;
+    if (e.target.closest && e.target.closest(".modal-bg")) return;
+    closeTool(false);
+  }, true);
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || !Tools.open) return;
+    if ([...document.querySelectorAll(".modal-bg")].some((m) => !m.hidden)) return;
+    e.stopImmediatePropagation();
+    closeTool(true);
+  }, true);
+  window.addEventListener("resize", () => { if (Tools.open) placePop(Tools.open); });
+  $("#toolbar").addEventListener("scroll", () => { toolbarFade(); if (Tools.open) placePop(Tools.open); }, { passive: true });
+  window.addEventListener("resize", toolbarFade);
+  // Fare tekerleği sığmayan araç çubuğunu yatay kaydırır
+  $("#toolbar").addEventListener("wheel", (e) => {
+    const tb = e.currentTarget;
+    if (tb.scrollWidth <= tb.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.target.closest(".pop")) return;
+    tb.scrollLeft += e.deltaY;
+    e.preventDefault();
+  }, { passive: false });
+  // Pencere içindeki değişiklik düğmedeki değeri de günceller
+  $("#toolbar").addEventListener("input", () => syncTools());
+  $("#toolbar").addEventListener("change", () => syncTools());
+  // Yer seçilince ya da haritada seçim başlayınca pencere kapanır ki harita görünsün
+  $("#popArea").addEventListener("click", (e) => {
+    if (e.target.closest('[data-act="pick"], [data-act="locate"], [data-preset], [data-recent], #worldResults [data-i]')) setTimeout(() => closeTool(false), 0);
+  });
+  $("#worldResults").addEventListener("keydown", (e) => {
+    const li = e.target.closest("[data-i]");
+    if (li && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); li.click(); }
+  });
+  syncTools();
+}
+/** Motorun kısa adı: "2207 · 1950KV" */
+function motorShort(m) {
+  const p = m.name.split(" · "), k = p.findIndex((x) => /KV/.test(x));
+  if (k < 1) return p.slice(0, 2).join(" · ");
+  const size = (p[k - 1].split(" ").filter((w) => /\d/.test(w)).pop()) || p[k - 1];
+  return size + " · " + p[k];
+}
+/** Araç çubuğundaki düğmelerin değerleri ve düzeneğe göre görünen bölümler */
+function syncTools() {
+  const tb = document.getElementById("toolbar");
+  if (!tb) return;
+  const put = (id, html) => { const el = document.getElementById(id); if (el && el.innerHTML !== html) el.innerHTML = html; };
+  const show = (k, on) => { const el = tb.querySelector(`[data-tool="${k}"]`); if (el && el.hidden === on) el.hidden = !on; };
+  const fly = S.rig === "fly";
+  show("drone", S.rig !== "stand");
+  show("area", fly);
+  show("flight", fly);
+  if (Tools.open && Tools.open.hidden) closeTool(false);
+  const d = drone();
+  put("tvDrone", esc(d.short || d.name));
+  put("tvArea", S.flyArea === "real" ? esc(World.place ? World.place.name : "Gerçek dünya") : "Parkur");
+  const wind = { light: "hafif rüzgâr", moderate: "orta rüzgâr", strong: "sert rüzgâr", real: "gerçek rüzgâr" }[Env.windMode];
+  put("tvFlight", esc(Fly.MODES[Fly.mode] + (wind ? " · " + wind : "")));
+  const m = mat();
+  put("tvMat", `<i class="sw" style="background:#${m.color.toString(16).padStart(6, "0")}"></i>${esc(m.name)}`);
+  const c = colorSpec();
+  put("tvColor", `<i class="sw" style="background:${legendStart()}"></i>${c.mat ? "Malzeme rengi" : esc(c.name)}`);
+  put("tvMotor", esc(motorShort(motor())));
+  put("tvProp", `${fmt(S.prop.diameterIn, S.prop.diameterIn % 1 ? 1 : 0)}″ · ${S.prop.blades || 2} kanat`);
+  const env = Env.current();
+  put("tvEnv", `${fmt(env.tC)} °C · ${env.src === "real" ? "gerçek hava" : fmt(env.altM) + " m"}`);
+  put("tvView", `Bükülme ${S.exag === 1 ? "gerçek" : "×" + S.exag}`);
+  toolbarFade();
+}
+/** Araç çubuğu sığmıyorsa kenarlarda solma */
+function toolbarFade() {
+  const tb = document.getElementById("toolbar");
+  if (!tb) return;
+  tb.classList.toggle("fade-l", tb.scrollLeft > 2);
+  tb.classList.toggle("fade-r", tb.scrollLeft + tb.clientWidth < tb.scrollWidth - 2);
+}
+
+/* ---------------- Açılır notlar ----------------
+   <details class="tip">: kapalıyken notun ilk satırı görünür. Tek satıra sığan notta açılacak bir şey
+   yoktur: ok gizlenir ve tıklama bir şey yapmaz (.fits). Not metni değişince ve pencere açılınca yeniden bakılır. */
+function initTips() {
+  const fit = (d) => {
+    const n = d && d.querySelector(".note");
+    if (!n || d.open) return;
+    const fits = n.clientWidth > 0 && n.scrollWidth <= n.clientWidth + 1;
+    d.classList.toggle("fits", fits);
+    d.querySelector("summary").tabIndex = fits ? -1 : 0;
+  };
+  const ro = new ResizeObserver((list) => list.forEach((r) => fit(r.target.closest("details.tip"))));
+  const mo = new MutationObserver((list) => list.forEach((r) => {
+    const el = r.target.nodeType === 1 ? r.target : r.target.parentElement;
+    fit(el && el.closest("details.tip"));
+  }));
+  document.querySelectorAll("details.tip").forEach((d) => {
+    const n = d.querySelector(".note");
+    ro.observe(n);
+    mo.observe(n, { childList: true, characterData: true, subtree: true });
+    d.addEventListener("toggle", () => fit(d));
+    d.querySelector("summary").addEventListener("click", (e) => { if (d.classList.contains("fits") && !d.open) e.preventDefault(); });
+  });
+}
+
+/* ---------------- Tam ekran ----------------
+   Yalnız sahne kalır (başlık, araç çubuğu ve alt şerit gizlenir); tarayıcı da tam ekrana geçer.
+   F tuşu ya da sağ üstteki düğme; Esc tarayıcının tam ekranından da çıkarır. */
+function setFull(on) {
+  on = !!on;
+  if (document.body.classList.contains("full") === on) return;
+  document.body.classList.toggle("full", on);
+  $("#fullBtn").setAttribute("aria-pressed", String(on));
+  if (on) { closeTool(false); showPage("lab", false); }
+  try {
+    if (on && !document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+    else if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+  } catch (e) { /* tam ekran izni yok: yalnız arayüz gizlenir */ }
+}
+function initFull() {
+  $("#fullBtn").onclick = () => setFull(true);
+  $("#fullExit").onclick = () => setFull(false);
+  document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement) setFull(false); });
+  document.addEventListener("keydown", (e) => {
+    if (e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
+    const t = e.target, typing = t && (t.isContentEditable || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || (t.tagName === "INPUT" && !["range", "checkbox", "button", "radio"].includes(t.type)));
+    if (typing || [...document.querySelectorAll(".modal-bg")].some((m) => !m.hidden)) return;
+    if (e.code === "KeyF") { e.preventDefault(); setFull(!document.body.classList.contains("full")); }
+    else if (e.key === "Escape" && document.body.classList.contains("full") && !Tools.open) setFull(false);
+  });
 }
 
 /* ---------------- Açılır-kapanır kartlar ---------------- */
@@ -1033,6 +1261,7 @@ function updateLegend() {
   $("#legendBar").style.background = "linear-gradient(90deg, " + start + " 0%, " + start + " 30%, #eab308 62%, #f97316 80%, #ef4444 100%)";
   document.querySelectorAll(".swatch").forEach((b) => b.classList.toggle("active", b.dataset.k === S.colorKey));
   $("#customColor").closest("label").classList.toggle("active", S.colorKey === "custom");
+  syncTools();
 }
 function selectColor(k) {
   S.colorKey = k;
