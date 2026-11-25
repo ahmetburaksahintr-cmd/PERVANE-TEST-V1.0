@@ -1,5 +1,9 @@
 # Sürüm geçmişi
 
+## 2.3.1 — 2026-11-25
+Başlıktaki TÜBİTAK 4006 rozeti şimdilik kaldırıldı
+- Üst çubuktaki "TÜBİTAK 4006 · Araştırma projesi" yazısı gösterilmiyor (stili duruyor, istenirse geri konur)
+
 ## 2.3.0 — 2026-11-24
 Arayüz yenilendi: üstte araç çubuğu, kenardan kenara sahne, alttan açılan paneller, tam ekran
 - Sol panel kaldırıldı; laboratuvarın bütün ayarları üstteki araç çubuğunda: solda düzenek seçimi (Test standı, FPV drone, Uçuş), yanında Drone, Uçuş alanı, Uçuş, Filament, Renk, Motor, Pervane, Ortam, Görünüm. Her biri küçük bir açılır pencere; düğmede bölümün o anki değeri yazar
