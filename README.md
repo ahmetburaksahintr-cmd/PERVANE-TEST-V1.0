@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 2.3.1
+# 🌀 Pervane Test Laboratuvarı — Sürüm 2.3.2
 
-> **Güncel sürüm: v2.3.1** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v2.3.2** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v2.3.1** | 2026-11-25 | Başlıktaki TÜBİTAK 4006 rozeti şimdilik kaldırıldı |
+| **v2.3.2** | 2026-11-26 | Açılır pencerelerde yana kayma giderildi |
+| v2.3.1 | 2026-11-25 | Başlıktaki TÜBİTAK 4006 rozeti şimdilik kaldırıldı |
 | v2.3.0 | 2026-11-24 | Arayüz yenilendi: üstte araç çubuğu, kenardan kenara sahne, alttan açılan paneller, tam ekran |
 | v2.2.0 | 2026-11-24 | Gerçek dünya: ayrıntılı 3D şehir, yol haritalı zemin, daha hızlı yükleme |
 | v2.1.1 | 2026-11-23 | Düzeltme: index.html çift tıklanarak açıldığında zemin siyah görünüyor, Google 3D çizilmiyordu |

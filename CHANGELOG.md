@@ -1,5 +1,10 @@
 # Sürüm geçmişi
 
+## 2.3.2 — 2026-11-26
+Açılır pencerelerde yana kayma giderildi
+- Ortam, Görünüm, Pervane rengi ve diğer araç çubuğu pencerelerinde içerik artık yana taşmıyor; yatay kaydırma çubuğu çıkmıyor
+- Sebep: tek satır gösterilen açıklama notları pencere içindeki ızgarayı genişletiyordu
+
 ## 2.3.1 — 2026-11-25
 Başlıktaki TÜBİTAK 4006 rozeti şimdilik kaldırıldı
 - Üst çubuktaki "TÜBİTAK 4006 · Araştırma projesi" yazısı gösterilmiyor (stili duruyor, istenirse geri konur)

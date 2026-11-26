@@ -173,7 +173,11 @@ body {
 .pop-h b { font-size: 13.5px; font-weight: 600; letter-spacing: -.005em; }
 .pop-h span { font-size: 12px; line-height: 1.45; color: var(--muted); }
 .pop label { display: block; color: var(--text-2); font-size: 13px; }
-.form { display: grid; gap: 12px; }
+.form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+/* Pencere içeriği hiçbir zaman yana taşmaz: tek satırlık notlar (nowrap) ızgara sütununu genişletmesin */
+.pop { overflow-x: hidden; }
+#dronePick, .payload, #payloadPanel { grid-template-columns: minmax(0, 1fr); }
+.tip, .more { min-width: 0; }
 .form > label:not(.check) { display: grid; grid-template-columns: 1fr auto; align-items: baseline; column-gap: 8px; margin: 0; }
 .form > label > input[type=range] { grid-column: 1 / -1; }
 .form > .tip { margin-top: -6px; }
