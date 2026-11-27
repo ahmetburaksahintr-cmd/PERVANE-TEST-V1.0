@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 2.5.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 2.6.0
 
-> **Güncel sürüm: v2.5.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v2.6.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v2.5.0** | 2026-11-27 | Drone atölyesi: gerçek ürünlerden geniş parça kataloğu |
+| **v2.6.0** | 2026-11-27 | Drone içe/dışa aktarma, parçalarda gerçek yazılar, kalkışta kamera hatası |
+| v2.5.0 | 2026-11-27 | Drone atölyesi: gerçek ürünlerden geniş parça kataloğu |
 | v2.4.0 | 2026-11-27 | Drone atölyesi (kendi drone'un), şehirde gerçekçi rüzgâr, sokak adı hatası |
 | v2.3.2 | 2026-11-26 | Açılır pencerelerde yana kayma giderildi |
 | v2.3.1 | 2026-11-25 | Başlıktaki TÜBİTAK 4006 rozeti şimdilik kaldırıldı |
@@ -134,6 +135,8 @@ Yalnızca **Uçuş → Gerçek dünya** internet ister: 3D harita kütüphanesi 
   - **Görüntü, alıcı, GPS:** DJI O3/O4/O4 Pro, Walksnail, HDZero, analog kamera + verici; ExpressLRS ve Crossfire alıcılar; Beitian ve Matek GPS.
   - Üstte sınıf düğmeleri (Whoop, Mikro, 5", 7" ve üstü) o sınıfın gerçek parçalardan başlangıç yapısını kurar; arama kutusu ve "Yalnız uyumlu parçalar" seçeneği listeyi daraltır. Pervane laboratuvarda tasarlayıp bastığın pervanedir (filament ve kök kesiti laboratuvardan; çap, hatve ve kanat sayısı atölyeden).
   - Atölye kalkış ağırlığını, itki/ağırlık oranını, askıda akımı ve uçuş süresini (momentum teorisi, boyuta göre pervane ve motor verimi) hesaplar, uyumsuzlukları söyler (motor bu gerilime göre değil, ESC ya da batarya akımı yetmiyor, pervane şaseye sığmıyor, kartta alıcı yok, pervane tam gazda kırılır…). **Bu drone'la uç** ya da **Bağlı testte dene** ile drone listesinde *Kendi drone'um* olarak kullanılır; tasarım tarayıcıda saklanır.
+  - **Ad, içe ve dışa aktarma:** Drone'a ad verilebilir. **Dışa aktar** tasarımı `Ad.drone.json` dosyası olarak indirir (seçilen parçaların kimlikleri, pervane, renk ve okunabilir parça adlarıyla); **İçe aktar** (atölyede ya da Drone menüsünde **Drone içe aktar**) dosyayı geri yükler. Bu sürümde bulunmayan bir parça varsa o bölümde mevcut seçim kalır ve adı söylenir.
+  - **Parçalar 3D'de üstündeki yazılarla:** batarya gerçek ağırlığına göre boyutlanır ve yanında markası, hücre/kapasite, C değeri ve gerilimi yazar; motor çanlarında model ve KV, ön kollarda şasenin markası ve modeli, ESC kartında markası ve akımı, kamera kafesinin yanlarında görüntü sistemi, GPS'in üstünde modeli yazar.
 
 ## Gerçek dünyada uçuş (3D harita)
 Uçuş düzeneğinde **Uçuş alanı → Gerçek dünya** seçilince drone, aradığın gerçek bir yerin üstünde uçar: kendi sokağın, okulun ya da şehrin meydanı.

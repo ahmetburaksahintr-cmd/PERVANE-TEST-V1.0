@@ -827,6 +827,9 @@ const Scene3D = {
       core.add(patch);
     }
 
+    // Atölyede kurulan drone: parçaların üzerinde gerçek marka ve model yazıları, batarya gerçek boyunda
+    if (d.detail) this.customDetail(core, body, d, pos, armT, { bat, batLabel, strap, xt60, esc, fc, cam });
+
     // Ayaklar ve LED'ler
     for (const [x, z] of pos) {
       const foot = new THREE.Mesh(new THREE.CylinderGeometry(6, 7, 8, 16), tpu);
@@ -836,6 +839,80 @@ const Scene3D = {
       this.addLed(body, 10, 2, 5, x * k, -3.4, z * k, x > 0 ? 0xe0f2fe : 0xff2244, -a);
     }
     return { baseY: 12.5, motorY: armT / 2, topY: (d.gps ? 66 : 60) * bs, attachY: -armT / 2 };
+  },
+
+  /**
+   * Atölye drone'u: seçilen gerçek parçaların yazıları (gerçek ürünlerde basılı oldukları yerlerde).
+   *  · Batarya: ağırlığına göre boyut (6S 190 g ≈ 75 × 28 × 36 mm), yan yüzlerde marka, hücre/kapasite, C değeri ve gerilim
+   *  · Ön kollar: şasenin markası ve modeli · Kamera kafesi: görüntü sistemi · Kart yığını: ESC ve uçuş kartı · GPS: model
+   */
+  customDetail(core, body, d, pos, armT, p) {
+    const D = d.detail, bs = d.bodyScale || 1;
+    const tx = (lines, w, h, bg, fg) => label3d(lines, w, h, bg, fg).material.map;
+    // Batarya
+    const B = D.battery;
+    if (B) {
+      const k = Math.max(0.25, Math.cbrt(Math.max(3, B.mass) / 190) / bs);
+      for (const m of [p.bat, p.batLabel, p.strap]) {
+        m.scale.setScalar(k);
+        m.position.y = 31.5 + (m.position.y - 31.5) * k;
+        m.position.x *= k;
+      }
+      p.xt60.scale.setScalar(Math.max(0.35, k));
+      p.xt60.position.x = -46 * k;
+      p.strap.position.x = 27 * k;                       // kayış yazının üstüne binmesin
+      p.batLabel.position.x = -8 * k;
+      const col = { Tattu: ["#b91c1c", "#ffffff"], GNB: ["#111827", "#4ade80"], iFlight: ["#0b0b0f", "#f97316"], GEPRC: ["#111827", "#facc15"], CNHL: ["#0f172a", "#e5e7eb"],
+        BETAFPV: ["#1d4ed8", "#ffffff"], DOGCOM: ["#4c1d95", "#f5f3ff"], Auline: ["#1e3a8a", "#e0f2fe"], Flywoo: ["#111827", "#38bdf8"], Happymodel: ["#e5e7eb", "#111827"] }[B.brand] || ["#facc15", "#111827"];
+      const side = tx([B.brand.toUpperCase(), `${B.cells}S ${B.mah}mAh`, `${B.chem === "Li-ion" ? "Li-ion" : B.c + "C"} · ${(B.cells * (B.chem === "LiHV" ? 3.8 : 3.7)).toFixed(1)}V`], 50, 28.4, col[0], col[1]);
+      const top = tx([B.brand.toUpperCase(), B.model.replace(/^\d+S\s*/, "")], 50, 36.4, col[0], col[1]);
+      const plain = new THREE.MeshStandardMaterial({ color: col[0], roughness: 0.5 });
+      const sm = new THREE.MeshStandardMaterial({ map: side, roughness: 0.5 }), tm = new THREE.MeshStandardMaterial({ map: top, roughness: 0.5 });
+      p.batLabel.material = [plain, plain, tm, plain, sm, sm];
+    }
+    // Şasenin adı: ön kolların üstünde, merkezden dışa doğru okunur
+    const F = D.frame;
+    if (F) {
+      const bg = { carbon: "#1b1d24", mixed: "#1b1d24", nylon: "#2b2e33", glassfiber: "#d9d3c0" }[d.frameMat] || "#" + (d.accent || 0xf97316).toString(16).padStart(6, "0");
+      const fg = d.frameMat === "glassfiber" ? "#1f2937" : "#e5e7eb";
+      for (const [x, z] of pos) {
+        if (x <= 0) continue;
+        const a = Math.atan2(z, x), r = Math.hypot(x, z), w = Math.max(16, Math.min(70, r * 0.6));
+        const L = flatLabel([`${F.brand} ${F.model}`.toUpperCase()], w, Math.min(10, armT * 2 + 4), bg, fg);
+        L.rotation.order = "YXZ";
+        L.rotation.y = -a;
+        L.position.set(Math.cos(a) * r * 0.5, armT / 2 + 0.25, Math.sin(a) * r * 0.5);
+        body.add(L);
+      }
+    }
+    // Kart yığını: ESC (+ uçuş kartı) yazısı kartların üst yüzünde ve önünde
+    const E = D.esc;
+    if (E) {
+      const fcTop = flatLabel([E.brand.toUpperCase(), E.model.slice(0, 28)], 28, 28, "#14532d", "#e2e8f0");
+      fcTop.position.set(0, 18.1, 0);
+      core.add(fcTop);
+      const front = label3d([E.brand.toUpperCase() + " " + E.amps + "A"], 32, 5, "#1e3a8a", "#ffffff");
+      front.rotation.y = Math.PI / 2;
+      front.position.set(16.1, 7, 0);
+      core.add(front);
+    }
+    // Görüntü sistemi: kamera kafesinin iki yanında
+    const V = D.video;
+    if (V) {
+      for (const s of [1, -1]) {
+        const L = label3d([V.brand.split(" ")[0].toUpperCase(), V.model.slice(0, 26)], 22, 12, null, "#ffffff", 700);
+        L.position.set(0, 0, s * 14.1);
+        if (s < 0) L.rotation.y = Math.PI;
+        p.cam.add(L);
+      }
+    }
+    // GPS modülü: üstünde model adı
+    const G = D.gps;
+    if (G && d.gps) {
+      const L = flatLabel([G.brand.toUpperCase(), G.model.split(" ")[0]], 14, 14, "#d6d3d1", "#111827");
+      L.position.set(-45, 62.8, 0);
+      core.add(L);
+    }
   },
 
   /**
@@ -2258,6 +2335,7 @@ const Scene3D = {
     }
     this.updateCamera();
     if (this.worldMode && typeof World !== "undefined" && World.on) World.guardCamera(cam, o.target);
+    else if (cam.position.y < 250) { cam.position.y = 250; cam.lookAt(o.target); }   // parkurda kamera zeminin altına inmez
   },
 
   /** Drone gövdesi: itki/ağırlık > 1 olunca kalkar, ip gerilir; pervane kırılınca yatıp düşer */

@@ -1,5 +1,13 @@
 # Sürüm geçmişi
 
+## 2.6.0 — 2026-11-27
+Drone içe/dışa aktarma, parçalarda gerçek yazılar, kalkışta kamera hatası
+- Kendi drone'una ad verilebilir; Dışa aktar tasarımı .drone.json dosyası olarak indirir, İçe aktar (atölyede ve Drone menüsünde "Drone içe aktar") geri yükler; bulunmayan parçalar adıyla söylenir
+- Atölye drone'unda parçaların üzerinde gerçek yazılar: batarya ağırlığına göre boyutlanır ve markası, hücre/kapasite, C değeri, gerilimi yazar; motor çanlarında model ve KV, kollarda şasenin markası ve modeli, ESC kartında markası ve akımı, kamera kafesinde görüntü sistemi, GPS'te modeli
+- Düzeltme: gerçek dünyada kalkışta kamera drone'a yapışıp bırakılıyordu (kamera koruması yerdeki drone'un altındaki zemini engel sanıyordu); koruma artık drone'un üstünden ölçer, kamerayı 2 m'den fazla yaklaştırmaz ve yumuşak uygular
+- Parkurda kamera zeminin altına inmez
+- Atölye özet paneli kendi içinde kayar (alt düğmeler her zaman ulaşılır)
+
 ## 2.5.0 — 2026-11-27
 Drone atölyesi: gerçek ürünlerden geniş parça kataloğu
 - Yeni js/parts.js: üretici ve satıcı sayfalarından doğrulanmış gerçek parçalar, her birinin kaynağı ve tahmin edilen değerleri yazılı

@@ -56,7 +56,7 @@ for (const [k, brand, model, size, kv, cMin, cMax, mass, pmax, imax, propIn, est
   if (MOTORS[k]) continue;
   MOTORS[k] = {
     name: `${brand} ${model} · ${kv}KV · ${cMax}S`, kv, cells: cMax, cellsMin: cMin, pmax: Math.round(pmax), imax, mass, propIn,
-    stator: Math.max(7, Number(String(size).slice(0, 2))), label: `${size}  ${kv}KV`, src, catalog: true,
+    stator: Math.max(7, Number(String(size).slice(0, 2))), label: `${model.length > 16 ? size : model}  ${kv}KV`, src, catalog: true,
     estimated: est.length ? `${brand} ${model}: ${est.join(", ")} üreticinin sayfasında yok, tahmindir.` : undefined
   };
 }

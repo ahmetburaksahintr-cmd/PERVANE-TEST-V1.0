@@ -913,34 +913,51 @@ const World = {
     if (!this.ready) return;
     const ce = cam.position.x / 1000, cn = -cam.position.z / 1000, cu = cam.position.y / 1000;
     const te = target.x / 1000, tn = -target.z / 1000, tu = target.y / 1000;
+    const want = this._gWant || (this._gWant = new THREE.Vector3());
+    want.copy(cam.position);
+    let hardMin = -Infinity;
     if (this.proc()) {
-      // Drone'dan kameraya giden çizgide ilk engel (bina ya da yamaç): yakındaysa kamera çatının üstüne çıkar, uzaktaysa engelin önüne çekilir
+      // Drone'dan kameraya giden çizgide ilk engel (bina ya da yamaç): uzaktaysa kamera engelin önüne çekilir, yakındaysa
+      // engelin üstüne çıkar. Çizgi drone'un en az 0,8 m üstünden başlar: drone yerdeyken zemin engel sayılmaz
+      // (eskiden kalkışta kamera bir drone'a yapışıp bir bırakılıyordu).
       const surf = (e, n) => (this.src === "osm3d" ? this.surface(e, n) : this.floorLocal(e, n));
-      let hit = 2;
-      for (let i = 1; i <= 14 && hit > 1; i++) {
-        const m = i / 14;
-        if (surf(te + (ce - te) * m, tn + (cn - tn) * m) > tu + (cu - tu) * m - 0.35) hit = m;
+      const ground = (e, n) => (this.src === "osm3d" ? this.terrainLocal(e, n) : 0);
+      const su = Math.max(tu, ground(te, tn) + 0.8), horiz = Math.hypot(ce - te, cn - tn);
+      let hit = 2, top = -1e9;
+      for (let i = 1; i <= 14; i++) {
+        const m = i / 14, s = surf(te + (ce - te) * m, tn + (cn - tn) * m);
+        top = Math.max(top, s);
+        if (hit > 1 && s > su + (cu - su) * m - 0.2) hit = m;
       }
-      if (hit > 1) return;
-      if (hit >= 0.5) cam.position.lerpVectors(target, cam.position, hit - 1 / 14);
-      else {
-        let top = -1e9;
-        for (let i = 1; i <= 14; i++) { const m = i / 14; top = Math.max(top, surf(te + (ce - te) * m, tn + (cn - tn) * m)); }
-        cam.position.y = Math.max(cam.position.y, (top + 1.2) * 1000);
+      if (hit <= 1) {
+        if (hit >= 0.5 && horiz * (hit - 1 / 14) >= 2) want.lerpVectors(target, cam.position, hit - 1 / 14);
+        else want.y = Math.max(want.y, (top + 1.2) * 1000);
       }
-      cam.lookAt(target);
-      return;
+      want.y = Math.max(want.y, (surf(want.x / 1000, -want.z / 1000) + 0.6) * 1000);
+      hardMin = (surf(ce, cn) + 0.25) * 1000;
+    } else {
+      // Arazili kaynaklar: kamera zeminin en az 40 cm üstünde
+      const now = performance.now();
+      if (!this._camFloor || now - this._camFloor.t > 200) {
+        const q = this.toGeo(ce, cn);
+        let h;
+        try { h = this.viewer.scene.sampleHeight(Cesium.Cartographic.fromDegrees(q.lon, q.lat), undefined, 0.3); } catch (e) { h = undefined; }
+        this._camFloor = { t: now, h: this.okHeight(h) ? h - this.h0 : -1e9 };
+      }
+      want.y = Math.max(want.y, (this._camFloor.h + 0.4) * 1000);
+      hardMin = (this._camFloor.h + 0.2) * 1000;
     }
-    // Arazili kaynaklar: kamera zeminin en az 40 cm üstünde
-    const now = performance.now();
-    if (!this._camFloor || now - this._camFloor.t > 200) {
-      const q = this.toGeo(ce, cn);
-      let h;
-      try { h = this.viewer.scene.sampleHeight(Cesium.Cartographic.fromDegrees(q.lon, q.lat), undefined, 0.3); } catch (e) { h = undefined; }
-      this._camFloor = { t: now, h: this.okHeight(h) ? h - this.h0 : -1e9 };
-    }
-    const minY = (this._camFloor.h + 0.4) * 1000;
-    if (cam.position.y < minY) { cam.position.y = minY; cam.lookAt(target); }
+    // Düzeltme yumuşak uygulanır: engele hızlı uyar, engel kalkınca yavaşça bırakır (ani sıçrama ve titreme olmaz)
+    const now = performance.now(), dt = Math.min(0.1, Math.max(0.001, (now - (this._gT || now)) / 1000));
+    this._gT = now;
+    const d = this._gD || (this._gD = new THREE.Vector3()), dx = want.x - cam.position.x, dy = want.y - cam.position.y, dz = want.z - cam.position.z;
+    const grow = dx * dx + dy * dy + dz * dz > d.lengthSq();
+    const k = 1 - Math.exp(-dt * (grow ? 16 : 4));
+    d.x += (dx - d.x) * k; d.y += (dy - d.y) * k; d.z += (dz - d.z) * k;
+    if (d.lengthSq() < 1 && cam.position.y >= hardMin) return;
+    cam.position.add(d);
+    cam.position.y = Math.max(cam.position.y, hardMin);   // yumuşatma sırasında bile zeminin altına inmez
+    cam.lookAt(target);
   },
   /** Drone'un altındaki sokağın adı (en yakın 30 m içinde) */
   streetAt(e, n) {

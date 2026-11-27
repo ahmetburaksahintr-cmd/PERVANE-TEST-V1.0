@@ -134,6 +134,7 @@ function init() {
   Builder.init();
   $("#buildBtn").onclick = () => showPage(S.page === "build" ? "lab" : "build");
   $("#droneBuildBtn").onclick = () => showPage("build");
+  $("#droneImportBtn").onclick = () => Builder.pickFile("use");
   initTips();
   initTools();
   initSheets();

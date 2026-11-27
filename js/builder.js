@@ -38,7 +38,9 @@ const BUILD_COLORS = [["#f97316", "Turuncu"], ["#ef4444", "Kırmızı"], ["#22c5
 const Builder = {
   KEY: "pervane.atolye",
   DEF: { frame: "geprcMark5", motor: "iflight2207", esc: "speedybeeF405V4Stack55a", battery: "", video: "analogRatelRush", rx: "happymodelEp2", gps: "none",
-    dia: 5, blades: 3, pitch: 4.3, color: "#f97316", cls: "five", q: "", compat: true },
+    dia: 5, blades: 3, pitch: 4.3, color: "#f97316", cls: "five", q: "", compat: true, name: "" },
+  CATS: ["frame", "motor", "esc", "battery", "video", "rx", "gps"],
+  FORMAT: "pervane-drone",
   cfg: null,
 
   load() {
@@ -73,7 +75,8 @@ const Builder = {
     const d = DRONES.custom || (DRONES.custom = {});
     for (const k of Object.keys(d)) delete d[k];
     Object.assign(d, {
-      brand: "Atölye", name: `Kendi drone'um · ${f.brand} ${f.model}`, short: "Kendi drone'um", style: "freestyle", custom: true,
+      brand: "Atölye", name: c.name ? `${c.name} · ${f.brand} ${f.model}` : `Kendi drone'um · ${f.brand} ${f.model}`, short: c.name || "Kendi drone'um", style: "freestyle", custom: true,
+      gps: !!g.mass, detail: { frame: f, esc: e, battery: b, video: v, rx, gps: g },
       motorKey: "custom", prop, propName: `${fmtB(dia, 1)}" · ${c.blades} kanat · laboratuvarda basılan`,
       wheelbaseMm: f.wb, massG: Math.round(f.mass + 4 * m.mass + e.mass + b.mass + av.reduce((s, p) => s + p.mass, 0)),
       battery: `${b.cells}S ${b.mah} mAh ${b.chem}`, accent: parseInt(c.color.slice(1), 16), armMm: f.arm || (f.wb < 120 ? 2 : f.wb < 200 ? 3.5 : 5),
@@ -204,11 +207,85 @@ const Builder = {
       if (ev.target.id === "bDia" || ev.target.id === "bPitch") this.changed();
       else if (ev.target.id === "bCompat") { this.cfg.compat = ev.target.checked; this.save(); this.renderLists(); }
     });
-    document.querySelector("#buildSum").addEventListener("click", (ev) => {
+    const sum = document.querySelector("#buildSum");
+    sum.addEventListener("click", (ev) => {
       const b = ev.target.closest("[data-use]");
       if (b) this.use(b.dataset.use);
+      if (ev.target.closest("[data-export]")) this.exportFile();
+      if (ev.target.closest("[data-import]")) this.pickFile();
     });
+    sum.addEventListener("input", (ev) => { if (ev.target.id === "bName") { this.cfg.name = ev.target.value.trim().slice(0, 40); this.apply(); this.save(); } });
+    sum.addEventListener("change", (ev) => { if (ev.target.id === "bName" && typeof refreshCustomDrone === "function") refreshCustomDrone(); });
     this.render();
+  },
+
+  /* ---------------- İçe / dışa aktarma (.drone.json) ----------------
+     Biçim: { format: "pervane-drone", version: 1, name, parts: { frame, motor, esc, battery, video, rx, gps },
+              prop: { diameterIn, pitchIn, blades }, color, app, created, details: { okunabilir parça adları ve hesaplar } }
+     İçe aktarırken yalnız "parts", "prop" ve "color" kullanılır; tanınmayan parça varsa o bölümde mevcut seçim kalır ve söylenir. */
+  toJSON() {
+    const c = this.cfg, r = this.compute(), names = {};
+    for (const cat of this.CATS) { const p = this.part(cat); names[cat] = cat === "motor" ? p.name : `${p.brand} ${p.model}`.trim(); }
+    return {
+      format: this.FORMAT, version: 1, app: typeof APP_VERSION !== "undefined" ? APP_VERSION : "", created: new Date().toISOString(),
+      name: c.name || "Kendi drone'um",
+      parts: Object.fromEntries(this.CATS.map((k) => [k, c[k]])),
+      prop: { diameterIn: c.dia, pitchIn: c.pitch, blades: c.blades }, color: c.color,
+      details: { parts: names, takeoffWeightG: Math.round(r.auw), thrustToWeight: +r.twr.toFixed(2), hoverMinutes: +r.minutes.toFixed(1), filament: r.mt.name }
+    };
+  },
+  exportFile() {
+    const data = this.toJSON(), safe = (data.name || "drone").replace(/[^\p{L}\p{N}\- _]/gu, "").trim().replace(/\s+/g, "-") || "drone";
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${safe}.drone.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    if (typeof toast === "function") toast(`Drone dışa aktarıldı: ${a.download}`, "ok");
+  },
+  pickFile(then) {
+    let inp = document.querySelector("#droneFileIn");
+    if (!inp) {
+      inp = document.createElement("input");
+      inp.type = "file"; inp.accept = ".json,.drone.json,application/json"; inp.id = "droneFileIn"; inp.hidden = true;
+      document.body.appendChild(inp);
+      inp.addEventListener("change", async () => {
+        const f = inp.files && inp.files[0];
+        inp.value = "";
+        if (!f) return;
+        try { this.importData(JSON.parse(await f.text()), inp._then); }
+        catch (e) { if (typeof toast === "function") toast("Dosya okunamadı: geçerli bir drone dosyası (.drone.json) değil.", "bad"); }
+      });
+    }
+    inp._then = then;
+    inp.click();
+  },
+  /** Dosyadan gelen drone'u atölyeye uygular. then: "use" ise hemen düzenekte de seçilir */
+  importData(j, then) {
+    if (!j || j.format !== this.FORMAT || !j.parts) throw new Error("biçim");
+    const missing = [];
+    for (const cat of this.CATS) {
+      const k = j.parts[cat];
+      if (k == null) continue;
+      if (this.has(cat, k)) this.cfg[cat] = k;
+      else missing.push(`${PARTS[cat].title}: ${(j.details && j.details.parts && j.details.parts[cat]) || k}`);
+    }
+    if (j.prop) {
+      if (isFinite(j.prop.diameterIn)) this.cfg.dia = Math.max(1, Math.min(12, Number(j.prop.diameterIn)));
+      if (isFinite(j.prop.pitchIn)) this.cfg.pitch = Math.max(1, Math.min(7, Number(j.prop.pitchIn)));
+      if ([2, 3, 4].includes(Number(j.prop.blades))) this.cfg.blades = Number(j.prop.blades);
+    }
+    if (/^#[0-9a-f]{6}$/i.test(j.color || "")) this.cfg.color = j.color.toLowerCase();
+    this.cfg.name = String(j.name || "").slice(0, 40);
+    this.cfg.cls = "all";
+    this.changed();
+    if (typeof toast === "function") toast(missing.length ? `"${this.cfg.name || "Drone"}" içe aktarıldı; bu sürümde bulunmayan parçalar için mevcut seçim kaldı: ${missing.join(", ")}` : `"${this.cfg.name || "Drone"}" içe aktarıldı`, missing.length ? "warn" : "ok");
+    if (then === "use" && typeof S !== "undefined") {
+      S.droneKey = "custom";
+      document.querySelector("#droneSel").value = "custom";
+      if (S.rig === "stand") setRig("drone"); else refreshCustomDrone();
+    }
   },
   changed() {
     this.apply(); this.save(); this.render();
@@ -298,7 +375,7 @@ const Builder = {
       .map(([cat, n]) => { const p = this.part(cat); return p && (cat !== "gps" || p.mass) && (cat !== "rx" || p.mass) ? [n, cat === "motor" ? motorBase(p) : `${p.brand} ${p.model}`, p.src] : null; }).filter(Boolean);
     if (this.fcPart()) chosen.push(["Uçuş kartı", `${PARTS_DB.fc.brand} ${PARTS_DB.fc.model}`, PARTS_DB.fc.src]);
     el.innerHTML = `
-      <div class="bsum-h"><b>Kendi drone'um</b><span class="chip ${worst === "ok" ? "good" : worst}">${worst === "ok" ? "Uçmaya hazır" : worst === "warn" ? "Uyarılar var" : r.twr < 1 ? "Kalkamaz" : "Sorunlu"}</span></div>
+      <div class="bsum-h"><input id="bName" class="bname" type="text" maxlength="40" placeholder="Kendi drone'um" value="${escB(this.cfg.name)}" aria-label="Drone'un adı" spellcheck="false"><span class="chip ${worst === "ok" ? "good" : worst}">${worst === "ok" ? "Uçmaya hazır" : worst === "warn" ? "Uyarılar var" : r.twr < 1 ? "Kalkamaz" : "Sorunlu"}</span></div>
       <div class="bstats">
         ${stat("Kalkış ağırlığı", `${fmtB(r.auw, 0)} g`)}
         ${stat("İtki / ağırlık", fmtB(r.twr, 1), r.twr < 1 ? "bad" : r.twr < 1.8 ? "warn" : "")}
@@ -315,6 +392,10 @@ const Builder = {
       <div class="bactions">
         <button type="button" class="btn primary" data-use="fly"><svg class="ic" aria-hidden="true"><use href="#i-fly"/></svg>Bu drone'la uç</button>
         <button type="button" class="btn" data-use="drone"><svg class="ic" aria-hidden="true"><use href="#i-drone"/></svg>Bağlı testte dene</button>
+      </div>
+      <div class="bactions bfile">
+        <button type="button" class="btn small" data-export><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>Dışa aktar (.drone.json)</button>
+        <button type="button" class="btn small" data-import><svg class="ic" aria-hidden="true"><use href="#i-upload"/></svg>İçe aktar</button>
       </div>
       <p class="note">Hesap seçili filamentle (${escB(r.mt.name)}) ve laboratuvardaki pervane kesitiyle yapılır. Parça değerleri üretici ya da satıcı sayfalarındandır; "yaklaşık" yazanlarda bazı değerler tahmindir (kartın üstünde durunca kaynak görünür).</p>`;
   }
