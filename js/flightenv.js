@@ -10,9 +10,15 @@
      Rakımla basınç (ISA): p = 1013,25 · (1 − 2,25577·10⁻⁵ · h)^5,25588 hPa
 
    Rüzgâr:
-     · Ortalama rüzgâr 10 m yükseklikte verilir; yere yaklaştıkça
-       logaritmik yasayla azalır: U(z) = U₁₀ · ln(z/z₀) / ln(10/z₀)
-       (z₀ = pürüzlülük: şehirde ~0,8 m, açık arazide ~0,05 m)
+     · Ortalama rüzgâr 10 m yükseklikte (açık arazide) verilir; yere
+       yaklaştıkça logaritmik yasayla azalır: U(z) = U₁₀ · ln(z/z₀) / ln(10/z₀)
+       (z₀ = pürüzlülük: açık arazide ~0,05 m)
+     · Şehirde (kent örtüsü modeli): çevredeki binaların ortalama
+       yüksekliği h, kayma yüksekliği d = 0,7·h, pürüzlülük z₀ = 0,1·h.
+       Çatıların üstünde U(z) = (u* ÷ κ) · ln((z − d)/z₀): yükseldikçe artar.
+       Binaların arasında (z < h) rüzgâr üstel olarak söner:
+       U(z) = U(h) · e^(2,5·(z/h − 1))  → sokak seviyesinde çok zayıf.
+       60 m'nin (ya da 2,5·h'nin) üstünde şehir ve açık arazi profili birleşir.
      · Hamleler (türbülans) birinci dereceden Gauss–Markov süreciyle
        (Dryden modelinin basit hâli) üretilir:
        du = −u/τ · dt + σ · √(2·dt/τ) · N(0,1),  τ = L/U, L ≈ 40 m
@@ -70,15 +76,31 @@ const Env = {
     return { u, dirFrom: 45, gust: u * 1.5 };                 // hazır ayarlar: poyraz (kuzeydoğudan)
   },
   /**
-   * Drone'un bulunduğu yükseklikte rüzgâr (mm/s; three.js eksenleri: x doğu, y yukarı, z güney).
-   * aglM: yerden yükseklik (m) · urban: şehir pürüzlülüğü
+   * Rüzgâr hız oranı U(z) / U₁₀ (açık arazide 10 m'deki rüzgâra göre).
+   * zM: yerden (arazi zemininden) yükseklik (m) · canopy: null = açık arazi, { hc: binaların ortalama yüksekliği (m) } = şehir
    */
-  windAt(aglM, dt, urban) {
+  profile(zM, canopy) {
+    const z0o = 0.05, ref = Math.log(10 / z0o), z = Math.max(0, zM);
+    const open = (h) => Math.log(Math.max(h, z0o * 1.6) / z0o) / ref;
+    const hc = canopy ? canopy.hc : 0;
+    if (hc < 2) return Math.max(0.12, open(z + 0.3));                     // açık arazi ya da çok seyrek yapı
+    const d = 0.7 * hc, z0 = Math.max(0.3, 0.1 * hc), zb = Math.max(60, 2.5 * hc);
+    if (z >= zb) return open(z);                                            // şehrin etkisi bitti
+    const s = open(zb) / Math.log((zb - d) / z0);
+    if (z >= hc) return s * Math.log((z - d) / z0);                         // çatıların üstü
+    return s * Math.log((hc - d) / z0) * Math.exp(2.5 * (z / hc - 1));      // binaların arası
+  },
+  /**
+   * Drone'un bulunduğu yükseklikte rüzgâr (mm/s; three.js eksenleri: x doğu, y yukarı, z güney).
+   * zM: yerden yükseklik (m) · canopy: çevredeki binalar (bkz. profile; true = ortalama bir şehir)
+   */
+  windAt(zM, dt, canopy) {
     const w = this.wind10(), out = this._w || (this._w = { x: 0, y: 0, z: 0 });
-    if (w.u <= 0.05 && w.gust <= 0.05) { this.g = [0, 0, 0]; out.x = out.y = out.z = 0; return out; }
-    const z0 = urban ? 0.8 : 0.05, z = Math.max(z0 * 1.6, aglM + 0.3);
-    const f = Math.max(0.12, Math.min(1.6, Math.log(z / z0) / Math.log(10 / z0)));
-    const U = w.u * f, sigma = (Math.max(w.gust - w.u, w.u * 0.25) / 2.5) * Math.max(0.45, f);
+    if (w.u <= 0.05 && w.gust <= 0.05) { this.g = [0, 0, 0]; out.x = out.y = out.z = 0; this.lastF = 1; return out; }
+    const f = Math.min(1.8, this.profile(zM, canopy === true ? { hc: 12 } : canopy));
+    this.lastF = f;
+    // Hamleler: binaların arasında da biraz girdap kalır, ama ortalama rüzgârla birlikte zayıflar
+    const U = w.u * f, sigma = (Math.max(w.gust - w.u, w.u * 0.25) / 2.5) * Math.max(0.2, Math.min(1.2, f));
     const tau = Math.max(0.6, Math.min(8, 40 / Math.max(1, U)));
     const a = Math.exp(-dt / tau), b = sigma * Math.sqrt(1 - a * a), sv = [1, 0.5, 1];
     for (let i = 0; i < 3; i++) this.g[i] = this.g[i] * a + b * sv[i] * gauss();
@@ -124,7 +146,7 @@ const Battery = {
     const txt = (d && d.battery) || "", mah = Number((/(\d[\d.]*)\s*mAh/i.exec(txt) || [0, 1300])[1]) || 1300;
     const cells = (m && m.cells) || 4, liion = /li-?ion/i.test(txt);
     const rCell = 0.010 * Math.pow(1300 / mah, 0.8) * (liion ? 1.8 : 1);       // hücre iç direnci (Ω); küçük ve Li-ion hücrede büyük
-    return { cells, mah, capAh: mah / 1000, r: cells * rCell + 0.004, liion, soc: 1, v: cells * 4.2, i: 0, used: 0, t: 0, vScale: 1, lowWarned: false, empty: false };
+    return { cells, mah, capAh: mah / 1000, r: cells * rCell + 0.004, liion, av: (d && d.avionicsW) || this.AVIONICS, soc: 1, v: cells * 4.2, i: 0, used: 0, t: 0, vScale: 1, lowWarned: false, empty: false };
   },
   ocv(b) {
     const T = b.liion ? this.LIION : this.LIPO, s = Math.max(0, Math.min(1, b.soc));
@@ -133,7 +155,7 @@ const Battery = {
   },
   /** dt saniyede pervanelerin çektiği mekanik güçle (W) bataryayı ilerletir; motor devir oranını (vScale) döndürür */
   update(b, dt, propPowerW, flying) {
-    const n = b.cells, oc = n * this.ocv(b), Pe = propPowerW / this.ETA + this.AVIONICS;
+    const n = b.cells, oc = n * this.ocv(b), Pe = propPowerW / this.ETA + (b.av || this.AVIONICS);
     let I = Pe / oc, V = oc;
     for (let k = 0; k < 4; k++) { V = Math.max(n * 2.6, oc - I * b.r); I = Pe / V; }
     b.v = V; b.i = I;

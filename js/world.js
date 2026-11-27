@@ -122,6 +122,7 @@ const World = {
     if (this.picking) this.endPick();
     document.body.classList.remove("world-on", "world-ready");
     if (this.viewer) this.viewer.container.hidden = true;
+    for (const id of ["#worldStreet", "#worldStatus", "#worldRadar"]) { const el = document.querySelector(id); if (el) el.hidden = true; }
     Fly.hold = false;
     WorldUI.sync();
   },
@@ -855,6 +856,33 @@ const World = {
       if (h > top) top = h;
     }
     return top;
+  },
+  /**
+   * Rüzgâr için kent örtüsü: (e, n) çevresinde 45 m içindeki binaların ortalama yüksekliği (taban alanıyla ağırlıklı)
+   * ve doluluk oranı. Seyrek yapıda yükseklik azaltılır (açık araziye yaklaşır). Bina verisi yoksa null.
+   */
+  windCanopy(e, n) {
+    if (!this.on || !this.ready || !this.grid || !this.blds || !this.blds.length) return null;
+    const c = this._can;
+    if (c && c.blds === this.blds && Math.abs(c.e - e) < 3 && Math.abs(c.n - n) < 3) return c;
+    const R = 45, g = this.grid, s = g.size, seen = new Set();
+    let area = 0, w = 0, wh = 0;
+    for (let i = Math.floor((e - R) / s); i <= Math.floor((e + R) / s); i++) {
+      for (let j = Math.floor((n - R) / s); j <= Math.floor((n + R) / s); j++) {
+        const list = g.cells.get(gkey(i, j));
+        if (!list) continue;
+        for (const k of list) {
+          if (seen.has(k)) continue;
+          seen.add(k);
+          const b = this.blds[k], dist = Math.hypot((b.minE + b.maxE) / 2 - e, (b.minN + b.maxN) / 2 - n);
+          if (dist > R) continue;
+          const a = b.A > 0 ? b.A : (b.maxE - b.minE) * (b.maxN - b.minN) * 0.7, k2 = a * (1 - (0.5 * dist) / R);
+          area += a; w += k2; wh += k2 * b.top;
+        }
+      }
+    }
+    const cover = Math.min(1, area / (Math.PI * R * R)), hc = w ? (wh / w) * smoothstep(0.04, 0.22, cover) : 0;
+    return (this._can = { blds: this.blds, e, n, hc, cover, ground: this.src === "osm3d" ? this.terrainLocal(e, n) : 0 });
   },
   /** Arazi ya da bina çatısı: hangisi yüksekse (m) */
   surface(e, n) { return Math.max(this.terrainLocal(e, n), this.floorLocal(e, n)); },

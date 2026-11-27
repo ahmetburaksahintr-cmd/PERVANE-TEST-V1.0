@@ -210,7 +210,16 @@ const Fly = {
   /** Rüzgâr, irtifadaki hava yoğunluğu, batarya, yer etkisi; o anki güvenli en yüksek itki (capNow) */
   env(dt, curve, auw, world) {
     const agl = Math.max(0, (this.p.y - this.floor) / 1000), R = (S.prop.diameterIn * 0.0254) / 2;
-    this.wind = Env.windAt(agl, dt, world);
+    // Rüzgâr: gerçek dünyada çevredeki binaların yüksekliğine göre (binaların arasında kesilir, çatıların üstünde yükseldikçe artar);
+    // yükseklik arazi zemininden ölçülür (çatının üstünde asılı drone sokak seviyesinde sayılmaz)
+    let can = null, zW = agl;
+    if (world) {
+      const c = World.windCanopy(this.p.x / 1000, -this.p.z / 1000);
+      if (c) { can = c; zW = Math.max(0, this.p.y / 1000 - c.ground); }
+      else can = true;                                  // bina verisi yok (Google 3D): ortalama bir şehir
+    }
+    this.canopy = can;
+    this.wind = Env.windAt(zW, dt, can);
     this.rhoK = Env.rhoFactor(this.p.y / 1000);
     if (!this.bat) this.bat = Battery.make(drone(), motor());
     const flying = this.p.y > this.floor + 30 && !this.crashed && !S.broken;

@@ -33,7 +33,8 @@ function init() {
   $("#matList").innerHTML = Object.entries(MATERIALS).map(([k, m]) =>
     `<button class="mat" data-k="${k}" style="--c:#${m.color.toString(16).padStart(6, "0")}"><i></i><b>${m.name}</b><small>E=${m.E} GPa · σ=${m.sigmaU} MPa</small></button>`).join("");
   $("#matList").onclick = (e) => { const b = e.target.closest(".mat"); if (b) selectMaterial(b.dataset.k); };
-  $("#motorSel").innerHTML = Object.entries(MOTORS).map(([k, m]) => `<option value="${k}">${m.name}</option>`).join("");
+  // Atölye motoru listede görünmez (yalnız "Kendi drone'um" seçiliyken düzenekte gösterilir)
+  $("#motorSel").innerHTML = Object.entries(MOTORS).map(([k, m]) => `<option value="${k}"${m.custom ? " hidden" : ""}>${m.name}</option>`).join("");
   $("#motorSel").value = S.motorKey;
   $("#motorSel").onchange = (e) => {
     S.motorKey = e.target.value;
@@ -130,6 +131,9 @@ function init() {
   $("#clearMeas").onclick = () => { S.measured = []; S.prop.ctScale = 1; updateMeasInfo(); refreshCompare(); };
 
   initAccordions();
+  Builder.init();
+  $("#buildBtn").onclick = () => showPage(S.page === "build" ? "lab" : "build");
+  $("#droneBuildBtn").onclick = () => showPage("build");
   initTips();
   initTools();
   initSheets();
@@ -407,6 +411,7 @@ function updateWindUi() {
   $("#windNote").textContent = Env.windMode === "off" ? "Hava durgun."
     : Env.windMode === "real" ? (Env.real ? `Şu an ${Env.real.name || "burada"}: 10 m'de ${fmt(Env.real.u, 1)} m/s, ${Env.dirFrom(Env.real.dirFrom)} (${fmt(Env.real.dirFrom)}°), hamleler ${fmt(Env.real.gust, 1)} m/s'ye kadar. Yere yaklaştıkça ve binaların arasında rüzgâr azalır.` : World.on ? "Hava durumu alınıyor…" : "Gerçek rüzgâr yalnızca gerçek dünyada.")
     : `10 m'de ${fmt(w.u)} m/s, kuzeydoğudan (poyraz); hamleler ${fmt(w.gust, 1)} m/s'ye kadar. Kolay mod konumu tutmak için rüzgâra karşı eğilir.`;
+  if (Env.windMode !== "off") $("#windNote").textContent += " Şehirde binaların arasında, alçakta rüzgâr neredeyse kesilir; çatıların üstüne çıktıkça güçlenir.";
 }
 
 /* ---------------- Uçuş alanı: parkur ya da gerçek dünya (js/world.js) ---------------- */
@@ -437,6 +442,16 @@ function payloadChanged() {
   newProp(sum ? `Drone'a ${massText(sum)} yük asıldı` : "Yük kaldırıldı");
 }
 
+/** Atölyede değişen "Kendi drone'um": listelerdeki adlar ve (seçiliyse) düzenek yenilenir */
+function refreshCustomDrone() {
+  const o = document.querySelector('#droneSel option[value="custom"]'), mo = document.querySelector('#motorSel option[value="custom"]');
+  if (o) o.textContent = DRONES.custom.name;
+  if (mo) mo.textContent = MOTORS.custom.name;
+  if (S.droneKey !== "custom" || !isDrone()) { syncTools(); return; }
+  applyDrone();
+  rebuildRig();
+  newProp(`${DRONES.custom.name} güncellendi`);
+}
 /** Drone modelinin motorunu ve pervane ölçüsünü uygular */
 function applyDrone() {
   const d = drone();
@@ -654,7 +669,8 @@ function updateHud(ev, realDefl) {
       $("#hFBat").style.color = bat.empty || pct < 10 ? "var(--bad)" : pct < 25 ? "var(--warn)" : "";
       $("#hFBatInfo").textContent = `${fmt(bat.v, 1)} V (${fmt(vc, 2)}/hücre) · ${fmt(bat.i, bat.i < 10 ? 1 : 0)} A · ${fmt(bat.used)}/${fmt(bat.mah)} mAh · ${Math.floor(bat.t / 60)}:${String(Math.floor(bat.t % 60)).padStart(2, "0")}`;
     }
-    $("#hFEnv").textContent = (wd.u > 0.05 ? `Rüzgâr ${Env.dirName(wd.dirFrom)} ${fmt(wd.u, 1)} m/s (burada ${fmt(wNow, 1)}, hamle ${fmt(wd.gust, 1)}) · ` : "Rüzgâr yok · ")
+    const shelter = Fly.canopy && Fly.canopy !== true && Env.lastF < 0.35 ? ", binalar kesiyor" : "";
+    $("#hFEnv").textContent = (wd.u > 0.05 ? `Rüzgâr ${Env.dirName(wd.dirFrom)} ${fmt(wd.u, 1)} m/s (burada ${fmt(wNow, 1)}${shelter}, hamle ${fmt(wd.gust, 1)}) · ` : "Rüzgâr yok · ")
       + `ρ = ${fmt(Physics.rho * Fly.rhoK, 3)} kg/m³` + (Fly.kGE > 1.01 ? ` · yer etkisi +%${fmt((Fly.kGE - 1) * 100)}` : "");
     const course = total ? `Halka ${Fly.passed}/${total}${Fly.timing || Fly.done ? " · " + fmt(Fly.time, 1) + " sn" : ""}` : "Serbest uçuş";
     $("#hFInfo").textContent = `${Fly.MODES[Fly.mode]} · ${!inp || inp.src === "klavye" ? "Klavye" : inp.name} · ${course}${wl ? " · Kalkış noktasına " + fmt(Math.hypot(Fly.x, Fly.z) / 1000) + " m" : ""}`;
@@ -978,6 +994,9 @@ function showPage(name, save = true) {
   document.querySelectorAll(".sheet").forEach((el) => { const on = el.dataset.page === name; el.classList.toggle("open", on); el.inert = !on; });
   document.querySelectorAll("#pageTabs .tab").forEach((b) => { const on = b.dataset.page === name; b.classList.toggle("active", on); b.setAttribute("aria-expanded", String(on)); });
   document.body.dataset.page = name;
+  $("#buildBtn").setAttribute("aria-expanded", String(name === "build"));
+  $("#buildBtn").classList.toggle("on", name === "build");
+  if (name === "build" && prev !== "build") Builder.render();           // filament ya da pervane kesiti değişmiş olabilir
   if (typeof Fly !== "undefined") Fly.keys.clear();            // panel açıkken drone kendi kendine gitmesin
   if (!save) return;
   if (name !== "lab") {

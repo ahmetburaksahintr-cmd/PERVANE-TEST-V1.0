@@ -1,5 +1,15 @@
 # Sürüm geçmişi
 
+## 2.4.0 — 2026-11-27
+Drone atölyesi (kendi drone'un), şehirde gerçekçi rüzgâr, sokak adı hatası
+- Yeni: Drone atölyesi (sol üstteki düğme ya da alt şeritteki sekme): şase, motor, ESC, batarya ve görüntü sistemini seçip kendi drone'unu kur; pervane laboratuvarda tasarladığın pervane
+- Atölye kalkış ağırlığını, itki/ağırlık oranını, askıda akımı ve uçuş süresini hesaplar; uyumsuz parçaları söyler (gerilim, ESC/batarya akımı, pervane boyu, pervane kırılması)
+- "Kendi drone'um" bağlı testte ve uçuşta diğer modeller gibi kullanılır; tasarım tarayıcıda saklanır
+- Motor kütüphanesine EMAX ECO II 2207 1900KV ve T-Motor F60 Pro V 1950KV eklendi
+- Rüzgâr: şehirde binaların arasında ve alçakta neredeyse kesilir, çatıların üstüne çıktıkça güçlenir (kent örtüsü modeli); göstergede "binalar kesiyor" yazar
+- Düzeltme: uçuştan test standına dönünce sokak adı (ve durum yazısı, radar) ekranda kalıyordu
+- README: atölye ve şehir rüzgârı anlatıldı
+
 ## 2.3.2 — 2026-11-26
 Açılır pencerelerde yana kayma giderildi
 - Ortam, Görünüm, Pervane rengi ve diğer araç çubuğu pencerelerinde içerik artık yana taşmıyor; yatay kaydırma çubuğu çıkmıyor

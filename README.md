@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 2.3.2
+# 🌀 Pervane Test Laboratuvarı — Sürüm 2.4.0
 
-> **Güncel sürüm: v2.3.2** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v2.4.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v2.3.2** | 2026-11-26 | Açılır pencerelerde yana kayma giderildi |
+| **v2.4.0** | 2026-11-27 | Drone atölyesi (kendi drone'un), şehirde gerçekçi rüzgâr, sokak adı hatası |
+| v2.3.2 | 2026-11-26 | Açılır pencerelerde yana kayma giderildi |
 | v2.3.1 | 2026-11-25 | Başlıktaki TÜBİTAK 4006 rozeti şimdilik kaldırıldı |
 | v2.3.0 | 2026-11-24 | Arayüz yenilendi: üstte araç çubuğu, kenardan kenara sahne, alttan açılan paneller, tam ekran |
 | v2.2.0 | 2026-11-24 | Gerçek dünya: ayrıntılı 3D şehir, yol haritalı zemin, daha hızlı yükleme |
@@ -124,6 +125,7 @@ Yalnızca **Uçuş → Gerçek dünya** internet ister: 3D harita kütüphanesi 
   - Arduino'dan gelen ölçümler itki grafiğinde **beyaz noktalar** olarak görünür.
   - "Modeli kalibre et" düğmesi, en küçük kareler yöntemiyle modeli ölçümüne uydurur.
   - Denemek için `ornek_olcum.csv` dosyasını yükleyebilirsin.
+- **Drone atölyesi (kendi drone'un):** Sol üstteki **Drone atölyesi** düğmesi (ya da alt şeritteki sekme) alttan açılan bir panel açar. Şase (2,5"–10"), motor (dünyada en çok kullanılan FPV motorlarından: iFlight XING2, T-Motor F60 Pro V, EMAX ECO II, BETAFPV LAVA, GEPRC SPEEDX2, Happymodel …), ESC (5–65 A), batarya (1S–6S LiPo, 6S Li-ion) ve görüntü sistemi (analog, Walksnail, DJI O3, GPS) seçilir; pervane laboratuvarda tasarlayıp bastığın pervanedir (filament ve kök kesiti laboratuvardan, çap, hatve ve kanat sayısı atölyeden). Atölye anında kalkış ağırlığını, itki/ağırlık oranını, askıda akımı ve uçuş süresini hesaplar, uyumsuzlukları söyler (motor bu gerilime göre değil, ESC ya da batarya akımı yetmiyor, pervane şaseye sığmıyor, pervane tam gazda kırılır…). **Bu drone'la uç** ya da **Bağlı testte dene** ile drone listesinde *Kendi drone'um* olarak kullanılır; tasarım tarayıcıda saklanır. Parça ağırlıkları o sınıftaki yaygın ürünlerin tipik değerleridir (yaklaşık).
 
 ## Gerçek dünyada uçuş (3D harita)
 Uçuş düzeneğinde **Uçuş alanı → Gerçek dünya** seçilince drone, aradığın gerçek bir yerin üstünde uçar: kendi sokağın, okulun ya da şehrin meydanı.
@@ -172,7 +174,7 @@ Kotayı korumak için uygulama 3D katmanı yalnızca kaynak seçildiğinde bir k
 Uçuş düzeneğinde drone'u etkileyen gerçek ortam koşulları hesaba katılır. Formüller **Nasıl hesaplanıyor?** sayfasında da var.
 
 - **Hava yoğunluğu:** Pervane itkisi ve gücü havanın yoğunluğuyla (ρ) doğru orantılıdır. ρ nemli hava denkleminden hesaplanır: ρ = p_d/(R_d·T) + p_v/(R_v·T). Gerçek dünyada konumun o anki sıcaklık, basınç ve nemi kullanılır; parkurda ve test standında **Ortam** bölümündeki *Hava sıcaklığı* ve *Rakım* ayarları. Örnek: 900 m'de (Ankara) aynı devirde itki deniz seviyesine göre yaklaşık %10 azdır; bu, fiziksel testlerin modelle karşılaştırılmasında önemlidir. Drone tırmandıkça yoğunluk standart atmosfere göre azalır.
-- **Rüzgâr ve hamleler:** *Rüzgâr* seçimi: Yok · Hafif (3 m/s) · Orta (7 m/s) · Sert (12 m/s) · **Gerçek** (konumun o anki rüzgârı). Rüzgâr 10 m'de verilir ve yere yaklaştıkça logaritmik yasayla azalır (şehirde binalar arasında daha çok). Ani hamleler Dryden türü rastgele süreçle üretilir. Hava direnci drone'un **havaya göre** hızından hesaplanır: kolay mod konumunu tutmak için rüzgâra karşı eğilir (göstergede gaz artar); angle/horizon/acro modunda pilot düzeltmezse drone sürüklenir. Radarda mavi ok rüzgârın estiği yönü gösterir.
+- **Rüzgâr ve hamleler:** *Rüzgâr* seçimi: Yok · Hafif (3 m/s) · Orta (7 m/s) · Sert (12 m/s) · **Gerçek** (konumun o anki rüzgârı). Rüzgâr açık arazide 10 m'de verilir ve yere yaklaştıkça logaritmik yasayla azalır. Gerçek dünyada **kent örtüsü modeli** kullanılır: drone'un çevresindeki (45 m) binaların ortalama yüksekliği h'ye göre, binaların arasında ve alçakta rüzgâr üstel olarak söner (sokak seviyesinde %5 kadarı kalır), çatıların üstünde yükseldikçe logaritmik yasayla güçlenir ve 60 m'nin üstünde açık arazidekini geçer. Örnek, h ≈ 18 m: 1,5 m'de %5, 12 m'de %19, 30 m'de %92, 80 m'de %139. Göstergede binalar rüzgârı kestiğinde "binalar kesiyor" yazar. Ani hamleler Dryden türü rastgele süreçle üretilir. Hava direnci drone'un **havaya göre** hızından hesaplanır: kolay mod konumunu tutmak için rüzgâra karşı eğilir (göstergede gaz artar); angle/horizon/acro modunda pilot düzeltmezse drone sürüklenir. Radarda mavi ok rüzgârın estiği yönü gösterir.
 - **Batarya:** Her drone kendi bataryasıyla uçar (hücre sayısı ve mAh). Voltaj şarj durumuna ve yüke bağlıdır: V = n·OCV(SoC) − I·R_iç. Motor devri voltajla orantılı olduğundan dolu batarya (4,2 V/hücre) güçlü, boşalmış ya da yük altında voltajı düşmüş batarya zayıftır. Göstergede yüzde, voltaj, akım, harcanan mAh ve uçuş süresi görünür; %20'de uyarı verilir, bitince ESC motorları keser. **R** tuşu (ya da *Yeni pervane tak*) dolu batarya takar.
 - **Yer etkisi:** Pervaneler yere yakınken yerden yansıyan akış itkiyi artırır. Dört rotorlu drone için yayımlanmış model kullanılır (Sanchez-Cuevas vd., 2017): tek pervane terimi (Cheeseman–Bennett) + komşu ve çapraz pervaneler + gövde. 5" drone'da yerden 10 cm'de itki ~%9 artar.
 - **Pervane girdabı (VRS):** Drone kendi aşağı akışının içine hızla ve dikey inerse (askı indüklenmiş hızının 0,3–1,6 katı; 5" drone için ~2–11 m/s) itki düşer, gövde sarsılır. Göstergede uyarı çıkar; ileri uçarak ya da gaz vererek çıkılır. Gerçek FPV pilotlarının "propwash" dediği durumun temeli budur.

@@ -71,6 +71,8 @@
       <b class="brand-name">Pervane Test Laboratuvarı</b>
       <span class="brand-sub">3D baskı pervanelerde itki, gerilme ve bükülme</span>
     </div>
+    <!-- Drone atölyesi: gerçek parçalarla kişisel drone (js/builder.js); alttan açılan panel olarak açılır -->
+    <button class="top-btn" id="buildBtn" type="button" aria-expanded="false" aria-controls="grpBuild" title="Gerçek parçalarla kendi drone'unu kur"><svg class="ic" aria-hidden="true"><use href="#i-drone"/></svg>Drone atölyesi</button>
     <div class="top-actions">
       <!-- TÜBİTAK 4006 rozeti şimdilik kaldırıldı (geri koymak için: <span class="badge tubitak">…</span>, stili css/style.css içinde duruyor) -->
       <span class="ver" id="appVersion"></span>
@@ -96,6 +98,7 @@
           <div class="pop-h"><b>Drone modeli</b><span>Gerçek modellerin motoru, pervanesi ve ağırlığıyla</span></div>
           <div id="dronePick" hidden>
             <select id="droneSel" aria-label="Drone modeli"></select>
+            <button class="btn small build-open" id="droneBuildBtn" type="button"><svg class="ic" aria-hidden="true"><use href="#i-wand"/></svg>Kendi drone'unu kur (atölye)</button>
             <!-- Donanım ayrıntıları: isteyen açar -->
             <details class="more" id="droneMore">
               <summary><span class="more-t">Donanım ve özellikler</span><span class="more-v" id="droneSum"></span></summary>
@@ -311,6 +314,21 @@
 
   <!-- Alttan açılan paneller: alt şeritteki sekmelerle açılır, laboratuvar arkada çalışmaya devam eder -->
   <section class="sheets" id="sheets">
+    <!-- DRONE ATÖLYESİ -->
+    <div class="group sheet" id="grpBuild" data-page="build" role="region" aria-labelledby="shBuild" tabindex="-1">
+      <div class="group-head">
+        <i class="grab" aria-hidden="true"></i>
+        <div class="group-title"><h2 id="shBuild">Drone atölyesi</h2><p>Gerçek parçalarla kendi drone'unu kur; pervanesi laboratuvarda tasarlayıp bastığın pervane</p></div>
+        <div class="group-actions">
+          <button class="icon sheet-x" type="button" data-sheet-close title="Kapat (Esc)" aria-label="Paneli kapat"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+        </div>
+      </div>
+      <div class="build">
+        <div class="build-parts" id="buildParts"></div>
+        <aside class="build-sum panel" id="buildSum" aria-live="polite"></aside>
+      </div>
+    </div>
+
     <!-- SONUÇLAR -->
     <div class="group sheet" id="grpResults" data-page="results" role="region" aria-labelledby="shResults" tabindex="-1">
       <div class="group-head">
@@ -486,6 +504,7 @@
       <button class="tab" type="button" data-page="results" aria-expanded="false" aria-controls="grpResults"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg><span class="tab-l">Grafikler ve karşılaştırma</span><span class="tab-s">Grafikler</span><i class="tab-chip" id="tabResults"></i></button>
       <button class="tab" type="button" data-page="data" aria-expanded="false" aria-controls="grpData"><svg class="ic" aria-hidden="true"><use href="#i-data"/></svg><span class="tab-l">Ölçümler ve kayıtlar</span><span class="tab-s">Ölçümler</span><i class="tab-chip" id="tabData"></i></button>
       <button class="tab" type="button" data-page="model" aria-expanded="false" aria-controls="grpModel"><svg class="ic" aria-hidden="true"><use href="#i-func"/></svg><span class="tab-l">Nasıl hesaplanıyor?</span><span class="tab-s">Yöntem</span></button>
+      <button class="tab" type="button" data-page="build" aria-expanded="false" aria-controls="grpBuild"><svg class="ic" aria-hidden="true"><use href="#i-drone"/></svg><span class="tab-l">Drone atölyesi</span><span class="tab-s">Atölye</span></button>
     </nav>
     <p class="status-note"><span class="status-l">Eğitim amaçlı basitleştirilmiş model; sonuçları gerçek testle doğrula.</span><a href="https://github.com/ahmetburaksahintr-cmd/PERVANE-TEST-V1.0" target="_blank" rel="noopener">Kaynak kod</a><b id="footVer"></b></p>
   </footer>
@@ -562,6 +581,7 @@
   <script src="js/version.js"></script>
   <script src="js/config.js"></script>
   <script src="js/materials.js"></script>
+  <script src="js/builder.js"></script>
   <script src="js/physics.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/scene.js"></script>
