@@ -1,5 +1,17 @@
 # Sürüm geçmişi
 
+## 2.5.0 — 2026-11-27
+Drone atölyesi: gerçek ürünlerden geniş parça kataloğu
+- Yeni js/parts.js: üretici ve satıcı sayfalarından doğrulanmış gerçek parçalar, her birinin kaynağı ve tahmin edilen değerleri yazılı
+- 35 şase: PP plastik whooplar, PA12 naylon/polikarbonat halkalı sinema dronları, karbon kürdan, 5" freestyle/yarış, 7–10" uzun menzil, cam elyaf/naylon F450 ve S500
+- 53 motor (0702'den 4214'e), 24 ESC (1S AIO'dan 8S'e), 61 batarya (1S LiHV'den 6S2P Li-ion'a), DJI/Walksnail/HDZero/analog görüntü sistemleri, ELRS/Crossfire alıcılar, GPS
+- Sınıf düğmeleri (Whoop, Mikro, 5", 7" ve üstü) gerçek parçalardan başlangıç yapısı kurar; marka/model arama ve "yalnız uyumlu parçalar" süzgeci
+- Yeni denetimler: kartta alıcı yok, verici yok, PP şasede ağır batarya, motorun en az hücre sayısı, ESC'nin kısa süreli akımı
+- Şase malzemesi 3D çizimde görünür (karbon, naylon, renkli PP, cam elyaf) ve korumalı şaselerde pervane halkaları çizilir
+- Askıda akım ve uçuş süresi momentum teorisiyle, boyuta göre pervane ve motor verimiyle hesaplanır
+- Tahmin edilmiş motor değerleri kaldırıldı: T-Motor F60 Pro V gerçek değerleriyle; EMAX ECO II 2207 doğrulanamadığı için çıkarıldı
+- Başlıktaki "3D baskı pervanelerde itki, gerilme ve bükülme" yazısı kaldırıldı
+
 ## 2.4.0 — 2026-11-27
 Drone atölyesi (kendi drone'un), şehirde gerçekçi rüzgâr, sokak adı hatası
 - Yeni: Drone atölyesi (sol üstteki düğme ya da alt şeritteki sekme): şase, motor, ESC, batarya ve görüntü sistemini seçip kendi drone'unu kur; pervane laboratuvarda tasarladığın pervane

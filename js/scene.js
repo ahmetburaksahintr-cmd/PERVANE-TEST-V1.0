@@ -700,9 +700,31 @@ const Scene3D = {
 
   /** Açık karbon şase (freestyle / uzun menzil). d.layout verilirse kollar o motor konumlarına gider;
    *  d.bodyScale orta gövdeyi (plakalar, batarya, kamera) büyütür, d.armMm kol kalınlığıdır. */
-  styleFreestyle(body, { d, pos, rM }) {
-    const carbon = new THREE.MeshStandardMaterial({ color: 0x1b1d24, metalness: 0.35, roughness: 0.5 });
-    const carbonTop = new THREE.MeshStandardMaterial({ color: 0x262a35, metalness: 0.4, roughness: 0.45 });
+  styleFreestyle(body, { d, pos, rM, R }) {
+    // Şase malzemesi (atölye): karbon koyu ve hafif parlak; naylon mat koyu gri; PP whoop plastiği renkli ve yarı saydam;
+    // cam elyaf (G10/PCB) açık krem; karbon + plastik: karbon plakalar, plastik halkalar
+    const fm = d.frameMat || "carbon", tint = d.accent != null ? d.accent : 0xf97316;
+    const plates = {
+      carbon: [0x1b1d24, 0.35, 0.5], mixed: [0x1b1d24, 0.35, 0.5], nylon: [0x2b2e33, 0.0, 0.85], tpu: [tint, 0.0, 0.8],
+      pp: [tint, 0.0, 0.55], glassfiber: [0xd9d3c0, 0.05, 0.6]
+    }[fm] || [0x1b1d24, 0.35, 0.5];
+    const carbon = new THREE.MeshStandardMaterial({ color: plates[0], metalness: plates[1], roughness: plates[2], transparent: fm === "pp", opacity: fm === "pp" ? 0.85 : 1 });
+    const carbonTop = fm === "carbon" || fm === "mixed" ? new THREE.MeshStandardMaterial({ color: 0x262a35, metalness: 0.4, roughness: 0.45 }) : carbon;
+    // Pervane koruma halkaları (whoop / sinema dronu)
+    if (d.ducts) {
+      const ductMat = fm === "carbon" ? new THREE.MeshStandardMaterial({ color: 0x1f2229, metalness: 0.3, roughness: 0.5, side: THREE.DoubleSide })
+        : new THREE.MeshStandardMaterial({ color: fm === "pp" ? tint : 0x2b2e33, roughness: 0.6, transparent: fm === "pp", opacity: fm === "pp" ? 0.8 : 1, side: THREE.DoubleSide });
+      const rr = (R || 60) + 3, hh = Math.max(8, (R || 60) * 0.28);
+      for (const [x, z] of pos) {
+        const duct = new THREE.Mesh(new THREE.CylinderGeometry(rr, rr, hh, 48, 1, true), ductMat);
+        duct.position.set(x, hh * 0.35, z);
+        body.add(duct);
+        const lip = new THREE.Mesh(new THREE.TorusGeometry(rr, 1.6, 8, 48), ductMat);
+        lip.rotation.x = Math.PI / 2;
+        lip.position.set(x, hh * 0.35 + hh / 2, z);
+        body.add(lip);
+      }
+    }
     const tpu = new THREE.MeshStandardMaterial({ color: d.accent || 0xf97316, roughness: 0.7 });
     const anod = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, metalness: 0.85, roughness: 0.3 });
     const black = new THREE.MeshStandardMaterial({ color: 0x0b0d12, metalness: 0.3, roughness: 0.6 });

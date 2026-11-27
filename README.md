@@ -1,12 +1,13 @@
-# 🌀 Pervane Test Laboratuvarı — Sürüm 2.4.0
+# 🌀 Pervane Test Laboratuvarı — Sürüm 2.5.0
 
-> **Güncel sürüm: v2.4.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
+> **Güncel sürüm: v2.5.0** · [Tüm sürümler](#-sürümler) · [Ayrıntılı sürüm geçmişi](CHANGELOG.md) · Sürüm etiketleri: GitHub'da **Tags** sekmesi
 
 ## 📦 Sürümler
 <!-- SURUMLER:BASLA -->
 | Sürüm | Tarih | Öne çıkanlar |
 |---|---|---|
-| **v2.4.0** | 2026-11-27 | Drone atölyesi (kendi drone'un), şehirde gerçekçi rüzgâr, sokak adı hatası |
+| **v2.5.0** | 2026-11-27 | Drone atölyesi: gerçek ürünlerden geniş parça kataloğu |
+| v2.4.0 | 2026-11-27 | Drone atölyesi (kendi drone'un), şehirde gerçekçi rüzgâr, sokak adı hatası |
 | v2.3.2 | 2026-11-26 | Açılır pencerelerde yana kayma giderildi |
 | v2.3.1 | 2026-11-25 | Başlıktaki TÜBİTAK 4006 rozeti şimdilik kaldırıldı |
 | v2.3.0 | 2026-11-24 | Arayüz yenilendi: üstte araç çubuğu, kenardan kenara sahne, alttan açılan paneller, tam ekran |
@@ -125,7 +126,14 @@ Yalnızca **Uçuş → Gerçek dünya** internet ister: 3D harita kütüphanesi 
   - Arduino'dan gelen ölçümler itki grafiğinde **beyaz noktalar** olarak görünür.
   - "Modeli kalibre et" düğmesi, en küçük kareler yöntemiyle modeli ölçümüne uydurur.
   - Denemek için `ornek_olcum.csv` dosyasını yükleyebilirsin.
-- **Drone atölyesi (kendi drone'un):** Sol üstteki **Drone atölyesi** düğmesi (ya da alt şeritteki sekme) alttan açılan bir panel açar. Şase (2,5"–10"), motor (dünyada en çok kullanılan FPV motorlarından: iFlight XING2, T-Motor F60 Pro V, EMAX ECO II, BETAFPV LAVA, GEPRC SPEEDX2, Happymodel …), ESC (5–65 A), batarya (1S–6S LiPo, 6S Li-ion) ve görüntü sistemi (analog, Walksnail, DJI O3, GPS) seçilir; pervane laboratuvarda tasarlayıp bastığın pervanedir (filament ve kök kesiti laboratuvardan, çap, hatve ve kanat sayısı atölyeden). Atölye anında kalkış ağırlığını, itki/ağırlık oranını, askıda akımı ve uçuş süresini hesaplar, uyumsuzlukları söyler (motor bu gerilime göre değil, ESC ya da batarya akımı yetmiyor, pervane şaseye sığmıyor, pervane tam gazda kırılır…). **Bu drone'la uç** ya da **Bağlı testte dene** ile drone listesinde *Kendi drone'um* olarak kullanılır; tasarım tarayıcıda saklanır. Parça ağırlıkları o sınıftaki yaygın ürünlerin tipik değerleridir (yaklaşık).
+- **Drone atölyesi (kendi drone'un):** Sol üstteki **Drone atölyesi** düğmesi (ya da alt şeritteki sekme) alttan açılan bir panel açar. Bütün parçalar **gerçek ürünlerdir**; değerler üretici ya da büyük satıcı sayfalarındandır ve her parçanın kaynağı atölyede görünür (kartın üstünde durunca, ayrıca "Seçilen parçalar ve kaynakları" listesinde). Üreticinin yayımlamadığı ve tahmin edilen değerlerde "yaklaşık" yazar.
+  - **Şase (35):** PP plastik whooplar (BETAFPV Meteor65/75, Happymodel Mobula6/7/8, NewBeeDrone), PA12 naylon ve polikarbonat halkalı sinema dronları (Pavo20/35, CineLog25/35, Defender 25), karbon kürdan ve 3–4" şaseler, 5" freestyle/yarış (ImpulseRC Apex, TBS Source One açık kaynak, GEPRC Mark5, Armattan Marmotte, Lumenier QAV-S 2, iFlight Nazgul, Five33 Switchback…), 7–10" uzun menzil (Chimera7, Crocodile7, Mark4, XL10) ve cam elyaf/naylon kollu DJI F450, S500. Malzeme 3D çizime yansır (karbon, mat naylon, yarı saydam renkli PP, krem cam elyaf; korumalı şaselerde pervane halkaları).
+  - **Motor (53):** 0702 whoop motorlarından 4214 X sınıfına; T-Motor, iFlight XING/XING2, EMAX, BrotherHobby, RCinPower, GEPRC SPEEDX2, BETAFPV, Happymodel, Axisflying, Sunnysky, Hobbywing.
+  - **ESC (24):** 1S–2S tek kartlar (AIO), 2–4S kürdan kartları, 3–6S 4'ü 1 arada ve yığınlar (SpeedyBee, T-Motor, iFlight BLITZ, Holybro Tekko32, Aikon, Hobbywing, Diatone, HDZero, GEPRC TAKER), 8S büyük ESC'ler.
+  - **Batarya (61):** 1S LiHV whoop paketleri, 2–4S, 6S LiPo (Tattu R-Line, CNHL, GNB, GEPRC Storm, iFlight Fullsend, DOGCOM) ve 6S/6S2P Li-ion uzun menzil paketleri.
+  - **Görüntü, alıcı, GPS:** DJI O3/O4/O4 Pro, Walksnail, HDZero, analog kamera + verici; ExpressLRS ve Crossfire alıcılar; Beitian ve Matek GPS.
+  - Üstte sınıf düğmeleri (Whoop, Mikro, 5", 7" ve üstü) o sınıfın gerçek parçalardan başlangıç yapısını kurar; arama kutusu ve "Yalnız uyumlu parçalar" seçeneği listeyi daraltır. Pervane laboratuvarda tasarlayıp bastığın pervanedir (filament ve kök kesiti laboratuvardan; çap, hatve ve kanat sayısı atölyeden).
+  - Atölye kalkış ağırlığını, itki/ağırlık oranını, askıda akımı ve uçuş süresini (momentum teorisi, boyuta göre pervane ve motor verimi) hesaplar, uyumsuzlukları söyler (motor bu gerilime göre değil, ESC ya da batarya akımı yetmiyor, pervane şaseye sığmıyor, kartta alıcı yok, pervane tam gazda kırılır…). **Bu drone'la uç** ya da **Bağlı testte dene** ile drone listesinde *Kendi drone'um* olarak kullanılır; tasarım tarayıcıda saklanır.
 
 ## Gerçek dünyada uçuş (3D harita)
 Uçuş düzeneğinde **Uçuş alanı → Gerçek dünya** seçilince drone, aradığın gerçek bir yerin üstünde uçar: kendi sokağın, okulun ya da şehrin meydanı.
